@@ -1,12 +1,15 @@
-RewriteEngine On
-
-# Ruta base donde vive el proyecto en Apache
-RewriteBase /ExamenFinalDS4/consultores-chiriqui-platform/public/
-
-# Si el archivo o carpeta existe, lo sirve normal
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
-
-# Si no existe, manda todo a index.php
-RewriteRule ^ index.php [L]
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Permitir acceso a archivos y directorios existentes
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Redirigir raíz a vacantes públicas
+    RewriteRule ^$ public/vacantes.php [L]
+    
+    # Redirigir /vacantes a public/vacantes.php
+    RewriteRule ^vacantes/?$ public/vacantes.php [L]
+    RewriteRule ^vacantes/(.+)/?$ public/vacante-detalle.php?slug=$1 [L]
+</IfModule>

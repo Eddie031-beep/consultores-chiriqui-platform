@@ -4,7 +4,7 @@ require_once '../config/database.php';
 
 // Redirigir si ya está autenticado
 if(isset($_SESSION['user_id'])) {
-    header('Location: ../panel-empresa/dashboard.php');
+    header('Location: ../panel-candidato/dashboard.php');
     exit;
 }
 
@@ -20,29 +20,27 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $pdo = db_connect();
-            $stmt = $pdo->prepare('
-                SELECT u.*, e.nombre as empresa_nombre 
-                FROM usuarios u 
-                JOIN empresas e ON u.empresa_id = e.id 
-                WHERE u.email = ? AND u.rol_id = 2 AND u.estado = ?
-            ');
+            $stmt = $pdo->prepare('SELECT * FROM solicitantes WHERE email = ? AND estado = ?');
             $stmt->execute([$email, 'activo']);
-            $usuario = $stmt->fetch();
+            $solicitante = $stmt->fetch();
 
-            if($usuario && password_verify($password, $usuario['password_hash'])) {
+            if($solicitante && password_verify($password, $solicitante['password_hash'])) {
                 // Login exitoso
-                $_SESSION['user_id'] = $usuario['id'];
-                $_SESSION['user_type'] = 'empresa';
-                $_SESSION['empresa_id'] = $usuario['empresa_id'];
-                $_SESSION['user_name'] = $usuario['nombre'] . ' ' . $usuario['apellido'];
-                $_SESSION['user_email'] = $usuario['email'];
-                $_SESSION['empresa_nombre'] = $usuario['empresa_nombre'];
+                $_SESSION['user_id'] = $solicitante['id'];
+                $_SESSION['user_type'] = 'candidato';
+                $_SESSION['user_name'] = $solicitante['nombre'] . ' ' . $solicitante['apellido'];
+                $_SESSION['user_email'] = $solicitante['email'];
 
                 // Actualizar último login
-                $stmt_update = $pdo->prepare('UPDATE usuarios SET ultimo_login = NOW() WHERE id = ?');
-                $stmt_update->execute([$usuario['id']]);
+                $stmt_update = $pdo->prepare('UPDATE solicitantes SET ultimo_login = NOW() WHERE id = ?');
+                $stmt_update->execute([$solicitante['id']]);
 
-                header('Location: ../panel-empresa/dashboard.php');
+                // Redirigir a vacante si viene desde postulación
+                if(isset($_GET['vacante_id']) && !empty($_GET['vacante_id'])) {
+                    header('Location: ../panel-candidato/postular.php?vacante_id=' . intval($_GET['vacante_id']));
+                } else {
+                    header('Location: ../panel-candidato/dashboard.php');
+                }
                 exit;
             } else {
                 $error = 'Email o contraseña incorrectos';
@@ -52,6 +50,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+$vacante_id = $_GET['vacante_id'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -59,7 +59,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Empresa | Consultores Chiriquí</title>
+    <title>Iniciar Sesión - Candidato | Consultores Chiriquí</title>
     <style>
         * {
             margin: 0;
@@ -145,6 +145,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #c33;
         }
 
+        .alert-info {
+            background: #eef;
+            border: 1px solid #ccf;
+            color: #33c;
+        }
+
         .btn-login {
             width: 100%;
             background: #667eea;
@@ -206,13 +212,19 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="form-card">
             <div class="form-header">
-                <h1>🏢 Iniciar Sesión</h1>
-                <p>Como Empresa</p>
+                <h1>👤 Iniciar Sesión</h1>
+                <p>Como Persona Postulante</p>
             </div>
 
             <?php if(!empty($error)): ?>
                 <div class="alert alert-error">
                     <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if(!empty($vacante_id)): ?>
+                <div class="alert alert-info">
+                    ℹ️ Inicia sesión para postularte a esta vacante
                 </div>
             <?php endif; ?>
 
@@ -225,7 +237,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                         name="email" 
                         value="<?php echo htmlspecialchars($email); ?>" 
                         required
-                        placeholder="empresa@example.com"
+                        placeholder="tu@email.com"
                     >
                 </div>
 
@@ -245,8 +257,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="form-footer">
                 <p>¿No tienes cuenta?</p>
-                <a href="registro-empresa.php">
-                    Registrar tu empresa
+                <a href="registro-candidato.php<?php echo !empty($vacante_id) ? '?vacante_id=' . intval($vacante_id) : ''; ?>">
+                    Crear cuenta de candidato
                 </a>
             </div>
         </div>
