@@ -1,0 +1,111 @@
+/* Global Styles con soporte para Modo Oscuro */
+
+/* Variables CSS - Modo Claro (por defecto) */
+:root {
+    --navbar-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --text-white: #ffffff;
+    --text-light: #f0f0f0;
+    --hover-bg: rgba(255, 255, 255, 0.15);
+    --active-bg: rgba(255, 255, 255, 0.25);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Variables para el body (modo claro) */
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-heading: #333333;
+    --border-color: #dee2e6;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Variables CSS - Modo Oscuro */
+[data-theme="dark"] {
+    --navbar-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    --text-white: #ffffff;
+    --text-light: #e0e0e0;
+    --hover-bg: rgba(255, 255, 255, 0.1);
+    --active-bg: rgba(255, 255, 255, 0.2);
+
+    /* Variables para el body (modo oscuro) */
+    --bg-primary: #0f0f1e;
+    --bg-secondary: #1a1a2e;
+    --bg-card: #1e1e2f;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-heading: #ffffff;
+    --border-color: #2d2d44;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Aplicar variables al body */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Cards y contenedores */
+.container,
+.filtros,
+.vacante-card,
+.nav-top {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Títulos */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.vacante-titulo,
+.header-vacantes h1 {
+    color: var(--text-heading) !important;
+}
+
+/* Texto secundario */
+p,
+span,
+label,
+.vacante-descripcion,
+.vacante-ubicacion,
+.contador-vacantes {
+    color: var(--text-secondary) !important;
+}
+
+/* Inputs y selects */
+.filtro-grupo input,
+.filtro-grupo select,
+input,
+select,
+textarea {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Empresas nombres (purpura/azul) se mantiene visible */
+.vacante-empresa {
+    color: #667eea !important;
+}
+
+/* Ajustes para modo oscuro específicos */
+[data-theme="dark"] .vacante-empresa {
+    color: #96a af9 !important;
+    /* Más claro en oscuro */
+}
+
+[data-theme="dark"] .vacante-salario {
+    background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .vacante-salario strong {
+    color: #96aaf9 !important;
+}

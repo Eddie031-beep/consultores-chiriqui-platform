@@ -30,6 +30,8 @@ define('ENV_DB', [
 
 define('ENV_APP', [
     'APP_ENV'    => $APP_ENV,
-    'BASE_URL'   => 'http://localhost/ExamenFinalDS4/consultores-chiriqui-platform/public',
+    // ASEGÚRATE DE QUE ESTA URL ES LA QUE INTENTAS VISITAR
+    'BASE_URL'   => 'http://localhost/ExamenFinalDS4/consultores-chiriqui-platform/public', 
     'ASSETS_URL' => '/ExamenFinalDS4/consultores-chiriqui-platform/public/assets',
 ]);
+
