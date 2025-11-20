@@ -12,9 +12,3 @@
     # Redirigir todo lo demás a public/index.php
     RewriteRule ^(.+)$ public/index.php [L]
 </IfModule>
-
-# Desactivar listado de directorios
-<FilesMatch "^$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
