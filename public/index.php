@@ -1,6 +1,7 @@
 <?php
 // public/index.php
 declare(strict_types=1);
+session_start();
 
 // Autoloader súper simple para cargar clases de App\...
 spl_autoload_register(function (string $class) {

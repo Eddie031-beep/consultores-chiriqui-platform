@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Ruta base donde vive el proyecto en Apache
+RewriteBase /ExamenFinalDS4/consultores-chiriqui-platform/public/
+
+# Si el archivo o carpeta existe, lo sirve normal
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Si no existe, manda todo a index.php
+RewriteRule ^ index.php [L]
