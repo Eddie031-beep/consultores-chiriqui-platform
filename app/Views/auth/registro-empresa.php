@@ -1,15 +1,6 @@
 <?php
-session_start();
-require_once '../config/database.php';
-
-// Redirigir si ya está autenticado
-if(isset($_SESSION['user_id'])) {
-    header('Location: ../panel-empresa/dashboard.php');
-    exit;
-}
-
-$error = '';
-$form_data = [
+$error = $error ?? '';
+$form_data = $form_data ?? [
     'nombre_empresa' => '',
     'ruc' => '',
     'dv' => '',
@@ -23,123 +14,6 @@ $form_data = [
     'apellido_usuario' => '',
     'email_usuario' => ''
 ];
-
-if($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $form_data = [
-        'nombre_empresa' => trim($_POST['nombre_empresa'] ?? ''),
-        'ruc' => trim($_POST['ruc'] ?? ''),
-        'dv' => trim($_POST['dv'] ?? ''),
-        'direccion' => trim($_POST['direccion'] ?? ''),
-        'provincia' => trim($_POST['provincia'] ?? ''),
-        'telefono' => trim($_POST['telefono'] ?? ''),
-        'email_contacto' => trim($_POST['email_contacto'] ?? ''),
-        'sitio_web' => trim($_POST['sitio_web'] ?? ''),
-        'sector' => trim($_POST['sector'] ?? ''),
-        'nombre_usuario' => trim($_POST['nombre_usuario'] ?? ''),
-        'apellido_usuario' => trim($_POST['apellido_usuario'] ?? ''),
-        'email_usuario' => trim($_POST['email_usuario'] ?? ''),
-        'password' => $_POST['password'] ?? '',
-        'password_confirm' => $_POST['password_confirm'] ?? '',
-        'tipo' => $_POST['tipo'] ?? 'privada'
-    ];
-
-    // Validaciones
-    if(empty($form_data['nombre_empresa'])) $error = 'El nombre de la empresa es requerido';
-    elseif(empty($form_data['ruc'])) $error = 'El RUC es requerido';
-    elseif(empty($form_data['direccion'])) $error = 'La dirección es requerida';
-    elseif(empty($form_data['provincia'])) $error = 'La provincia es requerida';
-    elseif(empty($form_data['nombre_usuario'])) $error = 'El nombre del usuario es requerido';
-    elseif(empty($form_data['apellido_usuario'])) $error = 'El apellido del usuario es requerido';
-    elseif(empty($form_data['email_usuario'])) $error = 'El email es requerido';
-    elseif(!filter_var($form_data['email_usuario'], FILTER_VALIDATE_EMAIL)) $error = 'Email inválido';
-    elseif(empty($form_data['password'])) $error = 'La contraseña es requerida';
-    elseif(strlen($form_data['password']) < 6) $error = 'La contraseña debe tener mínimo 6 caracteres';
-    elseif($form_data['password'] !== $form_data['password_confirm']) $error = 'Las contraseñas no coinciden';
-    else {
-        try {
-            $pdo = db_connect();
-
-            // Verificar si RUC ya existe
-            $stmt_check_ruc = $pdo->prepare('SELECT id FROM empresas WHERE ruc = ?');
-            $stmt_check_ruc->execute([$form_data['ruc']]);
-            if($stmt_check_ruc->fetch()) {
-                $error = 'Este RUC ya está registrado';
-            } else {
-                // Verificar si email ya existe
-                $stmt_check_email = $pdo->prepare('SELECT id FROM usuarios WHERE email = ?');
-                $stmt_check_email->execute([$form_data['email_usuario']]);
-                if($stmt_check_email->fetch()) {
-                    $error = 'Este email ya está registrado';
-                } else {
-                    // Iniciar transacción
-                    $pdo->beginTransaction();
-
-                    try {
-                        // Insertar empresa
-                        $stmt_empresa = $pdo->prepare('
-                            INSERT INTO empresas (tipo, nombre, ruc, dv, direccion, provincia, telefono, email_contacto, sitio_web, sector, estado)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ');
-                        
-                        $stmt_empresa->execute([
-                            $form_data['tipo'],
-                            $form_data['nombre_empresa'],
-                            $form_data['ruc'],
-                            $form_data['dv'],
-                            $form_data['direccion'],
-                            $form_data['provincia'],
-                            $form_data['telefono'] ?: null,
-                            $form_data['email_contacto'] ?: null,
-                            $form_data['sitio_web'] ?: null,
-                            $form_data['sector'] ?: null,
-                            'activa'
-                        ]);
-
-                        $empresa_id = $pdo->lastInsertId();
-
-                        // Insertar usuario admin de la empresa
-                        $password_hash = password_hash($form_data['password'], PASSWORD_BCRYPT);
-                        $stmt_usuario = $pdo->prepare('
-                            INSERT INTO usuarios (empresa_id, nombre, apellido, email, password_hash, rol_id, estado)
-                            VALUES (?, ?, ?, ?, ?, 2, ?)
-                        ');
-
-                        $stmt_usuario->execute([
-                            $empresa_id,
-                            $form_data['nombre_usuario'],
-                            $form_data['apellido_usuario'],
-                            $form_data['email_usuario'],
-                            $password_hash,
-                            'activo'
-                        ]);
-
-                        $usuario_id = $pdo->lastInsertId();
-
-                        // Confirmar transacción
-                        $pdo->commit();
-
-                        // Login automático
-                        $_SESSION['user_id'] = $usuario_id;
-                        $_SESSION['user_type'] = 'empresa';
-                        $_SESSION['empresa_id'] = $empresa_id;
-                        $_SESSION['user_name'] = $form_data['nombre_usuario'] . ' ' . $form_data['apellido_usuario'];
-                        $_SESSION['user_email'] = $form_data['email_usuario'];
-                        $_SESSION['empresa_nombre'] = $form_data['nombre_empresa'];
-
-                        header('Location: ../panel-empresa/dashboard.php');
-                        exit;
-
-                    } catch(PDOException $e) {
-                        $pdo->rollBack();
-                        $error = 'Error al registrar la empresa: ' . $e->getMessage();
-                    }
-                }
-            }
-        } catch(PDOException $e) {
-            $error = 'Error en la base de datos: ' . $e->getMessage();
-        }
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -329,7 +203,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container">
-        <a href="index.php" class="back-link">← Volver</a>
+        <a href="<?= ENV_APP['BASE_URL'] ?>/auth" class="back-link">← Volver</a>
 
         <div class="form-card">
             <div class="form-header">
@@ -337,13 +211,13 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Publica tus vacantes y gestiona candidatos</p>
             </div>
 
-            <?php if(!empty($error)): ?>
+            <?php if (!empty($error)): ?>
                 <div class="alert alert-error">
-                    <?php echo htmlspecialchars($error); ?>
+                    <?= htmlspecialchars($error) ?>
                 </div>
             <?php endif; ?>
 
-            <form method="POST">
+            <form method="POST" action="<?= ENV_APP['BASE_URL'] ?>/auth/registro-empresa">
                 <!-- Datos de la Empresa -->
                 <div class="form-section">
                     <h3 class="form-section-titulo">📋 Información de la Empresa</h3>
@@ -354,7 +228,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                             type="text" 
                             id="nombre_empresa" 
                             name="nombre_empresa" 
-                            value="<?php echo htmlspecialchars($form_data['nombre_empresa']); ?>" 
+                            value="<?= htmlspecialchars($form_data['nombre_empresa']) ?>" 
                             required
                         >
                     </div>
@@ -366,7 +240,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 type="text" 
                                 id="ruc" 
                                 name="ruc" 
-                                value="<?php echo htmlspecialchars($form_data['ruc']); ?>" 
+                                value="<?= htmlspecialchars($form_data['ruc']) ?>" 
                                 placeholder="Ej: 155555555-1"
                                 required
                             >
@@ -378,7 +252,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 type="text" 
                                 id="dv" 
                                 name="dv" 
-                                value="<?php echo htmlspecialchars($form_data['dv']); ?>"
+                                value="<?= htmlspecialchars($form_data['dv']) ?>"
                                 maxlength="5"
                             >
                         </div>
@@ -390,7 +264,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                             type="text" 
                             id="direccion" 
                             name="direccion" 
-                            value="<?php echo htmlspecialchars($form_data['direccion']); ?>" 
+                            value="<?= htmlspecialchars($form_data['direccion']) ?>" 
                             required
                         >
                     </div>
@@ -400,15 +274,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label for="provincia">Provincia <span class="required">*</span></label>
                             <select id="provincia" name="provincia" required>
                                 <option value="">Selecciona una provincia</option>
-                                <option value="Panamá" <?php echo $form_data['provincia'] === 'Panamá' ? 'selected' : ''; ?>>Panamá</option>
-                                <option value="Chiriquí" <?php echo $form_data['provincia'] === 'Chiriquí' ? 'selected' : ''; ?>>Chiriquí</option>
-                                <option value="Bocas del Toro" <?php echo $form_data['provincia'] === 'Bocas del Toro' ? 'selected' : ''; ?>>Bocas del Toro</option>
-                                <option value="Colón" <?php echo $form_data['provincia'] === 'Colón' ? 'selected' : ''; ?>>Colón</option>
-                                <option value="Coclé" <?php echo $form_data['provincia'] === 'Coclé' ? 'selected' : ''; ?>>Coclé</option>
-                                <option value="Los Santos" <?php echo $form_data['provincia'] === 'Los Santos' ? 'selected' : ''; ?>>Los Santos</option>
-                                <option value="Herrera" <?php echo $form_data['provincia'] === 'Herrera' ? 'selected' : ''; ?>>Herrera</option>
-                                <option value="Panamá Oeste" <?php echo $form_data['provincia'] === 'Panamá Oeste' ? 'selected' : ''; ?>>Panamá Oeste</option>
-                                <option value="Darién" <?php echo $form_data['provincia'] === 'Darién' ? 'selected' : ''; ?>>Darién</option>
+                                <option value="Panamá" <?= $form_data['provincia'] === 'Panamá' ? 'selected' : '' ?>>Panamá</option>
+                                <option value="Chiriquí" <?= $form_data['provincia'] === 'Chiriquí' ? 'selected' : '' ?>>Chiriquí</option>
+                                <option value="Bocas del Toro" <?= $form_data['provincia'] === 'Bocas del Toro' ? 'selected' : '' ?>>Bocas del Toro</option>
+                                <option value="Colón" <?= $form_data['provincia'] === 'Colón' ? 'selected' : '' ?>>Colón</option>
+                                <option value="Coclé" <?= $form_data['provincia'] === 'Coclé' ? 'selected' : '' ?>>Coclé</option>
+                                <option value="Los Santos" <?= $form_data['provincia'] === 'Los Santos' ? 'selected' : '' ?>>Los Santos</option>
+                                <option value="Herrera" <?= $form_data['provincia'] === 'Herrera' ? 'selected' : '' ?>>Herrera</option>
+                                <option value="Panamá Oeste" <?= $form_data['provincia'] === 'Panamá Oeste' ? 'selected' : '' ?>>Panamá Oeste</option>
+                                <option value="Darién" <?= $form_data['provincia'] === 'Darién' ? 'selected' : '' ?>>Darién</option>
                             </select>
                         </div>
 
@@ -418,7 +292,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 type="text" 
                                 id="sector" 
                                 name="sector" 
-                                value="<?php echo htmlspecialchars($form_data['sector']); ?>"
+                                value="<?= htmlspecialchars($form_data['sector']) ?>"
                                 placeholder="Ej: Tecnología, Salud..."
                             >
                         </div>
@@ -431,7 +305,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 type="tel" 
                                 id="telefono" 
                                 name="telefono" 
-                                value="<?php echo htmlspecialchars($form_data['telefono']); ?>"
+                                value="<?= htmlspecialchars($form_data['telefono']) ?>"
                             >
                         </div>
 
@@ -441,7 +315,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 type="email" 
                                 id="email_contacto" 
                                 name="email_contacto" 
-                                value="<?php echo htmlspecialchars($form_data['email_contacto']); ?>"
+                                value="<?= htmlspecialchars($form_data['email_contacto']) ?>"
                             >
                         </div>
                     </div>
@@ -452,7 +326,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                             type="url" 
                             id="sitio_web" 
                             name="sitio_web" 
-                            value="<?php echo htmlspecialchars($form_data['sitio_web']); ?>"
+                            value="<?= htmlspecialchars($form_data['sitio_web']) ?>"
                             placeholder="https://ejemplo.com"
                         >
                     </div>
@@ -469,7 +343,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 type="text" 
                                 id="nombre_usuario" 
                                 name="nombre_usuario" 
-                                value="<?php echo htmlspecialchars($form_data['nombre_usuario']); ?>" 
+                                value="<?= htmlspecialchars($form_data['nombre_usuario']) ?>" 
                                 required
                             >
                         </div>
@@ -480,7 +354,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 type="text" 
                                 id="apellido_usuario" 
                                 name="apellido_usuario" 
-                                value="<?php echo htmlspecialchars($form_data['apellido_usuario']); ?>" 
+                                value="<?= htmlspecialchars($form_data['apellido_usuario']) ?>" 
                                 required
                             >
                         </div>
@@ -492,11 +366,46 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                             type="email" 
                             id="email_usuario" 
                             name="email_usuario" 
-                            value="<?php echo htmlspecialchars($form_data['email_usuario']); ?>" 
+                            value="<?= htmlspecialchars($form_data['email_usuario']) ?>" 
                             required
                         >
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="password">Contraseña <span class="required">*</span
+                            <label for="password">Contraseña <span class="required">*</span></label>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required
+                                placeholder="Mín. 6 caracteres"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password_confirm">Confirmar Contraseña <span class="required">*</span></label>
+                            <input 
+                                type="password" 
+                                id="password_confirm" 
+                                name="password_confirm" 
+                                required
+                                placeholder="Repite la contraseña"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-registro">✓ Crear Cuenta</button>
+            </form>
+
+            <div class="form-footer">
+                <p>¿Ya tienes cuenta?</p>
+                <a href="<?= ENV_APP['BASE_URL'] ?>/auth/login-empresa">
+                    Inicia sesión aquí
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

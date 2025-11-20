@@ -11,215 +11,111 @@ class VacanteController extends Controller
 
     public function __construct()
     {
-        $this->db = db_connect('local'); // maestro
+        $this->db = db_connect('local');
     }
 
-    private function requireEmpresa(): array
+    // Listar vacantes
+    public function listar(): void
     {
-        $user = Auth::user();
-        if (!$user || ($user['rol'] ?? '') !== 'empresa_admin') {
-            $this->redirect('/');
-        }
-        if (empty($user['empresa_id'])) {
-            throw new \RuntimeException('El usuario no tiene empresa asociada.');
-        }
-        return $user;
-    }
+        $busqueda = $_GET['busqueda'] ?? '';
+        $modalidad = $_GET['modalidad'] ?? '';
+        $ubicacion = $_GET['ubicacion'] ?? '';
+        $empresa = $_GET['empresa'] ?? '';
 
-    public function index(): void
-    {
-        $user = $this->requireEmpresa();
-        $empresaId = (int)$user['empresa_id'];
+        $sql = "SELECT v.*, e.nombre as empresa_nombre FROM vacantes v 
+                JOIN empresas e ON v.empresa_id = e.id 
+                WHERE v.estado = 'abierta'";
 
-        $sql = "SELECT v.*
-                FROM vacantes v
-                WHERE v.empresa_id = :eid
-                ORDER BY v.fecha_publicacion DESC";
+        $params = [];
+
+        if (!empty($busqueda)) {
+            $sql .= " AND (v.titulo LIKE ? OR v.descripcion LIKE ?)";
+            $params[] = "%$busqueda%";
+            $params[] = "%$busqueda%";
+        }
+
+        if (!empty($modalidad)) {
+            $sql .= " AND v.modalidad = ?";
+            $params[] = $modalidad;
+        }
+
+        if (!empty($ubicacion)) {
+            $sql .= " AND v.ubicacion LIKE ?";
+            $params[] = "%$ubicacion%";
+        }
+
+        if (!empty($empresa)) {
+            $sql .= " AND v.empresa_id = ?";
+            $params[] = $empresa;
+        }
+
+        $sql .= " ORDER BY v.fecha_publicacion DESC";
+
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['eid' => $empresaId]);
-        $vacantes = $stmt->fetchAll();
+        $stmt->execute($params);
+        $vacantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $this->view('vacantes/index', compact('vacantes', 'user'));
+        // Obtener empresas para filtro
+        $empresasStmt = $this->db->query("SELECT id, nombre FROM empresas WHERE estado = 'activa' ORDER BY nombre");
+        $empresas = $empresasStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('vacantes/listar', compact('vacantes', 'empresas'));
     }
 
-    public function create(): void
+    // Ver detalle de vacante
+    public function detalle($slug): void
     {
-        $this->requireEmpresa();
-        $this->view('vacantes/form', [
-            'modo' => 'crear',
-            'vacante' => null,
-            'errores' => [],
-            'old' => [],
-        ]);
-    }
-
-    public function store(): void
-    {
-        $user = $this->requireEmpresa();
-        $empresaId = (int)$user['empresa_id'];
-
-        $titulo        = trim($_POST['titulo'] ?? '');
-        $descripcion   = trim($_POST['descripcion'] ?? '');
-        $tipo_contrato = trim($_POST['tipo_contrato'] ?? '');
-        $salario_min   = $_POST['salario_min'] !== '' ? (float)$_POST['salario_min'] : null;
-        $salario_max   = $_POST['salario_max'] !== '' ? (float)$_POST['salario_max'] : null;
-        $ubicacion     = trim($_POST['ubicacion'] ?? '');
-        $modalidad     = $_POST['modalidad'] ?? 'presencial';
-
-        $errores = [];
-
-        if ($titulo === '')        $errores['titulo'] = 'El título es obligatorio';
-        if ($descripcion === '')   $errores['descripcion'] = 'La descripción es obligatoria';
-        if ($tipo_contrato === '') $errores['tipo_contrato'] = 'El tipo de contrato es obligatorio';
-        if ($ubicacion === '')     $errores['ubicacion'] = 'La ubicación es obligatoria';
-
-        $old = compact(
-            'titulo','descripcion','tipo_contrato',
-            'salario_min','salario_max','ubicacion','modalidad'
-        );
-
-        if ($errores) {
-            $this->view('vacantes/form', [
-                'modo'    => 'crear',
-                'vacante' => null,
-                'errores' => $errores,
-                'old'     => $old,
-            ]);
-            return;
-        }
-
-        // slug simple
-        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $titulo), '-'));
-
-        $sql = "INSERT INTO vacantes
-                (empresa_id, titulo, slug, descripcion, tipo_contrato,
-                 salario_min, salario_max, ubicacion, modalidad)
-                VALUES
-                (:eid, :titulo, :slug, :descripcion, :tipo_contrato,
-                 :salario_min, :salario_max, :ubicacion, :modalidad)";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            'eid'          => $empresaId,
-            'titulo'       => $titulo,
-            'slug'         => $slug . '-' . time(),
-            'descripcion'  => $descripcion,
-            'tipo_contrato'=> $tipo_contrato,
-            'salario_min'  => $salario_min,
-            'salario_max'  => $salario_max,
-            'ubicacion'    => $ubicacion,
-            'modalidad'    => $modalidad,
-        ]);
-
-        $this->redirect('/empresa/vacantes');
-    }
-
-    public function edit(): void
-    {
-        $user = $this->requireEmpresa();
-        $empresaId = (int)$user['empresa_id'];
-
-        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        if ($id <= 0) {
-            $this->redirect('/empresa/vacantes');
-        }
-
-        $sql = "SELECT * FROM vacantes WHERE id = :id AND empresa_id = :eid";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute(['id' => $id, 'eid' => $empresaId]);
-        $vacante = $stmt->fetch();
+        $stmt = $this->db->prepare("
+            SELECT v.*, e.nombre as empresa_nombre, e.telefono, e.email_contacto, e.sitio_web, e.sector
+            FROM vacantes v
+            JOIN empresas e ON v.empresa_id = e.id
+            WHERE v.slug = ? AND v.estado = 'abierta'
+        ");
+        $stmt->execute([$slug]);
+        $vacante = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$vacante) {
-            $this->redirect('/empresa/vacantes');
-        }
-
-        $this->view('vacantes/form', [
-            'modo'    => 'editar',
-            'vacante' => $vacante,
-            'errores' => [],
-            'old'     => [],
-        ]);
-    }
-
-    public function update(): void
-    {
-        $user = $this->requireEmpresa();
-        $empresaId = (int)$user['empresa_id'];
-
-        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        if ($id <= 0) {
-            $this->redirect('/empresa/vacantes');
-        }
-
-        $titulo        = trim($_POST['titulo'] ?? '');
-        $descripcion   = trim($_POST['descripcion'] ?? '');
-        $tipo_contrato = trim($_POST['tipo_contrato'] ?? '');
-        $salario_min   = $_POST['salario_min'] !== '' ? (float)$_POST['salario_min'] : null;
-        $salario_max   = $_POST['salario_max'] !== '' ? (float)$_POST['salario_max'] : null;
-        $ubicacion     = trim($_POST['ubicacion'] ?? '');
-        $modalidad     = $_POST['modalidad'] ?? 'presencial';
-
-        $errores = [];
-
-        if ($titulo === '')        $errores['titulo'] = 'El título es obligatorio';
-        if ($descripcion === '')   $errores['descripcion'] = 'La descripción es obligatoria';
-        if ($tipo_contrato === '') $errores['tipo_contrato'] = 'El tipo de contrato es obligatorio';
-        if ($ubicacion === '')     $errores['ubicacion'] = 'La ubicación es obligatoria';
-
-        $old = compact(
-            'titulo','descripcion','tipo_contrato',
-            'salario_min','salario_max','ubicacion','modalidad'
-        );
-
-        if ($errores) {
-            $vacante = array_merge(['id' => $id], $old);
-            $this->view('vacantes/form', [
-                'modo'    => 'editar',
-                'vacante' => $vacante,
-                'errores' => $errores,
-                'old'     => $old,
-            ]);
+            header("HTTP/1.1 404 Not Found");
+            $this->view('404');
             return;
         }
 
-        $sql = "UPDATE vacantes
-                SET titulo = :titulo,
-                    descripcion = :descripcion,
-                    tipo_contrato = :tipo_contrato,
-                    salario_min = :salario_min,
-                    salario_max = :salario_max,
-                    ubicacion = :ubicacion,
-                    modalidad = :modalidad
-                WHERE id = :id AND empresa_id = :eid";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            'titulo'        => $titulo,
-            'descripcion'   => $descripcion,
-            'tipo_contrato' => $tipo_contrato,
-            'salario_min'   => $salario_min,
-            'salario_max'   => $salario_max,
-            'ubicacion'     => $ubicacion,
-            'modalidad'     => $modalidad,
-            'id'            => $id,
-            'eid'           => $empresaId,
-        ]);
+        // Registrar interacción
+        $interaccionStmt = $this->db->prepare("
+            INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id)
+            VALUES (?, 'ver_detalle', 'web', ?, ?)
+        ");
+        $interaccionStmt->execute([$vacante['id'], $_SERVER['REMOTE_ADDR'], session_id()]);
 
-        $this->redirect('/empresa/vacantes');
+        $this->view('vacantes/detalle', compact('vacante'));
     }
 
-    public function close(): void
+    // Redirigir a postulación (validar si está autenticado)
+    public function prePostular($vacante_id): void
     {
-        $user = $this->requireEmpresa();
-        $empresaId = (int)$user['empresa_id'];
-
-        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        if ($id > 0) {
-            $sql = "UPDATE vacantes
-                    SET estado = 'cerrada'
-                    WHERE id = :id AND empresa_id = :eid";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute(['id' => $id, 'eid' => $empresaId]);
+        // Verificar que la vacante existe
+        $stmt = $this->db->prepare("SELECT id FROM vacantes WHERE id = ? AND estado = 'abierta'");
+        $stmt->execute([$vacante_id]);
+        if (!$stmt->fetch()) {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/vacantes');
+            exit;
         }
 
-        $this->redirect('/empresa/vacantes');
+        // Registrar interacción
+        $interaccionStmt = $this->db->prepare("
+            INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id)
+            VALUES (?, 'click_aplicar', 'web', ?, ?)
+        ");
+        $interaccionStmt->execute([$vacante_id, $_SERVER['REMOTE_ADDR'], session_id()]);
+
+        // Si ya está autenticado como candidato
+        if (Auth::check() && Auth::user()['rol'] === 'candidato') {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/postular/' . $vacante_id);
+            exit;
+        }
+
+        // Sino, redirigir a registro/login
+        header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro-candidato?vacante_id=' . $vacante_id);
+        exit;
     }
 }
