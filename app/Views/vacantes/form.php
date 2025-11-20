@@ -25,12 +25,18 @@
     </div>
 
     <?php
+    // Evitar warnings de variable no asignada
+    $vacante = $vacante ?? null;
+    $old     = $old ?? [];
+    $errores = $errores ?? [];
+
     $v = $vacante ?? [];
     $valor = function(string $campo, $default = '') use ($v, $old) {
         if (isset($old[$campo])) return $old[$campo];
         return $v[$campo] ?? $default;
     };
     ?>
+
 
     <form method="post" action="">
         <?php if ($modo === 'editar'): ?>
