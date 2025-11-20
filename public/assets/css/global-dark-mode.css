@@ -1,0 +1,464 @@
+/* ========================================
+   GLOBAL DARK MODE STYLES
+   Archivo: public/assets/css/global-dark-mode.css
+======================================== */
+
+/* Variables CSS - Modo Claro (por defecto) */
+:root {
+    /* Variables para el body (modo claro) - MEJORADO */
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --text-primary: #1a1a1a;
+    /* Más oscuro y legible */
+    --text-secondary: #4a5568;
+    /* Gris más oscuro */
+    --text-heading: #0f172a;
+    /* Casi negro para títulos */
+    --border-color: #e2e8f0;
+    --shadow-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Variables CSS - Modo Oscuro - MEJORADO */
+[data-theme="dark"] {
+    /* Variables para el body (modo oscuro) - COLORES MEJORADOS */
+    --bg-primary: #0f172a;
+    /* Azul oscuro más suave */
+    --bg-secondary: #1e293b;
+    /* Azul gris medio */
+    --bg-card: #1e293b;
+    /* Azul gris para cards */
+    --text-primary: #f1f5f9;
+    /* Blanco casi puro */
+    --text-secondary: #94a3b8;
+    /* Gris azulado claro */
+    --text-heading: #ffffff;
+    /* Blanco puro para títulos */
+    --border-color: #334155;
+    /* Borde azul gris */
+    --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+/* ===== ESTILOS GLOBALES ===== */
+
+/* Aplicar variables al body */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Cards y contenedores */
+.container,
+.filtros,
+.vacante-card,
+.nav-top,
+.vacante-container,
+.postulaciones,
+.card,
+.vacantes-grid>div {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ===== TÍTULOS ===== */
+
+/* Títulos principales */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.vacante-titulo,
+.header-vacantes h1,
+.section-titulo,
+.card-titulo,
+.postulacion-info h3 {
+    color: var(--text-heading) !important;
+    font-weight: 700;
+}
+
+/* Modo claro - títulos casi negros */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.vacante-titulo,
+.vacante-card .vacante-titulo,
+.card-titulo {
+    color: #0f172a !important;
+}
+
+/* Modo oscuro - títulos blancos puros */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+[data-theme="dark"] .vacante-titulo,
+[data-theme="dark"] .vacante-card .vacante-titulo,
+[data-theme="dark"] .vacante-card h2,
+[data-theme="dark"] .card-titulo,
+[data-theme="dark"] .postulacion-info h3 {
+    color: #ffffff !important;
+}
+
+/* ===== TEXTO ===== */
+
+/* Texto secundario */
+p,
+span:not(.navbar-link span),
+label,
+.vacante-descripcion,
+.vacante-ubicacion,
+.contador-vacantes,
+.vacante-info,
+.section-contenido,
+.card-desc,
+.postulacion-fecha,
+.info-item-label {
+    color: var(--text-secondary) !important;
+}
+
+/* Modo claro - texto más oscuro */
+p,
+span:not(.navbar-link span),
+label {
+    color: #4a5568 !important;
+}
+
+/* Modo oscuro - texto más claro */
+[data-theme="dark"] p,
+[data-theme="dark"] span:not(.navbar-link span),
+[data-theme="dark"] label,
+[data-theme="dark"] .vacante-descripcion,
+[data-theme="dark"] .section-contenido {
+    color: #cbd5e1 !important;
+}
+
+/* ===== EMPRESAS ===== */
+
+/* Nombres de empresas */
+.vacante-empresa,
+.postulacion-empresa {
+    color: #667eea !important;
+    font-weight: 600;
+}
+
+/* Más brillante en modo oscuro */
+[data-theme="dark"] .vacante-empresa,
+[data-theme="dark"] .postulacion-empresa {
+    color: #818cf8 !important;
+}
+
+/* ===== INPUTS Y FORMS ===== */
+
+/* Inputs y selects */
+.filtro-grupo input,
+.filtro-grupo select,
+input,
+select,
+textarea {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+    transition: all 0.3s ease;
+}
+
+/* Placeholder */
+input::placeholder,
+textarea::placeholder,
+select option {
+    color: var(--text-secondary) !important;
+    opacity: 0.7;
+}
+
+/* Focus states */
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+    border-color: #667eea !important;
+    outline: none;
+    background-color: #1e293b !important;
+}
+
+/* ===== BADGES ===== */
+
+.badge {
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+/* Modo claro - badges con buen contraste */
+.badge-modalidad {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+}
+
+.badge-tipo {
+    background-color: #f3e5f5 !important;
+    color: #7b1fa2 !important;
+}
+
+/* Modo oscuro - badges más brillantes */
+[data-theme="dark"] .badge {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    color: #a5b4fc !important;
+}
+
+[data-theme="dark"] .badge-modalidad,
+[data-theme="dark"] .badge-estado {
+    background-color: rgba(99, 102, 241, 0.2) !important;
+    color: #c7d2fe !important;
+}
+
+[data-theme="dark"] .badge-pendiente {
+    background-color: rgba(251, 191, 36, 0.2) !important;
+    color: #fcd34d !important;
+}
+
+[data-theme="dark"] .badge-aceptado {
+    background-color: rgba(34, 197, 94, 0.2) !important;
+    color: #86efac !important;
+}
+
+/* ===== BORDERS Y SOMBRAS ===== */
+
+.vacante-card,
+.filtros,
+.nav-top,
+.card {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .vacante-card,
+[data-theme="dark"] .filtros,
+[data-theme="dark"] .nav-top,
+[data-theme="dark"] .card {
+    border: 1px solid #334155 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Hover effects */
+.vacante-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .vacante-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+    border-color: #475569 !important;
+}
+
+/* Header de vacantes */
+.vacante-header {
+    border-bottom-color: var(--border-color) !important;
+}
+
+/* ===== LINKS ===== */
+
+a {
+    color: #667eea;
+    transition: color 0.3s ease;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #5568d3;
+}
+
+[data-theme="dark"] a:not(.btn-detalle):not(.btn-postular):not(.btn-volver):not(.navbar-link):not(.btn-buscar):not(.btn-limpiar) {
+    color: #818cf8 !important;
+}
+
+[data-theme="dark"] a:not(.btn-detalle):not(.btn-postular):not(.btn-volver):not(.navbar-link):not(.btn-buscar):not(.btn-limpiar):hover {
+    color: #a5b4fc !important;
+}
+
+/* ===== HERO SECTIONS ===== */
+
+.hero {
+    transition: background 0.3s ease;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+[data-theme="dark"] .hero,
+[data-theme="dark"] .header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+    color: white !important;
+}
+
+/* Títulos en hero siempre blancos */
+.hero h1,
+.hero p,
+.header h1,
+.header p {
+    color: white !important;
+}
+
+/* ===== INFO ITEMS ===== */
+
+.info-item-label {
+    color: var(--text-secondary) !important;
+}
+
+.info-item-valor {
+    color: var(--text-heading) !important;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .info-item-valor {
+    color: #ffffff !important;
+}
+
+/* ===== EMPRESA INFO ===== */
+
+.empresa-info {
+    background-color: var(--bg-secondary);
+    border-left-color: #667eea !important;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .empresa-info {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ===== ALERTAS ===== */
+
+.alerta,
+.alerta-registro {
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .alerta,
+[data-theme="dark"] .alerta-registro {
+    background-color: rgba(251, 191, 36, 0.2) !important;
+    color: #fcd34d !important;
+    border-color: rgba(251, 191, 36, 0.4) !important;
+}
+
+/* ===== BOTONES ===== */
+
+/* Mantener colores originales de botones */
+.btn-buscar,
+.btn-postular,
+.btn-detalle,
+.btn-volver {
+    color: white !important;
+}
+
+/* ===== SALARIOS ===== */
+
+.vacante-salario {
+    background-color: var(--bg-secondary);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border-left: 3px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .vacante-salario {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-left-color: #818cf8 !important;
+}
+
+[data-theme="dark"] .vacante-salario strong {
+    color: #818cf8 !important;
+}
+
+/* ===== SIN RESULTADOS ===== */
+
+.sin-resultados {
+    text-align: center;
+    padding: 3rem;
+}
+
+.sin-resultados h3 {
+    color: var(--text-heading) !important;
+    margin-bottom: 1rem;
+}
+
+/* ===== TRANSICIONES ===== */
+
+* {
+    transition: background-color 0.3s ease,
+        color 0.3s ease,
+        border-color 0.3s ease;
+}
+
+/* Evitar transiciones en elementos específicos */
+.navbar-toggle,
+.theme-toggle,
+button {
+    transition: transform 0.3s ease,
+        opacity 0.3s ease,
+        background-color 0.3s ease;
+}
+
+/* ===== CONTADOR DE VACANTES ===== */
+
+.contador-vacantes {
+    padding: 1rem;
+    background-color: var(--bg-card);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+[data-theme="dark"] .contador-vacantes {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* ===== TABLAS ===== */
+
+table {
+    background-color: var(--bg-card) !important;
+}
+
+th {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-heading) !important;
+}
+
+td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] table {
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] th {
+    background-color: #0f172a !important;
+}
+
+/* ===== BADGES ESTADOS ===== */
+
+.badge-abierta {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+}
+
+.badge-cerrada {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+}
+
+[data-theme="dark"] .badge-abierta {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #6ee7b7 !important;
+}
+
+[data-theme="dark"] .badge-cerrada {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+}

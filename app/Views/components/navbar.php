@@ -1,7 +1,7 @@
 <?php
 /**
  * Navbar Component
- * Barra de navegación moderna y responsive
+ * Barra de navegación moderna y responsive con Dark Mode
  */
 
 // Obtener la URL base de la configuración
@@ -32,29 +32,35 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
         --active-bg: rgba(255, 255, 255, 0.25);
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         
-        /* Variables para el body (modo claro) */
+        /* Variables para el body (modo claro) - MEJORADO */
         --bg-primary: #f8f9fa;
         --bg-secondary: #ffffff;
-        --text-primary: #212529;
-        --text-secondary: #6c757d;
-        --border-color: #dee2e6;
+        --bg-card: #ffffff;
+        --text-primary: #1a1a1a;        /* Más oscuro y legible */
+        --text-secondary: #4a5568;      /* Gris más oscuro */
+        --text-heading: #0f172a;        /* Casi negro para títulos */
+        --border-color: #e2e8f0;
+        --shadow-color: rgba(0, 0, 0, 0.08);
     }
 
-    /* Variables CSS - Modo Oscuro */
+    /* Variables CSS - Modo Oscuro - MEJORADO */
     [data-theme="dark"] {
-        --navbar-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        --navbar-bg: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         --text-white: #ffffff;
         --text-light: #e0e0e0;
         --hover-bg: rgba(255, 255, 255, 0.1);
         --active-bg: rgba(255, 255, 255, 0.2);
         
-        /* Variables para el body (modo oscuro) */
-        --bg-primary: #0f0f1e;
-        --bg-secondary: #1a1a2e;
-        --text-primary: #ffffff;
-        --text-secondary: #b0b0b0;
-        --border-color: #2d2d44;
+        /* Variables para el body (modo oscuro) - COLORES MEJORADOS */
+        --bg-primary: #0f172a;          /* Azul oscuro más suave */
+        --bg-secondary: #1e293b;        /* Azul gris medio */
+        --bg-card: #1e293b;             /* Azul gris para cards */
+        --text-primary: #f1f5f9;        /* Blanco casi puro */
+        --text-secondary: #94a3b8;      /* Gris azulado claro */
+        --text-heading: #ffffff;        /* Blanco puro para títulos */
+        --border-color: #334155;        /* Borde azul gris */
+        --shadow-color: rgba(0, 0, 0, 0.5);
     }
 
     /* Aplicar variables al body */
@@ -63,6 +69,203 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
         color: var(--text-primary);
         transition: background-color 0.3s ease, color 0.3s ease;
     }
+
+    /* ===== ESTILOS GLOBALES PARA DARK MODE ===== */
+    
+    /* Cards y contenedores */
+    .container,
+    .filtros,
+    .vacante-card,
+    .nav-top,
+    .vacante-container,
+    .postulaciones,
+    .card {
+        background-color: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Títulos principales */
+    h1, h2, h3, h4, h5, h6,
+    .vacante-titulo,
+    .header-vacantes h1,
+    .section-titulo,
+    .card-titulo,
+    .postulacion-info h3 {
+        color: var(--text-heading) !important;
+    }
+
+    /* Modo oscuro específico para títulos en tarjetas - MEJORADO */
+    [data-theme="dark"] .vacante-titulo,
+    [data-theme="dark"] .vacante-card .vacante-titulo,
+    [data-theme="dark"] .vacante-card h2,
+    [data-theme="dark"] .card-titulo,
+    [data-theme="dark"] h1,
+    [data-theme="dark"] h2,
+    [data-theme="dark"] h3 {
+        color: #ffffff !important;  /* Blanco puro para máximo contraste */
+    }
+    
+    /* Modo claro - asegurar buen contraste */
+    .vacante-titulo,
+    .vacante-card .vacante-titulo,
+    .card-titulo {
+        color: #0f172a !important;  /* Casi negro en modo claro */
+        font-weight: 700;
+    }
+
+    /* Texto secundario - MEJORADO */
+    p, span, label,
+    .vacante-descripcion,
+    .vacante-ubicacion,
+    .contador-vacantes,
+    .vacante-info,
+    .section-contenido,
+    .card-desc,
+    .postulacion-fecha {
+        color: var(--text-secondary) !important;
+    }
+    
+    /* Modo claro - texto más oscuro */
+    p, span, label {
+        color: #4a5568 !important;
+    }
+    
+    /* Modo oscuro - texto más claro */
+    [data-theme="dark"] p,
+    [data-theme="dark"] span:not(.navbar-link span),
+    [data-theme="dark"] label {
+        color: #cbd5e1 !important;
+    }
+
+    /* Inputs y selects */
+    .filtro-grupo input,
+    .filtro-grupo select,
+    input, select, textarea {
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--text-secondary) !important;
+        opacity: 0.7;
+    }
+
+    /* Empresas nombres - MEJORADO */
+    .vacante-empresa,
+    .postulacion-empresa {
+        color: #667eea !important;
+        font-weight: 600;
+    }
+
+    /* Más brillante y visible en modo oscuro */
+    [data-theme="dark"] .vacante-empresa,
+    [data-theme="dark"] .postulacion-empresa {
+        color: #818cf8 !important;  /* Índigo más brillante */
+    }
+
+    /* Badges - MEJORADO */
+    .badge {
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    /* Modo claro - badges con buen contraste */
+    .badge-modalidad {
+        background-color: #dbeafe !important;
+        color: #1e40af !important;
+    }
+    
+    /* Modo oscuro - badges más brillantes */
+    [data-theme="dark"] .badge {
+        background-color: rgba(99, 102, 241, 0.15) !important;
+        color: #a5b4fc !important;
+    }
+
+    [data-theme="dark"] .badge-modalidad,
+    [data-theme="dark"] .badge-estado {
+        background-color: rgba(99, 102, 241, 0.2) !important;
+        color: #c7d2fe !important;
+    }
+
+    /* Borders y sombras - MEJORADO */
+    .vacante-card,
+    .filtros,
+    .nav-top,
+    .card {
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px var(--shadow-color);
+        transition: all 0.3s ease;
+    }
+    
+    [data-theme="dark"] .vacante-card,
+    [data-theme="dark"] .filtros,
+    [data-theme="dark"] .nav-top,
+    [data-theme="dark"] .card {
+        border: 1px solid #334155 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    /* Hover effect mejorado */
+    .vacante-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    [data-theme="dark"] .vacante-card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+        border-color: #475569 !important;
+    }
+
+    /* Links */
+    a {
+        color: #667eea;
+        transition: color 0.3s ease;
+    }
+
+    [data-theme="dark"] a:not(.btn-detalle):not(.btn-postular):not(.btn-volver):not(.navbar-link) {
+        color: #96aaf9;
+    }
+
+    /* Hero sections */
+    [data-theme="dark"] .hero,
+    [data-theme="dark"] .header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+    }
+
+    /* Info items */
+    .info-item-label {
+        color: var(--text-secondary) !important;
+    }
+
+    .info-item-valor {
+        color: var(--text-heading) !important;
+    }
+
+    [data-theme="dark"] .info-item-valor {
+        color: #f3f4f6 !important;
+    }
+
+    /* Empresa info */
+    [data-theme="dark"] .empresa-info {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* Alertas */
+    [data-theme="dark"] .alerta,
+    [data-theme="dark"] .alerta-registro {
+        background-color: rgba(255, 193, 7, 0.2) !important;
+        color: #fbbf24 !important;
+    }
+
+    /* Header de vacantes */
+    .vacante-header {
+        border-bottom-color: var(--border-color) !important;
+    }
+
+    /* ===== NAVBAR STYLES ===== */
 
     /* Navbar Principal */
     .navbar {
@@ -139,13 +342,13 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
     .navbar-link:hover {
         background: var(--hover-bg);
         transform: translateY(-2px);
+        color: var(--text-white) !important;
     }
 
     .navbar-link.active {
         background: var(--active-bg);
     }
 
-    /* Icono en los links */
     .navbar-link i {
         font-size: 1.1rem;
     }
@@ -182,7 +385,7 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
         transform: rotate(-45deg) translate(8px, -8px);
     }
 
-    /* Botón de Tema (Dark/Light Mode) */
+    /* Botón de Tema */
     .theme-toggle {
         display: flex;
         align-items: center;
@@ -291,6 +494,11 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
         overflow: hidden;
     }
 
+    [data-theme="dark"] .navbar-dropdown {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+    }
+
     .navbar-user:hover .navbar-dropdown,
     .navbar-dropdown:hover {
         opacity: 1;
@@ -309,6 +517,11 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
         border-bottom: 1px solid #f0f0f0;
     }
 
+    [data-theme="dark"] .navbar-dropdown-item {
+        color: var(--text-primary);
+        border-bottom-color: var(--border-color);
+    }
+
     .navbar-dropdown-item:last-child {
         border-bottom: none;
     }
@@ -316,6 +529,11 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
     .navbar-dropdown-item:hover {
         background: #f8f9fa;
         color: #667eea;
+    }
+
+    [data-theme="dark"] .navbar-dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #96aaf9;
     }
 
     .navbar-dropdown-item i {
@@ -336,6 +554,7 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
     .navbar-cta:hover {
         transform: translateY(-2px) scale(1.05);
         box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+        color: #667eea !important;
     }
 
     /* Responsive */
@@ -497,20 +716,20 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
             <?php else: ?>
                 <!-- Usuario No Autenticado -->
                 <li class="navbar-item">
-                    <a href="<?= $baseUrl ?>/public/login.php" class="navbar-link">
+                    <a href="<?= $baseUrl ?>/auth/login-candidato" class="navbar-link">
                         <i>🔑</i>
                         <span>Iniciar Sesión</span>
                     </a>
                 </li>
                 <li class="navbar-item">
-                    <a href="<?= $baseUrl ?>/public/registro.php" class="navbar-link navbar-cta">
+                    <a href="<?= $baseUrl ?>/auth/registro-candidato" class="navbar-link navbar-cta">
                         <i>✨</i>
                         <span>Registrarse</span>
                     </a>
                 </li>
             <?php endif; ?>
 
-            <!-- Botón de Tema (siempre visible) -->
+            <!-- Botón de Tema -->
             <li class="navbar-item">
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
                     <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -533,7 +752,7 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
     </div>
 </nav>
 
-<!-- JavaScript para el menú móvil -->
+<!-- JavaScript -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const toggle = document.getElementById('navbarToggle');
@@ -545,7 +764,6 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
                 menu.classList.toggle('active');
             });
 
-            // Cerrar menú al hacer clic en un enlace (móvil)
             const links = menu.querySelectorAll('.navbar-link');
             links.forEach(link => {
                 link.addEventListener('click', function() {
@@ -556,7 +774,6 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
                 });
             });
 
-            // Cerrar menú al hacer clic fuera
             document.addEventListener('click', function(event) {
                 const isClickInsideNav = event.target.closest('.navbar-container');
                 if (!isClickInsideNav && menu.classList.contains('active')) {
@@ -566,7 +783,6 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
             });
         }
 
-        // Marcar enlace activo según la URL actual
         const currentPath = window.location.pathname;
         const navLinks = document.querySelectorAll('.navbar-link');
         
@@ -576,19 +792,16 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
             }
         });
 
-        // Funcionalidad del Theme Toggle (Dark/Light Mode)
+        // Theme Toggle
         const themeToggle = document.getElementById('themeToggle');
         const html = document.documentElement;
         
-        // Cargar tema guardado o detectar preferencia del sistema
         const savedTheme = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light');
         
-        // Aplicar tema inicial
         html.setAttribute('data-theme', currentTheme);
         
-        // Event listener para cambiar tema
         if (themeToggle) {
             themeToggle.addEventListener('click', function() {
                 const currentTheme = html.getAttribute('data-theme');
@@ -597,7 +810,6 @@ $userRole = $isLoggedIn ? ($_SESSION['user_role'] ?? '') : '';
                 html.setAttribute('data-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
                 
-                // Animación del botón
                 this.style.transform = 'scale(0.9) rotate(180deg)';
                 setTimeout(() => {
                     this.style.transform = '';

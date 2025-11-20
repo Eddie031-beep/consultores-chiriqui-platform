@@ -9,6 +9,7 @@ $isAuthenticated = isset($_SESSION['user']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($vacante['titulo']) ?> | Consultores Chiriquí</title>
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/global-dark-mode.css">
     <style>
         * {
             margin: 0;
