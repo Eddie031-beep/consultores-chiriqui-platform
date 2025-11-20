@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/database.php';
 
 try {
-    // Nos conectamos a la réplica (Ubuntu)
+    // Conectamos a la réplica (Ubuntu)
     $pdo = db_connect('replica');
 
     $stmt = $pdo->query("SELECT COUNT(*) AS total_vacantes FROM vacantes");
