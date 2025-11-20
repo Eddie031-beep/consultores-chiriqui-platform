@@ -1,12 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Si estás en la carpeta public, la base es la propia carpeta.
-    # Puede que tengas que probar quitando o dejando la línea de RewriteBase.
-    # Prueba PRIMERO sin esta línea:
-    # RewriteBase /ExamenFinalDS4/consultores-chiriqui-platform/public/
     
-    # Redirige todas las peticiones al archivo index.php, excepto archivos/directorios
+    # No redirigir archivos ni directorios existentes
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ index.php/$1 [L]
+    
+    # Redirigir todo lo demás a index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>

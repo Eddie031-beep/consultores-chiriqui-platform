@@ -588,6 +588,10 @@
                 const userType = this.dataset.tab;
                 userTypeInput.value = userType;
                 
+                // Update form action dynamically
+                const baseUrl = '<?= ENV_APP['BASE_URL'] ?>';
+                registerForm.action = `${baseUrl}/auth/registro-${userType}`;
+                
                 if (userType === 'empresa') {
                     empresaFields.style.display = 'block';
                     lastNameGroup.style.display = 'none';
@@ -605,6 +609,11 @@
                 }
             });
         });
+        
+        // Set initial action
+        const initialUserType = userTypeInput.value;
+        const baseUrl = '<?= ENV_APP['BASE_URL'] ?>';
+        registerForm.action = `${baseUrl}/auth/registro-${initialUserType}`;
 
         // Password Strength
         const passwordInput = document.getElementById('password');

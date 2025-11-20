@@ -516,10 +516,19 @@
                 const userType = this.dataset.tab;
                 userTypeInput.value = userType;
                 
+                // Update form action dynamically
+                const baseUrl = '<?= ENV_APP['BASE_URL'] ?>';
+                loginForm.action = `${baseUrl}/auth/login-${userType}`;
+                
                 // Update register link
-                registerLink.href = `<?= ENV_APP['BASE_URL'] ?>/registro/${userType}`;
+                registerLink.href = `${baseUrl}/registro.php?rol=${userType}`;
             });
         });
+        
+        // Set initial action
+        const initialUserType = userTypeInput.value;
+        const baseUrl = '<?= ENV_APP['BASE_URL'] ?>';
+        loginForm.action = `${baseUrl}/auth/login-${initialUserType}`;
 
         // Form submission with loading state
         const loginForm = document.getElementById('loginForm');
