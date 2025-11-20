@@ -1,35 +1,37 @@
 <?php
-// public/index.php
-declare(strict_types=1);
-session_start();
+/**
+ * Punto de entrada principal de la aplicación
+ * Consultores Chiriquí Platform
+ */
 
-// Autoloader súper simple para cargar clases de App\...
-spl_autoload_register(function (string $class) {
-    $prefix = 'App\\';
-    $baseDir = __DIR__ . '/../app/';
-
-    if (str_starts_with($class, $prefix)) {
-        $relative = substr($class, strlen($prefix));
-        $file = $baseDir . str_replace('\\', '/', $relative) . '.php';
-
-        if (file_exists($file)) {
-            require_once $file;
-        }
-    }
-});
-
+// Cargar configuraciones
 require_once __DIR__ . '/../config/env.php';
 require_once __DIR__ . '/../config/database.php';
 
-use App\Core\Router;
+// Iniciar sesión
+session_start();
 
-// BASE_PATH debe coincidir con la ruta pública en Apache
-$basePath = '/ExamenFinalDS4/consultores-chiriqui-platform/public';
+// Autoloader de clases
+spl_autoload_register(function ($class) {
+    $prefix = 'App\\';
+    $base_dir = __DIR__ . '/../app/';
 
-$router = new Router($basePath);
+    if (strpos($class, $prefix) !== 0) {
+        return;
+    }
 
-// Cargar definición de rutas
-require __DIR__ . '/../config/routes.php';
+    $relative_class = substr($class, strlen($prefix));
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
 
-// Despachar la petición actual
-$router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+    if (file_exists($file)) {
+        require $file;
+    }
+});
+
+// Cargar y ejecutar router
+try {
+    require_once __DIR__ . '/../config/routes.php';
+} catch (Exception $e) {
+    header("HTTP/1.1 500 Internal Server Error");
+    die("Error: " . $e->getMessage());
+}

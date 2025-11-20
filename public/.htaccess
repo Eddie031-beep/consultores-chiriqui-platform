@@ -1,15 +1,20 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /
+    RewriteBase /ExamenFinalDS4/consultores-chiriqui-platform/
     
     # Permitir acceso a archivos y directorios existentes
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     
-    # Redirigir raíz a vacantes públicas
-    RewriteRule ^$ public/vacantes.php [L]
+    # Redirigir raíz a public/index.php
+    RewriteRule ^$ public/index.php [L]
     
-    # Redirigir /vacantes a public/vacantes.php
-    RewriteRule ^vacantes/?$ public/vacantes.php [L]
-    RewriteRule ^vacantes/(.+)/?$ public/vacante-detalle.php?slug=$1 [L]
+    # Redirigir todo lo demás a public/index.php
+    RewriteRule ^(.+)$ public/index.php [L]
 </IfModule>
+
+# Desactivar listado de directorios
+<FilesMatch "^$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
