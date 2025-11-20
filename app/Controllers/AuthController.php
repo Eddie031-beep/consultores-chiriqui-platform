@@ -14,64 +14,84 @@ class AuthController extends Controller
         $this->db = db_connect('local');
     }
 
-    // ============ PÁGINA INICIAL DE SELECCIÓN ============
+    // ============ PÁGINA INICIAL - MODAL DE SELECCIÓN ============
     public function index(): void
     {
+        // Si ya está autenticado, redirigir al dashboard correspondiente
         if (Auth::check()) {
-            $user = Auth::user();
-            if ($user['rol'] === 'admin_consultora') {
-                header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/dashboard');
-            } elseif ($user['rol'] === 'empresa_admin') {
-                header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
-            } elseif ($user['rol'] === 'candidato') {
-                header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/dashboard');
-            }
-            exit;
-        }
-
-        $this->view('auth/index');
-    }
-
-    // ============ LOGIN CANDIDATO ============
-    public function showLoginCandidato(): void
-    {
-        if (Auth::check()) {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/dashboard');
-            exit;
-        }
-
-        $vacante_id = $_GET['vacante_id'] ?? '';
-        $this->view('auth/login-candidato', compact('vacante_id'));
-    }
-
-    public function loginCandidato(): void
-    {
-        $email = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $error = '';
-
-        if (empty($email) || empty($password)) {
-            $error = 'Por favor completa todos los campos';
-            $this->view('auth/login-candidato', compact('error', 'email'));
+            $this->redirectToDashboard();
             return;
         }
 
+        // Mostrar el modal de selección
+        include __DIR__ . '/../Views/auth/index.php';
+    }
+
+    // ============ MOSTRAR LOGIN UNIFICADO ============
+    public function showLogin(): void
+    {
+        if (Auth::check()) {
+            $this->redirectToDashboard();
+            return;
+        }
+
+        $tipo = $_GET['tipo'] ?? 'persona';
+        $error = $_SESSION['error'] ?? '';
+        $email = $_SESSION['email'] ?? '';
+        
+        unset($_SESSION['error'], $_SESSION['email']);
+
+        include __DIR__ . '/../Views/auth/login-unificado.php';
+    }
+
+    // ============ PROCESAR LOGIN UNIFICADO ============
+    public function processLogin(): void
+    {
+        $tipo = $_POST['tipo'] ?? $_GET['tipo'] ?? 'persona';
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        // Validaciones
+        if (empty($email) || empty($password)) {
+            $_SESSION['error'] = 'Por favor completa todos los campos';
+            $_SESSION['email'] = $email;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/login?tipo=' . $tipo);
+            exit;
+        }
+
+        // Login según tipo
+        if ($tipo === 'persona') {
+            $this->loginPersona($email, $password);
+        } elseif ($tipo === 'empresa') {
+            $this->loginEmpresa($email, $password);
+        } elseif ($tipo === 'consultora') {
+            $this->loginConsultora($email, $password);
+        } else {
+            $_SESSION['error'] = 'Tipo de usuario inválido';
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth');
+            exit;
+        }
+    }
+
+    private function loginPersona($email, $password): void
+    {
         $sql = "SELECT * FROM solicitantes WHERE email = ? AND estado = 'activo'";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$email]);
         $solicitante = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$solicitante || !password_verify($password, $solicitante['password_hash'])) {
-            $error = 'Email o contraseña incorrectos';
-            $this->view('auth/login-candidato', compact('error', 'email'));
-            return;
+            $_SESSION['error'] = 'Email o contraseña incorrectos';
+            $_SESSION['email'] = $email;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/login?tipo=persona');
+            exit;
         }
 
         // Actualizar último login
         $updateStmt = $this->db->prepare('UPDATE solicitantes SET ultimo_login = NOW() WHERE id = ?');
         $updateStmt->execute([$solicitante['id']]);
 
-        // Crear sesión personalizada para candidatos
+        // Crear sesión
         $_SESSION['user'] = [
             'id' => $solicitante['id'],
             'nombre' => $solicitante['nombre'],
@@ -81,28 +101,104 @@ class AuthController extends Controller
             'rol_nombre' => 'candidato'
         ];
 
-        // Redirigir a vacante si viene de postulación
-        if (isset($_GET['vacante_id']) && !empty($_GET['vacante_id'])) {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/postular/' . intval($_GET['vacante_id']));
-        } else {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/dashboard');
-        }
+        header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/dashboard');
         exit;
     }
 
-    // ============ REGISTRO CANDIDATO ============
-    public function showRegistroCandidato(): void
+    private function loginEmpresa($email, $password): void
     {
-        if (Auth::check()) {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/dashboard');
+        $sql = "
+            SELECT u.*, r.nombre AS rol_nombre, e.nombre as empresa_nombre
+            FROM usuarios u
+            JOIN roles r ON r.id = u.rol_id
+            JOIN empresas e ON e.id = u.empresa_id
+            WHERE u.email = ? AND r.nombre = 'empresa_admin' AND u.estado = 'activo'
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user || !password_verify($password, $user['password_hash'])) {
+            $_SESSION['error'] = 'Email o contraseña incorrectos';
+            $_SESSION['email'] = $email;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/login?tipo=empresa');
             exit;
         }
 
-        $vacante_id = $_GET['vacante_id'] ?? '';
-        $this->view('auth/registro-candidato', compact('vacante_id'));
+        // Actualizar último login
+        $updateStmt = $this->db->prepare('UPDATE usuarios SET ultimo_login = NOW() WHERE id = ?');
+        $updateStmt->execute([$user['id']]);
+
+        // Crear sesión
+        Auth::login($user);
+
+        header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
+        exit;
     }
 
-    public function registroCandidato(): void
+    private function loginConsultora($email, $password): void
+    {
+        $sql = "
+            SELECT u.*, r.nombre AS rol_nombre
+            FROM usuarios u
+            JOIN roles r ON r.id = u.rol_id
+            WHERE u.email = ? AND r.nombre = 'admin_consultora' AND u.estado = 'activo'
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user || !password_verify($password, $user['password_hash'])) {
+            $_SESSION['error'] = 'Email o contraseña incorrectos';
+            $_SESSION['email'] = $email;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/login?tipo=consultora');
+            exit;
+        }
+
+        // Actualizar último login
+        $updateStmt = $this->db->prepare('UPDATE usuarios SET ultimo_login = NOW() WHERE id = ?');
+        $updateStmt->execute([$user['id']]);
+
+        Auth::login($user);
+
+        header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/dashboard');
+        exit;
+    }
+
+    // ============ MOSTRAR REGISTRO UNIFICADO ============
+    public function showRegistro(): void
+    {
+        if (Auth::check()) {
+            $this->redirectToDashboard();
+            return;
+        }
+
+        $tipo = $_GET['tipo'] ?? 'persona';
+        $error = $_SESSION['error'] ?? '';
+        $form_data = $_SESSION['form_data'] ?? [];
+        
+        unset($_SESSION['error'], $_SESSION['form_data']);
+
+        include __DIR__ . '/../Views/auth/registro-unificado.php';
+    }
+
+    // ============ PROCESAR REGISTRO UNIFICADO ============
+    public function processRegistro(): void
+    {
+        $tipo = $_POST['tipo'] ?? $_GET['tipo'] ?? 'persona';
+
+        if ($tipo === 'persona') {
+            $this->registroPersona();
+        } elseif ($tipo === 'empresa') {
+            $this->registroEmpresa();
+        } else {
+            $_SESSION['error'] = 'Tipo de registro inválido';
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth');
+            exit;
+        }
+    }
+
+    private function registroPersona(): void
     {
         $form_data = [
             'nombre' => trim($_POST['nombre'] ?? ''),
@@ -114,37 +210,23 @@ class AuthController extends Controller
             'password_confirm' => $_POST['password_confirm'] ?? ''
         ];
 
-        $error = '';
-
         // Validaciones
-        if (empty($form_data['nombre'])) {
-            $error = 'El nombre es requerido';
-        } elseif (empty($form_data['apellido'])) {
-            $error = 'El apellido es requerido';
-        } elseif (empty($form_data['email'])) {
-            $error = 'El email es requerido';
-        } elseif (!filter_var($form_data['email'], FILTER_VALIDATE_EMAIL)) {
-            $error = 'Email inválido';
-        } elseif (empty($form_data['password'])) {
-            $error = 'La contraseña es requerida';
-        } elseif (strlen($form_data['password']) < 6) {
-            $error = 'La contraseña debe tener mínimo 6 caracteres';
-        } elseif ($form_data['password'] !== $form_data['password_confirm']) {
-            $error = 'Las contraseñas no coinciden';
-        }
-
-        if (!empty($error)) {
-            $this->view('auth/registro-candidato', compact('error', 'form_data'));
-            return;
+        $error = $this->validatePersonaData($form_data);
+        if ($error) {
+            $_SESSION['error'] = $error;
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=persona');
+            exit;
         }
 
         // Verificar si email ya existe
         $checkStmt = $this->db->prepare('SELECT id FROM solicitantes WHERE email = ?');
         $checkStmt->execute([$form_data['email']]);
         if ($checkStmt->fetch()) {
-            $error = 'Este email ya está registrado';
-            $this->view('auth/registro-candidato', compact('error', 'form_data'));
-            return;
+            $_SESSION['error'] = 'Este email ya está registrado';
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=persona');
+            exit;
         }
 
         // Insertar nuevo solicitante
@@ -175,82 +257,17 @@ class AuthController extends Controller
                 'rol_nombre' => 'candidato'
             ];
 
-            // Redirigir a vacante si viene desde postulación
-            if (isset($_GET['vacante_id']) && !empty($_GET['vacante_id'])) {
-                header('Location: ' . ENV_APP['BASE_URL'] . '/postular/' . intval($_GET['vacante_id']));
-            } else {
-                header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/dashboard');
-            }
+            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/dashboard');
             exit;
         } catch (\PDOException $e) {
-            $error = 'Error al registrar: ' . $e->getMessage();
-            $this->view('auth/registro-candidato', compact('error', 'form_data'));
-        }
-    }
-
-    // ============ LOGIN EMPRESA ============
-    public function showLoginEmpresa(): void
-    {
-        if (Auth::check()) {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
+            $_SESSION['error'] = 'Error al registrar: ' . $e->getMessage();
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=persona');
             exit;
         }
-
-        $this->view('auth/login-empresa');
     }
 
-    public function loginEmpresa(): void
-    {
-        $email = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $error = '';
-
-        if (empty($email) || empty($password)) {
-            $error = 'Por favor completa todos los campos';
-            $this->view('auth/login-empresa', compact('error', 'email'));
-            return;
-        }
-
-        $sql = "
-            SELECT u.*, r.nombre AS rol_nombre, e.nombre as empresa_nombre
-            FROM usuarios u
-            JOIN roles r ON r.id = u.rol_id
-            JOIN empresas e ON e.id = u.empresa_id
-            WHERE u.email = ? AND r.nombre = 'empresa_admin' AND u.estado = 'activo'
-        ";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$user || !password_verify($password, $user['password_hash'])) {
-            $error = 'Email o contraseña incorrectos';
-            $this->view('auth/login-empresa', compact('error', 'email'));
-            return;
-        }
-
-        // Actualizar último login
-        $updateStmt = $this->db->prepare('UPDATE usuarios SET ultimo_login = NOW() WHERE id = ?');
-        $updateStmt->execute([$user['id']]);
-
-        // Crear sesión
-        Auth::login($user);
-
-        header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
-        exit;
-    }
-
-    // ============ REGISTRO EMPRESA ============
-    public function showRegistroEmpresa(): void
-    {
-        if (Auth::check()) {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
-            exit;
-        }
-
-        $this->view('auth/registro-empresa');
-    }
-
-    public function registroEmpresa(): void
+    private function registroEmpresa(): void
     {
         $form_data = [
             'nombre_empresa' => trim($_POST['nombre_empresa'] ?? ''),
@@ -267,57 +284,35 @@ class AuthController extends Controller
             'email_usuario' => trim($_POST['email_usuario'] ?? ''),
             'password' => $_POST['password'] ?? '',
             'password_confirm' => $_POST['password_confirm'] ?? '',
-            'tipo' => $_POST['tipo'] ?? 'privada'
+            'tipo' => $_POST['tipo_empresa'] ?? 'privada'
         ];
 
-        $error = '';
-
         // Validaciones
-        if (empty($form_data['nombre_empresa'])) {
-            $error = 'El nombre de la empresa es requerido';
-        } elseif (empty($form_data['ruc'])) {
-            $error = 'El RUC es requerido';
-        } elseif (empty($form_data['direccion'])) {
-            $error = 'La dirección es requerida';
-        } elseif (empty($form_data['provincia'])) {
-            $error = 'La provincia es requerida';
-        } elseif (empty($form_data['nombre_usuario'])) {
-            $error = 'El nombre del usuario es requerido';
-        } elseif (empty($form_data['apellido_usuario'])) {
-            $error = 'El apellido del usuario es requerido';
-        } elseif (empty($form_data['email_usuario'])) {
-            $error = 'El email es requerido';
-        } elseif (!filter_var($form_data['email_usuario'], FILTER_VALIDATE_EMAIL)) {
-            $error = 'Email inválido';
-        } elseif (empty($form_data['password'])) {
-            $error = 'La contraseña es requerida';
-        } elseif (strlen($form_data['password']) < 6) {
-            $error = 'La contraseña debe tener mínimo 6 caracteres';
-        } elseif ($form_data['password'] !== $form_data['password_confirm']) {
-            $error = 'Las contraseñas no coinciden';
+        $error = $this->validateEmpresaData($form_data);
+        if ($error) {
+            $_SESSION['error'] = $error;
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=empresa');
+            exit;
         }
 
-        if (!empty($error)) {
-            $this->view('auth/registro-empresa', compact('error', 'form_data'));
-            return;
-        }
-
-        // Verificar si RUC existe
+        // Verificar duplicados
         $checkRuc = $this->db->prepare('SELECT id FROM empresas WHERE ruc = ?');
         $checkRuc->execute([$form_data['ruc']]);
         if ($checkRuc->fetch()) {
-            $error = 'Este RUC ya está registrado';
-            $this->view('auth/registro-empresa', compact('error', 'form_data'));
-            return;
+            $_SESSION['error'] = 'Este RUC ya está registrado';
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=empresa');
+            exit;
         }
 
-        // Verificar si email existe
         $checkEmail = $this->db->prepare('SELECT id FROM usuarios WHERE email = ?');
         $checkEmail->execute([$form_data['email_usuario']]);
         if ($checkEmail->fetch()) {
-            $error = 'Este email ya está registrado';
-            $this->view('auth/registro-empresa', compact('error', 'form_data'));
-            return;
+            $_SESSION['error'] = 'Este email ya está registrado';
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=empresa');
+            exit;
         }
 
         // Iniciar transacción
@@ -373,58 +368,40 @@ class AuthController extends Controller
             exit;
         } catch (\PDOException $e) {
             $this->db->rollBack();
-            $error = 'Error al registrar la empresa: ' . $e->getMessage();
-            $this->view('auth/registro-empresa', compact('error', 'form_data'));
-        }
-    }
-
-    // ============ LOGIN CONSULTORA ============
-    public function showLoginConsultora(): void
-    {
-        if (Auth::check()) {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/dashboard');
+            $_SESSION['error'] = 'Error al registrar la empresa: ' . $e->getMessage();
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=empresa');
             exit;
         }
-
-        $this->view('auth/login-consultora');
     }
 
-    public function loginConsultora(): void
+    // ============ VALIDACIONES ============
+    private function validatePersonaData($data): ?string
     {
-        $email = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $error = '';
+        if (empty($data['nombre'])) return 'El nombre es requerido';
+        if (empty($data['apellido'])) return 'El apellido es requerido';
+        if (empty($data['email'])) return 'El email es requerido';
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) return 'Email inválido';
+        if (empty($data['password'])) return 'La contraseña es requerida';
+        if (strlen($data['password']) < 6) return 'La contraseña debe tener mínimo 6 caracteres';
+        if ($data['password'] !== $data['password_confirm']) return 'Las contraseñas no coinciden';
+        return null;
+    }
 
-        if (empty($email) || empty($password)) {
-            $error = 'Por favor completa todos los campos';
-            $this->view('auth/login-consultora', compact('error', 'email'));
-            return;
-        }
-
-        $sql = "
-            SELECT u.*, r.nombre AS rol_nombre
-            FROM usuarios u
-            JOIN roles r ON r.id = u.rol_id
-            WHERE u.email = ? AND r.nombre = 'admin_consultora' AND u.estado = 'activo'
-        ";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$user || !password_verify($password, $user['password_hash'])) {
-            $error = 'Email o contraseña incorrectos';
-            $this->view('auth/login-consultora', compact('error', 'email'));
-            return;
-        }
-
-        // Actualizar último login
-        $updateStmt = $this->db->prepare('UPDATE usuarios SET ultimo_login = NOW() WHERE id = ?');
-        $updateStmt->execute([$user['id']]);
-
-        Auth::login($user);
-
-        header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/dashboard');
-        exit;
+    private function validateEmpresaData($data): ?string
+    {
+        if (empty($data['nombre_empresa'])) return 'El nombre de la empresa es requerido';
+        if (empty($data['ruc'])) return 'El RUC es requerido';
+        if (empty($data['direccion'])) return 'La dirección es requerida';
+        if (empty($data['provincia'])) return 'La provincia es requerida';
+        if (empty($data['nombre_usuario'])) return 'El nombre del usuario es requerido';
+        if (empty($data['apellido_usuario'])) return 'El apellido del usuario es requerido';
+        if (empty($data['email_usuario'])) return 'El email es requerido';
+        if (!filter_var($data['email_usuario'], FILTER_VALIDATE_EMAIL)) return 'Email inválido';
+        if (empty($data['password'])) return 'La contraseña es requerida';
+        if (strlen($data['password']) < 6) return 'La contraseña debe tener mínimo 6 caracteres';
+        if ($data['password'] !== $data['password_confirm']) return 'Las contraseñas no coinciden';
+        return null;
     }
 
     // ============ LOGOUT ============
@@ -432,6 +409,24 @@ class AuthController extends Controller
     {
         Auth::logout();
         header('Location: ' . ENV_APP['BASE_URL'] . '/');
+        exit;
+    }
+
+    // ============ HELPER ============
+    private function redirectToDashboard(): void
+    {
+        $user = Auth::user();
+        $rol = $user['rol'] ?? $user['rol_nombre'] ?? '';
+
+        if ($rol === 'admin_consultora') {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/dashboard');
+        } elseif ($rol === 'empresa_admin') {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
+        } elseif ($rol === 'candidato') {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/dashboard');
+        } else {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/');
+        }
         exit;
     }
 }
