@@ -8,11 +8,12 @@
     <h1>Dashboard Empresa</h1>
     <p>Bienvenido, <?= htmlspecialchars($user['nombre'] . ' ' . $user['apellido']) ?> (<?= htmlspecialchars($user['email']) ?>)</p>
 
-    <ul>
-        <li>Administrar vacantes de la empresa</li>
-        <li>Ver interacciones generadas por el chatbot</li>
-        <li>Consultar facturas emitidas</li>
-    </ul>
+<ul>
+    <li><a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes" style="color:#38bdf8;">Administrar vacantes de la empresa</a></li>
+    <li>Ver interacciones generadas por el chatbot</li>
+    <li>Consultar facturas emitidas</li>
+</ul>
+
 
     <p>
         <a href="<?= ENV_APP['BASE_URL'] ?>/logout" style="color:#f97316;">Cerrar sesión</a>

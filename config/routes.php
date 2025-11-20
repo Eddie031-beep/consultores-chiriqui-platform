@@ -22,3 +22,13 @@ $router->get('/logout', 'AuthController@logout');
 // Dashboards
 $router->get('/consultora/dashboard', 'DashboardController@consultora');
 $router->get('/empresa/dashboard', 'DashboardController@empresa');
+
+// ========================
+// Rutas módulo VACANTES (empresa)
+// ========================
+$router->get('/empresa/vacantes', 'VacanteController@index');
+$router->get('/empresa/vacantes/nueva', 'VacanteController@create');
+$router->post('/empresa/vacantes/nueva', 'VacanteController@store');
+$router->get('/empresa/vacantes/editar', 'VacanteController@edit');
+$router->post('/empresa/vacantes/editar', 'VacanteController@update');
+$router->post('/empresa/vacantes/cerrar', 'VacanteController@close');

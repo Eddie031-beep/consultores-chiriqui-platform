@@ -18,4 +18,16 @@ class Controller
 
         require $file;
     }
+
+    /**
+     * Redirección sencilla relativa a BASE_URL
+     * Ejemplo: redirect('/empresa/vacantes');
+     */
+    protected function redirect(string $path = '/'): void
+    {
+        $base = ENV_APP['BASE_URL'];
+        $path = '/' . ltrim($path, '/');
+        header("Location: {$base}{$path}");
+        exit;
+    }
 }
