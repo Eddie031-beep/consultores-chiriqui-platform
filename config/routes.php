@@ -24,6 +24,7 @@ $routes = [
         '/candidato/dashboard' => 'CandidatoController@dashboard',
         '/candidato/postulaciones' => 'CandidatoController@postulaciones',
         '/candidato/perfil' => 'CandidatoController@perfil',
+        '/candidato/postular/(?P<vacante_id>\d+)' => 'CandidatoController@postular', // Permitir GET para procesar postulación tras redirección
         
         // Dashboard Empresa
         '/empresa/dashboard' => 'EmpresaController@dashboard',

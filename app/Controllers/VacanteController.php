@@ -114,8 +114,8 @@ class VacanteController extends Controller
             exit;
         }
 
-        // Sino, redirigir a registro/login
-        header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro-candidato?vacante_id=' . $vacante_id);
+        // Sino, redirigir a registro/login unificado
+        header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=candidato&vacante_id=' . $vacante_id);
         exit;
     }
 }

@@ -244,9 +244,23 @@ $isAuthenticated = isset($_SESSION['user']);
                     <?php endif; ?>
 
                     <div class="info-item">
-                        <span>📅</span>
+                        <span>�</span>
                         <div class="info-item-valor"><?= date('d/m/Y', strtotime($vacante['fecha_publicacion'])) ?></div>
                     </div>
+
+                    <?php if (isset($vacante['cantidad_plazas']) && $vacante['cantidad_plazas'] > 0): ?>
+                        <div class="info-item">
+                            <span>👥</span>
+                            <div class="info-item-valor"><?= $vacante['cantidad_plazas'] ?> Vacante(s) disponible(s)</div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (isset($vacante['estado']) && $vacante['estado'] !== 'abierta'): ?>
+                        <div class="info-item">
+                            <span>🔒</span>
+                            <div class="info-item-valor" style="color: #e74c3c;">Convocatoria Cerrada</div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -292,7 +306,12 @@ $isAuthenticated = isset($_SESSION['user']);
             <!-- Acciones -->
             <div class="acciones">
                 <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes" class="btn-volver">← Volver al Listado</a>
-                <a href="<?= ENV_APP['BASE_URL'] ?>/postular/<?= $vacante['id'] ?>" class="btn-postular">✓ Postularme</a>
+                
+                <?php if (isset($vacante['estado']) && $vacante['estado'] !== 'abierta'): ?>
+                    <button class="btn-postular" style="background: #ccc; cursor: not-allowed;" disabled>🔒 Convocatoria Cerrada</button>
+                <?php else: ?>
+                    <a href="<?= ENV_APP['BASE_URL'] ?>/postular/<?= $vacante['id'] ?>" class="btn-postular">✓ Postularme</a>
+                <?php endif; ?>
             </div>
         </div>
     </div>

@@ -65,33 +65,53 @@ class CandidatoController extends Controller
         $user = Auth::user();
         $vacante_id = (int)$vacante_id;
 
-        // Verificar que la vacante existe
-        $stmt = $this->db->prepare("SELECT id FROM vacantes WHERE id = ? AND estado = 'abierta'");
+        // 1. Verificar que la vacante existe y está abierta
+        $stmt = $this->db->prepare("SELECT id, titulo, cantidad_plazas FROM vacantes WHERE id = ? AND estado = 'abierta'");
         $stmt->execute([$vacante_id]);
-        if (!$stmt->fetch()) {
+        $vacante = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$vacante) {
+            $_SESSION['message'] = ['type' => 'error', 'text' => 'Esta vacante ya no está disponible o ha sido cerrada.'];
             header('Location: ' . ENV_APP['BASE_URL'] . '/vacantes');
             exit;
         }
 
-        // Verificar si ya se postuló
+        // 2. Verificar límite de cupos (si existe la columna cantidad_plazas)
+        if (isset($vacante['cantidad_plazas']) && $vacante['cantidad_plazas'] > 0) {
+            $countStmt = $this->db->prepare("SELECT COUNT(*) as total FROM postulaciones WHERE vacante_id = ? AND estado = 'aceptado'");
+            $countStmt->execute([$vacante_id]);
+            $aceptados = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+            if ($aceptados >= $vacante['cantidad_plazas']) {
+                // Cerrar vacante automáticamente si se llenó
+                $closeStmt = $this->db->prepare("UPDATE vacantes SET estado = 'cerrada' WHERE id = ?");
+                $closeStmt->execute([$vacante_id]);
+
+                $_SESSION['message'] = ['type' => 'error', 'text' => 'Lo sentimos, las vacantes para este puesto ya han sido cubiertas.'];
+                header('Location: ' . ENV_APP['BASE_URL'] . '/vacantes/' . $vacante_id);
+                exit;
+            }
+        }
+
+        // 3. Verificar si ya se postuló
         $checkStmt = $this->db->prepare("
             SELECT id FROM postulaciones WHERE solicitante_id = ? AND vacante_id = ?
         ");
         $checkStmt->execute([$user['id'], $vacante_id]);
         if ($checkStmt->fetch()) {
-            $_SESSION['message'] = ['type' => 'warning', 'text' => 'Ya te has postulado a esta vacante'];
-            header('Location: ' . ENV_APP['BASE_URL'] . '/vacantes/' . $vacante_id);
+            $_SESSION['message'] = ['type' => 'warning', 'text' => 'Ya te has postulado a esta vacante anteriormente.'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/postulaciones');
             exit;
         }
 
-        // Crear postulación
+        // 4. Crear postulación
         $postStmt = $this->db->prepare("
-            INSERT INTO postulaciones (solicitante_id, vacante_id, estado)
-            VALUES (?, ?, 'pendiente')
+            INSERT INTO postulaciones (solicitante_id, vacante_id, estado, fecha_postulacion)
+            VALUES (?, ?, 'pendiente', NOW())
         ");
         $postStmt->execute([$user['id'], $vacante_id]);
 
-        $_SESSION['message'] = ['type' => 'success', 'text' => '¡Postulación enviada exitosamente!'];
+        $_SESSION['message'] = ['type' => 'success', 'text' => '¡Postulación enviada exitosamente! La empresa revisará tu perfil.'];
         header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/postulaciones');
         exit;
     }
