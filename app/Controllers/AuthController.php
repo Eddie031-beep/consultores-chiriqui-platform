@@ -257,7 +257,7 @@ class AuthController extends Controller
                 'rol_nombre' => 'candidato'
             ];
 
-            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/dashboard');
+            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/opciones-perfil');
             exit;
         } catch (\PDOException $e) {
             $_SESSION['error'] = 'Error al registrar: ' . $e->getMessage();

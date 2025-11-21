@@ -25,7 +25,9 @@ $routes = [
         '/candidato/postulaciones' => 'CandidatoController@postulaciones',
         '/candidato/perfil' => 'CandidatoController@perfil',
         '/candidato/postular/(?P<vacante_id>\d+)' => 'CandidatoController@postular', // Permitir GET para procesar postulación tras redirección
-        
+        '/candidato/opciones-perfil' => 'CandidatoController@opcionesPerfil',
+        '/candidato/perfil-manual' => 'CandidatoController@perfilManual',
+
         // Dashboard Empresa
         '/empresa/dashboard' => 'EmpresaController@dashboard',
         '/empresa/vacantes' => 'EmpresaController@vacantes',
@@ -57,6 +59,8 @@ $routes = [
         // Candidato
         '/candidato/postular/(?P<vacante_id>\d+)' => 'CandidatoController@postular',
         '/candidato/perfil' => 'CandidatoController@perfil',
+        '/candidato/subir-cv' => 'CandidatoController@subirCV',
+        '/candidato/guardar-manual' => 'CandidatoController@guardarManual',
         
         // Empresa
         '/empresa/vacantes/crear' => 'EmpresaController@storeVacante',
