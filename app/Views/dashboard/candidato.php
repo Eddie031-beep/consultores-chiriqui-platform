@@ -139,23 +139,49 @@ $postulaciones = $postulaciones ?? [];
 
         .btn-explorar {
             display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            padding: 12px 25px;
+            border-radius: 50px;
             text-decoration: none;
             margin-top: 20px;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .btn-explorar:hover {
-            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        /* Mejoras para modo oscuro en textos */
+        [data-theme="dark"] .card-titulo {
+            color: #cbd5e1;
+        }
+        
+        [data-theme="dark"] .postulaciones h2 {
+            color: #fff;
+        }
+
+        [data-theme="dark"] .postulacion-item {
+            border-bottom-color: #334155;
+        }
+
+        [data-theme="dark"] .postulacion-info h3 {
+            color: #f1f5f9;
+        }
+        
+        [data-theme="dark"] .postulacion-fecha {
+            color: #94a3b8;
         }
     </style>
 </head>
 <body>
     <!-- NAVBAR -->
-    <?php include '../components/navbar.php'; ?>
+    <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <div class="container">
         <!-- Header -->

@@ -119,53 +119,6 @@ $userRole = $isLoggedIn ? ($_SESSION['user']['rol'] ?? '') : '';
         border-radius: 50%;
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 1rem;
-    }
-
-    .navbar-dropdown {
-        position: absolute;
-        top: calc(100% + 0.5rem);
-        right: 0;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-        min-width: 220px;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-10px);
-        transition: var(--transition);
-        overflow: hidden;
-    }
-
-    .navbar-user-dropdown:hover .navbar-dropdown {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
-
-    .navbar-dropdown-item {
-        padding: 0.75rem 1.25rem;
-        color: #333;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        transition: var(--transition);
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-    .navbar-dropdown-item:hover {
-        background: #f8f9fa;
-        color: #667eea;
-    }
-
-    .theme-toggle {
-        width: 45px;
-        height: 45px;
-        background: rgba(255, 255, 255, 0.15);
         border: none;
         border-radius: 50%;
         cursor: pointer;
