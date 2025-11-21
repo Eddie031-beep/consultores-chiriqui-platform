@@ -21,7 +21,9 @@ $postulaciones = $postulaciones ?? [];
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .container {
@@ -30,20 +32,32 @@ $postulaciones = $postulaciones ?? [];
             padding: 20px;
         }
 
+        /* ===== HEADER ===== */
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            color: white !important;
             padding: 40px 20px;
             border-radius: 10px;
             margin-bottom: 30px;
             text-align: center;
         }
 
+        [data-theme="dark"] .header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+
         .header h1 {
             font-size: 2em;
             margin-bottom: 10px;
+            color: white !important;
         }
 
+        .header p {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 1.1em;
+        }
+
+        /* ===== CARDS GRID ===== */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -52,11 +66,23 @@ $postulaciones = $postulaciones ?? [];
         }
 
         .card {
-            background: white;
+            background: var(--bg-card);
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px var(--shadow-color);
             text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+
+        [data-theme="dark"] .card {
+            background: var(--bg-card);
+            border: 1px solid #334155;
         }
 
         .card-numero {
@@ -65,29 +91,50 @@ $postulaciones = $postulaciones ?? [];
             color: #667eea;
         }
 
-        .card-titulo {
-            color: #666;
-            margin-top: 10px;
+        [data-theme="dark"] .card-numero {
+            color: #818cf8;
         }
 
+        .card-titulo {
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        /* ===== POSTULACIONES ===== */
         .postulaciones {
-            background: white;
+            background: var(--bg-card);
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .postulaciones {
+            background: var(--bg-card);
+            border: 1px solid #334155;
         }
 
         .postulaciones h2 {
             margin-bottom: 20px;
-            color: #333;
+            color: var(--text-heading);
         }
 
         .postulacion-item {
             padding: 20px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .postulacion-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        [data-theme="dark"] .postulacion-item:hover {
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .postulacion-item:last-child {
@@ -95,21 +142,28 @@ $postulaciones = $postulaciones ?? [];
         }
 
         .postulacion-info h3 {
-            color: #333;
+            color: var(--text-heading);
             margin-bottom: 5px;
+            font-size: 1.1em;
         }
 
         .postulacion-empresa {
             color: #667eea;
             font-size: 0.9em;
             margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .postulacion-empresa {
+            color: #818cf8;
         }
 
         .postulacion-fecha {
-            color: #999;
+            color: var(--text-secondary);
             font-size: 0.85em;
         }
 
+        /* ===== BADGES ===== */
         .badge-estado {
             padding: 5px 15px;
             border-radius: 20px;
@@ -137,6 +191,28 @@ $postulaciones = $postulaciones ?? [];
             color: #842029;
         }
 
+        /* Badges en modo oscuro */
+        [data-theme="dark"] .badge-pendiente {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fcd34d;
+        }
+
+        [data-theme="dark"] .badge-revisado {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .badge-aceptado {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        [data-theme="dark"] .badge-rechazado {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        /* ===== BOTÓN EXPLORAR ===== */
         .btn-explorar {
             display: inline-block;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -157,25 +233,33 @@ $postulaciones = $postulaciones ?? [];
             background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
 
-        /* Mejoras para modo oscuro en textos */
-        [data-theme="dark"] .card-titulo {
-            color: #cbd5e1;
-        }
-        
-        [data-theme="dark"] .postulaciones h2 {
-            color: #fff;
+        /* Mensaje sin postulaciones */
+        .sin-postulaciones {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
         }
 
-        [data-theme="dark"] .postulacion-item {
-            border-bottom-color: #334155;
+        .sin-postulaciones p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
         }
 
-        [data-theme="dark"] .postulacion-info h3 {
-            color: #f1f5f9;
-        }
-        
-        [data-theme="dark"] .postulacion-fecha {
-            color: #94a3b8;
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .postulacion-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -217,15 +301,19 @@ $postulaciones = $postulaciones ?? [];
             <h2>📋 Mis Postulaciones Recientes</h2>
 
             <?php if (empty($postulaciones)): ?>
-                <p style="text-align: center; color: #999; padding: 40px;">
-                    Aún no has realizado postulaciones. 
-                    <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes" class="btn-explorar">Explorar vacantes disponibles</a>
-                </p>
+                <div class="sin-postulaciones">
+                    <p>Aún no has realizado postulaciones.</p>
+                    <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes" class="btn-explorar">
+                        🔍 Explorar vacantes disponibles
+                    </a>
+                </div>
             <?php else: ?>
                 <?php foreach ($postulaciones as $post): ?>
                     <div class="postulacion-item">
                         <div class="postulacion-info">
-                            <div class="postulacion-empresa"><?= htmlspecialchars($post['empresa_nombre']) ?></div>
+                            <div class="postulacion-empresa">
+                                <?= htmlspecialchars($post['empresa_nombre']) ?>
+                            </div>
                             <h3><?= htmlspecialchars($post['titulo']) ?></h3>
                             <div class="postulacion-fecha">
                                 📅 <?= date('d/m/Y H:i', strtotime($post['fecha_postulacion'])) ?>
