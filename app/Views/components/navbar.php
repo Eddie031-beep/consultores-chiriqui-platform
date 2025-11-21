@@ -16,9 +16,6 @@ $userRole = $isLoggedIn ? ($_SESSION['user']['rol'] ?? '') : '';
 
 <!-- Estilos del Navbar -->
 <style>
-    /* [TODOS LOS ESTILOS DEL NAVBAR SE MANTIENEN IGUAL] */
-    /* Solo copio la estructura básica para no saturar */
-    
     :root {
         --navbar-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -113,16 +110,102 @@ $userRole = $isLoggedIn ? ($_SESSION['user']['rol'] ?? '') : '';
         font-weight: 500;
     }
 
+    .navbar-user-button:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
     .navbar-user-avatar {
         width: 35px;
         height: 35px;
         border-radius: 50%;
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    /* Dropdown del usuario */
+    .navbar-dropdown {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        min-width: 220px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: var(--transition);
+        overflow: hidden;
+        z-index: 1000;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    [data-theme="dark"] .navbar-dropdown {
+        background: #1e293b;
+        border: 1px solid #334155;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Mostrar dropdown al hacer hover */
+    .navbar-user-dropdown:hover .navbar-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .navbar-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 1.5rem;
+        color: #333;
+        text-decoration: none;
+        transition: var(--transition);
+        border-bottom: 1px solid #f0f0f0;
+        font-weight: 500;
+    }
+
+    [data-theme="dark"] .navbar-dropdown-item {
+        color: #e2e8f0;
+        border-bottom-color: #334155;
+    }
+
+    .navbar-dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .navbar-dropdown-item:hover {
+        background: #f8f9fa;
+        color: #667eea;
+        padding-left: 1.8rem;
+    }
+
+    [data-theme="dark"] .navbar-dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #818cf8;
+    }
+
+    /* Botón de tema */
+    .theme-toggle {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.15);
         border: none;
         border-radius: 50%;
         cursor: pointer;
         transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.05);
     }
 
     @media (max-width: 768px) {

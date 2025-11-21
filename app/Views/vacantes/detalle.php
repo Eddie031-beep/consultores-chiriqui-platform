@@ -202,14 +202,16 @@ $isAuthenticated = isset($_SESSION['user']);
     </style>
 </head>
 <body>
-    <!-- NAVBAR -->
-    <?php include '../components/navbar.php'; ?>
+    <!-- NAVBAR - RUTA CORREGIDA -->
+    <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <div class="container">
         <!-- Nav superior -->
         <div class="nav-top">
             <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes">← Volver al listado</a>
-            <a href="<?= ENV_APP['BASE_URL'] ?>/auth">Iniciar Sesión</a>
+            <?php if (!$isAuthenticated): ?>
+                <a href="<?= ENV_APP['BASE_URL'] ?>/auth">Iniciar Sesión</a>
+            <?php endif; ?>
         </div>
 
         <!-- Contenido principal -->
@@ -249,9 +251,11 @@ $isAuthenticated = isset($_SESSION['user']);
             </div>
 
             <!-- Alerta de registro -->
-            <div class="alerta">
-                <strong>⚠️ Nota importante:</strong> Para postularte a esta vacante deberás registrarte en la plataforma. El registro es rápido y obligatorio.
-            </div>
+            <?php if (!$isAuthenticated): ?>
+                <div class="alerta">
+                    <strong>⚠️ Nota importante:</strong> Para postularte a esta vacante deberás registrarte en la plataforma. El registro es rápido y obligatorio.
+                </div>
+            <?php endif; ?>
 
             <!-- Descripción -->
             <div class="section">
