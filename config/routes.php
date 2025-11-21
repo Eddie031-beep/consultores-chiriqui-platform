@@ -34,6 +34,7 @@ $routes = [
         '/empresa/vacantes/crear' => 'EmpresaController@crearVacante',
         '/empresa/vacantes/(?P<id>\d+)' => 'EmpresaController@editarVacante',
         '/empresa/candidatos' => 'EmpresaController@candidatos',
+        '/empresa/facturacion' => 'EmpresaController@facturacion',
         
         // Dashboard Consultora
         '/consultora/dashboard' => 'ConsultoraController@dashboard',
@@ -65,7 +66,7 @@ $routes = [
         // Empresa
         '/empresa/vacantes/crear' => 'EmpresaController@storeVacante',
         '/empresa/vacantes/(?P<id>\d+)' => 'EmpresaController@updateVacante',
-        
+
         // Consultora
         '/consultora/empresas/crear' => 'ConsultoraController@storeEmpresa',
         '/consultora/empresas/(?P<id>\d+)/editar' => 'ConsultoraController@updateEmpresa',
