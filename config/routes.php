@@ -35,7 +35,9 @@ $routes = [
         '/empresa/vacantes/(?P<id>\d+)' => 'EmpresaController@editarVacante',
         '/empresa/candidatos' => 'EmpresaController@candidatos',
         '/empresa/facturacion' => 'EmpresaController@facturacion',
-        
+        '/empresa/dashboard' => 'EmpresaController@dashboard',
+        '/empresa/perfil' => 'EmpresaController@perfil',
+
         // Dashboard Consultora
         '/consultora/dashboard' => 'ConsultoraController@dashboard',
         '/consultora/empresas' => 'ConsultoraController@empresas',
@@ -46,7 +48,9 @@ $routes = [
         '/consultora/facturacion/generar' => 'FacturacionController@generar',
         '/consultora/facturacion/ver/(?P<id>\d+)' => 'FacturacionController@ver',
         '/consultora/info' => 'ConsultoraController@info',
-        
+        '/consultora/dashboard' => 'ConsultoraController@dashboard',
+        '/consultora/perfil' => 'ConsultoraController@perfil',
+
         // Chatbot
         '/chatbot' => 'ChatbotController@chat',
     ],
