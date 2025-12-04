@@ -74,8 +74,11 @@ class EmpresaController extends Controller
             JOIN vacantes v ON iv.vacante_id = v.id
             WHERE v.empresa_id = ? AND MONTH(iv.fecha_hora) = MONTH(CURRENT_DATE())
         ");
-        $stmtPeaje->execute([$empresaId]);
-        $consumoActual = $stmtPeaje->fetch(PDO::FETCH_ASSOC)['total_consumo'] ?? 0.00;
+       $stmtPeaje->execute([$empresaId]);
+       $resultado = $stmtPeaje->fetch(PDO::FETCH_ASSOC);
+
+        // Forzamos a float para evitar errores en number_format
+        $consumoActual = (float) ($resultado['total_consumo'] ?? 0);
 
         // 4. Actividad
         $stmtAct = $this->dbRead->prepare("
