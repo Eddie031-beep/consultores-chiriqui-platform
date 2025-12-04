@@ -69,32 +69,48 @@ class FacturacionController extends Controller
         }
 
         try {
-            // Obtener interacciones del período
-            $stmtInt = $this->db->prepare("
+            // 1. Obtener tarifas vigentes de la BD (DINÁMICO)
+            $stmtT = $this->db->query("SELECT * FROM peajes_tarifas WHERE activo = 1");
+            $tarifas = $stmtT->fetchAll(PDO::FETCH_ASSOC);
+            
+            $p_vista = 0.10; $p_click = 0.15; $p_chat = 0.05; // defaults
+            foreach($tarifas as $t) {
+                if (stripos($t['nombre_plan'], 'Vista') !== false) $p_vista = $t['precio_unitario'];
+                if (stripos($t['nombre_plan'], 'Click') !== false) $p_click = $t['precio_unitario'];
+                if (stripos($t['nombre_plan'], 'Chat') !== false) $p_chat = $t['precio_unitario'];
+            }
+
+            // 2. Calcular interacciones usando precios dinámicos
+            $sql = "
                 SELECT 
                     iv.tipo_interaccion,
                     COUNT(*) as cantidad,
-                    pt.precio_unitario
+                    CASE 
+                        WHEN iv.tipo_interaccion = 'ver_detalle' THEN $p_vista
+                        WHEN iv.tipo_interaccion = 'click_aplicar' THEN $p_click
+                        WHEN iv.tipo_interaccion = 'chat_consulta' THEN $p_chat
+                    END as precio_unitario
                 FROM interacciones_vacante iv
                 JOIN vacantes v ON iv.vacante_id = v.id
-                LEFT JOIN peajes_tarifas pt ON iv.tipo_interaccion = CASE 
-                    WHEN iv.tipo_interaccion = 'ver_detalle' THEN 'Vista Básica'
-                    WHEN iv.tipo_interaccion = 'click_aplicar' THEN 'Click Aplicar'
-                    WHEN iv.tipo_interaccion = 'chat_consulta' THEN 'Consulta Chat'
-                END
                 WHERE v.empresa_id = ? AND DATE(iv.fecha_hora) BETWEEN ? AND ?
                 GROUP BY iv.tipo_interaccion
-            ");
+            ";
+            
+            $stmtInt = $this->db->prepare($sql);
             $stmtInt->execute([$empresa_id, $periodo_desde, $periodo_hasta]);
             $interacciones = $stmtInt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Calcular totales
+            // 3. Calcular totales
             $subtotal = 0;
             foreach ($interacciones as $int) {
-                $subtotal += ($int['cantidad'] * ($int['precio_unitario'] ?? 0.10));
+                $subtotal += ($int['cantidad'] * $int['precio_unitario']);
             }
 
-            $itbms_pct = 0.07;
+            // Obtener ITBMS de configuraciones (si existe) o usar 0.07
+            $stmtConf = $this->db->prepare("SELECT valor FROM configuraciones WHERE codigo = 'ITBMS'");
+            $stmtConf->execute();
+            $itbms_pct = $stmtConf->fetchColumn() ?: 0.07;
+
             $itbms = $subtotal * $itbms_pct;
             $total = $subtotal + $itbms;
 
@@ -114,13 +130,13 @@ class FacturacionController extends Controller
 
             // Insertar detalles
             foreach ($interacciones as $int) {
-                $total_linea = $int['cantidad'] * ($int['precio_unitario'] ?? 0.10);
+                $total_linea = $int['cantidad'] * $int['precio_unitario'];
                 $stmtDet = $this->db->prepare("
                     INSERT INTO facturas_detalle 
                     (factura_id, cantidad_interacciones, tarifa_unitaria, total_linea)
                     VALUES (?, ?, ?, ?)
                 ");
-                $stmtDet->execute([$factura_id, $int['cantidad'], $int['precio_unitario'] ?? 0.10, $total_linea]);
+                $stmtDet->execute([$factura_id, $int['cantidad'], $int['precio_unitario'], $total_linea]);
             }
 
             $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Factura generada exitosamente: ' . $numero_fiscal];

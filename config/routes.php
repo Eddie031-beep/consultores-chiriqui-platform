@@ -70,7 +70,8 @@ $routes = [
         // Empresa
         '/empresa/vacantes/crear' => 'EmpresaController@storeVacante',
         '/empresa/vacantes/(?P<id>\d+)' => 'EmpresaController@updateVacante',
-
+        '/empresa/aceptar-contrato' => 'EmpresaController@aceptarContrato',
+        
         // Consultora
         '/consultora/empresas/crear' => 'ConsultoraController@storeEmpresa',
         '/consultora/empresas/(?P<id>\d+)/editar' => 'ConsultoraController@updateEmpresa',

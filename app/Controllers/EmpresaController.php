@@ -7,11 +7,14 @@ use PDO;
 
 class EmpresaController extends Controller
 {
-    private PDO $db;
+    private PDO $dbWrite; // Conexión Maestro (INSERT/UPDATE)
+    private PDO $dbRead;  // Conexión Réplica (SELECT)
 
     public function __construct()
     {
-        $this->db = db_connect('local');
+        // 1. INICIALIZAR DOBLE CONEXIÓN (Requisito de Infraestructura)
+        $this->dbWrite = db_connect('write');
+        $this->dbRead  = db_connect('read');
         
         if (!Auth::check() || Auth::user()['rol'] !== 'empresa_admin') {
             header('Location: ' . ENV_APP['BASE_URL'] . '/auth/login?tipo=empresa');
@@ -19,19 +22,21 @@ class EmpresaController extends Controller
         }
     }
 
-    // ============ DASHBOARD PRINCIPAL ============
+    // ============ DASHBOARD CON PRECIOS DINÁMICOS ============
     public function dashboard(): void
     {
         $user = Auth::user();
         $empresaId = $user['empresa_id'];
 
-        // 1. Total Vacantes Activas
-        $stmtVac = $this->db->prepare("SELECT COUNT(*) as total FROM vacantes WHERE empresa_id = ? AND estado = 'abierta'");
+        // Usamos dbRead para consultas (Balanceo de carga)
+        
+        // 1. Vacantes
+        $stmtVac = $this->dbRead->prepare("SELECT COUNT(*) as total FROM vacantes WHERE empresa_id = ? AND estado = 'abierta'");
         $stmtVac->execute([$empresaId]);
         $vacantesActivas = $stmtVac->fetch(PDO::FETCH_ASSOC)['total'];
 
-        // 2. Total Candidatos (Postulaciones únicas)
-        $stmtCand = $this->db->prepare("
+        // 2. Candidatos
+        $stmtCand = $this->dbRead->prepare("
             SELECT COUNT(DISTINCT solicitante_id) as total 
             FROM postulaciones p 
             JOIN vacantes v ON p.vacante_id = v.id 
@@ -40,16 +45,31 @@ class EmpresaController extends Controller
         $stmtCand->execute([$empresaId]);
         $totalCandidatos = $stmtCand->fetch(PDO::FETCH_ASSOC)['total'];
 
-        // 3. Cálculo de Consumo (Peaje por interacción)
-        // Según el PDF, se cobra por interacción. Asumimos precios base si no están en DB.
-        $stmtPeaje = $this->db->prepare("
-            SELECT 
-                SUM(CASE 
-                    WHEN tipo_interaccion = 'ver_detalle' THEN 0.10 
-                    WHEN tipo_interaccion = 'click_aplicar' THEN 0.15 
-                    WHEN tipo_interaccion = 'chat_consulta' THEN 0.05 
-                    ELSE 0 
-                END) as total_consumo
+        // 3. CONSUMO DINÁMICO (Requisito de BD)
+        // Traemos precios de la tabla, no fijos
+        $stmtTarifas = $this->dbRead->query("SELECT nombre_plan, precio_unitario FROM peajes_tarifas WHERE activo = 1");
+        $tarifas = [];
+        while ($row = $stmtTarifas->fetch(PDO::FETCH_ASSOC)) {
+            if (stripos($row['nombre_plan'], 'Vista') !== false) $tarifas['ver_detalle'] = $row['precio_unitario'];
+            if (stripos($row['nombre_plan'], 'Click') !== false) $tarifas['click_aplicar'] = $row['precio_unitario'];
+            if (stripos($row['nombre_plan'], 'Chat') !== false) $tarifas['chat_consulta'] = $row['precio_unitario'];
+        }
+        
+        $p_vista = $tarifas['ver_detalle'] ?? 0.10;
+        $p_click = $tarifas['click_aplicar'] ?? 0.15;
+        $p_chat  = $tarifas['chat_consulta'] ?? 0.05;
+
+        // Validamos que los precios sean numéricos para evitar errores SQL
+        $p_vista = (float)$p_vista;
+        $p_click = (float)$p_click;
+        $p_chat  = (float)$p_chat;
+
+        $stmtPeaje = $this->dbRead->prepare("
+            SELECT SUM(CASE 
+                WHEN tipo_interaccion = 'ver_detalle' THEN $p_vista 
+                WHEN tipo_interaccion = 'click_aplicar' THEN $p_click 
+                WHEN tipo_interaccion = 'chat_consulta' THEN $p_chat 
+                ELSE 0 END) as total_consumo
             FROM interacciones_vacante iv
             JOIN vacantes v ON iv.vacante_id = v.id
             WHERE v.empresa_id = ? AND MONTH(iv.fecha_hora) = MONTH(CURRENT_DATE())
@@ -57,207 +77,113 @@ class EmpresaController extends Controller
         $stmtPeaje->execute([$empresaId]);
         $consumoActual = $stmtPeaje->fetch(PDO::FETCH_ASSOC)['total_consumo'] ?? 0.00;
 
-        // 4. Actividad Reciente (Últimas 5 postulaciones)
-        $stmtAct = $this->db->prepare("
-            SELECT p.fecha_postulacion, s.nombre, s.apellido, v.titulo
-            FROM postulaciones p
-            JOIN solicitantes s ON p.solicitante_id = s.id
-            JOIN vacantes v ON p.vacante_id = v.id
-            WHERE v.empresa_id = ?
-            ORDER BY p.fecha_postulacion DESC
+        // 4. Actividad
+        $stmtAct = $this->dbRead->prepare("
+            SELECT p.fecha_postulacion, s.nombre, s.apellido, v.titulo 
+            FROM postulaciones p 
+            JOIN solicitantes s ON p.solicitante_id = s.id 
+            JOIN vacantes v ON p.vacante_id = v.id 
+            WHERE v.empresa_id = ? 
+            ORDER BY p.fecha_postulacion DESC 
             LIMIT 5
         ");
         $stmtAct->execute([$empresaId]);
         $actividadReciente = $stmtAct->fetchAll(PDO::FETCH_ASSOC);
 
-        $this->view('dashboard/empresa', compact('user', 'vacantesActivas', 'totalCandidatos', 'consumoActual', 'actividadReciente'));
+        // 5. Verificar Contrato
+        $stmtContrato = $this->dbRead->prepare("SELECT id FROM contratos_empresas WHERE empresa_id = ? AND estado = 'vigente'");
+        $stmtContrato->execute([$empresaId]);
+        $contratoAceptado = $stmtContrato->fetch() ? true : false;
+
+        $this->view('dashboard/empresa', compact('user', 'vacantesActivas', 'totalCandidatos', 'consumoActual', 'actividadReciente', 'contratoAceptado'));
     }
 
-    // ============ LISTAR VACANTES ============
-    public function vacantes(): void
+    // ============ ACEPTAR CONTRATO ============
+    public function aceptarContrato(): void
     {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $user = Auth::user();
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $texto = "Aceptación Digital de Términos v1.0. IP: $ip. Fecha: " . date('Y-m-d H:i:s');
+
+            $stmt = $this->dbWrite->prepare("INSERT INTO contratos_empresas (empresa_id, version_contrato, ip_aceptacion, texto_resumen, estado) VALUES (?, 'v1.0', ?, ?, 'vigente')");
+            $stmt->execute([$user['empresa_id'], $ip, $texto]);
+            
+            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
+            exit;
+        }
+        header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
+        exit;
+    }
+
+    // ============ OTROS MÉTODOS ============
+    public function vacantes(): void {
         $user = Auth::user();
-        
-        // Obtener vacantes de la empresa actual
-        $stmt = $this->db->prepare("
-            SELECT * FROM vacantes 
-            WHERE empresa_id = ? 
-            ORDER BY fecha_publicacion DESC
-        ");
+        $stmt = $this->dbRead->prepare("SELECT * FROM vacantes WHERE empresa_id = ? ORDER BY fecha_publicacion DESC");
         $stmt->execute([$user['empresa_id']]);
         $vacantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
         $this->view('vacantes/index', compact('vacantes', 'user'));
     }
 
-    // ============ CREAR VACANTE (VISTA) ============
-    public function crearVacante(): void
-    {
+    public function crearVacante(): void {
         $this->view('vacantes/form', ['modo' => 'crear']);
     }
 
-    // ============ GUARDAR VACANTE (POST) ============
-    public function storeVacante(): void
-    {
+    public function storeVacante(): void {
         $user = Auth::user();
+        $titulo = $_POST['titulo'] ?? ''; 
+        $desc = $_POST['descripcion'] ?? ''; 
         
-        $titulo = trim($_POST['titulo'] ?? '');
-        $descripcion = trim($_POST['descripcion'] ?? '');
-        $tipo_contrato = trim($_POST['tipo_contrato'] ?? '');
-        $ubicacion = trim($_POST['ubicacion'] ?? '');
-        $modalidad = $_POST['modalidad'] ?? 'presencial';
-        $salario_min = !empty($_POST['salario_min']) ? $_POST['salario_min'] : null;
-        $salario_max = !empty($_POST['salario_max']) ? $_POST['salario_max'] : null;
+        if(empty($titulo)) { header('Location: '.ENV_APP['BASE_URL'].'/empresa/vacantes/crear'); exit; }
 
-        // Validaciones básicas
-        $errores = [];
-        if (empty($titulo)) $errores['titulo'] = 'El título es obligatorio';
-        if (empty($descripcion)) $errores['descripcion'] = 'La descripción es obligatoria';
-        if (empty($ubicacion)) $errores['ubicacion'] = 'La ubicación es obligatoria';
-
-        if (!empty($errores)) {
-            $this->view('vacantes/form', [
-                'modo' => 'crear',
-                'errores' => $errores,
-                'old' => $_POST
-            ]);
-            return;
-        }
-
-        // Generar slug único
-        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $titulo)));
-        $slug .= '-' . time(); 
-
-        try {
-            // Insertar vacante con cantidad_plazas (si aplicaste el parche anterior) o sin él
-            // Nota: Asumo que ya aplicaste el parche de cantidad_plazas, si no, quítalo del query
-            $sql = "INSERT INTO vacantes 
-                    (empresa_id, titulo, slug, descripcion, tipo_contrato, ubicacion, modalidad, salario_min, salario_max, estado, fecha_publicacion, cantidad_plazas)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'abierta', NOW(), 0)";
-            
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                $user['empresa_id'], $titulo, $slug, $descripcion, $tipo_contrato, 
-                $ubicacion, $modalidad, $salario_min, $salario_max
-            ]);
-
-            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
-            exit;
-
-        } catch (\PDOException $e) {
-            // Manejo de error (ej. slug duplicado o error de BD)
-            $errores['general'] = 'Error al guardar: ' . $e->getMessage();
-            $this->view('vacantes/form', [
-                'modo' => 'crear',
-                'errores' => $errores,
-                'old' => $_POST
-            ]);
-        }
-    }
-
-    // ============ EDITAR VACANTE (VISTA) ============
-    public function editarVacante($id): void
-    {
-        $user = Auth::user();
-        $id = (int)$id;
-
-        // Verificar que la vacante pertenezca a la empresa
-        $stmt = $this->db->prepare("SELECT * FROM vacantes WHERE id = ? AND empresa_id = ?");
-        $stmt->execute([$id, $user['empresa_id']]);
-        $vacante = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$vacante) {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
-            exit;
-        }
-
-        $this->view('vacantes/form', ['modo' => 'editar', 'vacante' => $vacante]);
-    }
-
-    // ============ ACTUALIZAR VACANTE (POST) ============
-    public function updateVacante($id): void
-    {
-        $user = Auth::user();
-        $id = (int)$id;
-
-        // Verificar propiedad
-        $stmtCheck = $this->db->prepare("SELECT id FROM vacantes WHERE id = ? AND empresa_id = ?");
-        $stmtCheck->execute([$id, $user['empresa_id']]);
-        if (!$stmtCheck->fetch()) {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
-            exit;
-        }
-
-        $titulo = trim($_POST['titulo'] ?? '');
-        $descripcion = trim($_POST['descripcion'] ?? '');
-        $tipo_contrato = trim($_POST['tipo_contrato'] ?? '');
-        $ubicacion = trim($_POST['ubicacion'] ?? '');
-        $modalidad = $_POST['modalidad'] ?? 'presencial';
-        $salario_min = !empty($_POST['salario_min']) ? $_POST['salario_min'] : null;
-        $salario_max = !empty($_POST['salario_max']) ? $_POST['salario_max'] : null;
-
-        $sql = "UPDATE vacantes SET 
-                titulo = ?, descripcion = ?, tipo_contrato = ?, ubicacion = ?, 
-                modalidad = ?, salario_min = ?, salario_max = ?
-                WHERE id = ?";
+        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $titulo))) . '-' . time();
         
-        $stmt = $this->db->prepare($sql);
+        $sql = "INSERT INTO vacantes (empresa_id, titulo, slug, descripcion, tipo_contrato, ubicacion, modalidad, salario_min, salario_max, estado, fecha_publicacion, cantidad_plazas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'abierta', NOW(), 0)";
+        $stmt = $this->dbWrite->prepare($sql);
         $stmt->execute([
-            $titulo, $descripcion, $tipo_contrato, $ubicacion, 
-            $modalidad, $salario_min, $salario_max, $id
+            $user['empresa_id'], $titulo, $slug, $desc, 
+            $_POST['tipo_contrato']??'', $_POST['ubicacion']??'', $_POST['modalidad']??'presencial', 
+            !empty($_POST['salario_min'])?$_POST['salario_min']:null, 
+            !empty($_POST['salario_max'])?$_POST['salario_max']:null
         ]);
-
+        
         header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
         exit;
     }
 
-    // ============ VER CANDIDATOS (Placeholder) ============
-    // Ruta definida en routes: '/empresa/candidatos'
-    public function candidatos(): void
-    {
+    public function editarVacante($id): void {
         $user = Auth::user();
-        
-        // Obtener postulaciones a vacantes de esta empresa
-        $sql = "SELECT p.*, v.titulo as vacante_titulo, s.nombre, s.apellido, s.email, s.cv_ruta
-                FROM postulaciones p
-                JOIN vacantes v ON p.vacante_id = v.id
-                JOIN solicitantes s ON p.solicitante_id = s.id
-                WHERE v.empresa_id = ?
-                ORDER BY p.fecha_postulacion DESC";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$user['empresa_id']]);
-        $candidatos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->dbRead->prepare("SELECT * FROM vacantes WHERE id = ? AND empresa_id = ?");
+        $stmt->execute([(int)$id, $user['empresa_id']]);
+        $vacante = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$vacante) { header('Location: '.ENV_APP['BASE_URL'].'/empresa/vacantes'); exit; }
+        $this->view('vacantes/form', ['modo' => 'editar', 'vacante' => $vacante]);
+    }
 
-        // Puedes crear una vista 'empresas/candidatos.php' o reutilizar alguna existente
-        // Por ahora, si no tienes la vista, podrías mostrar un dump o redirigir
-        // $this->view('empresas/candidatos', compact('candidatos')); 
-        
-        // Si no existe la vista, evita el error 500 mostrando algo básico:
-        echo "<h1>Candidatos Postulados</h1>";
-        echo "<pre>"; print_r($candidatos); echo "</pre>";
-        echo "<a href='".ENV_APP['BASE_URL']."/empresa/dashboard'>Volver</a>";
+    public function updateVacante($id): void {
+        $sql = "UPDATE vacantes SET titulo=?, descripcion=?, tipo_contrato=?, ubicacion=?, modalidad=?, salario_min=?, salario_max=? WHERE id=?";
+        $stmt = $this->dbWrite->prepare($sql);
+        $stmt->execute([
+            $_POST['titulo'], $_POST['descripcion'], $_POST['tipo_contrato'], 
+            $_POST['ubicacion'], $_POST['modalidad'], 
+            !empty($_POST['salario_min'])?$_POST['salario_min']:null, 
+            !empty($_POST['salario_max'])?$_POST['salario_max']:null, 
+            (int)$id
+        ]);
+        header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
+        exit;
     }
     
-    // Método adicional para cerrar vacante (usado en tu vista index.php)
-    public function cerrarVacante(): void 
-    {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $user = Auth::user();
-            $id = (int)($_POST['id'] ?? 0);
-            
-            $stmt = $this->db->prepare("UPDATE vacantes SET estado = 'cerrada' WHERE id = ? AND empresa_id = ?");
-            $stmt->execute([$id, $user['empresa_id']]);
-            
-            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
-            exit;
-        }
-    }
-    // Agregar método placeholder para facturación si no existe
-    public function facturacion(): void {
+    public function candidatos(): void {
         $user = Auth::user();
-        // Aquí iría la lógica para mostrar el historial de facturas
-        echo "<h1>Historial de Facturación</h1><p>Módulo en construcción según requerimientos DGI.</p>";
-        echo "<a href='".ENV_APP['BASE_URL']."/empresa/dashboard'>Volver</a>";
+        $stmt = $this->dbRead->prepare("SELECT p.*, v.titulo as vacante_titulo, s.nombre, s.apellido FROM postulaciones p JOIN vacantes v ON p.vacante_id = v.id JOIN solicitantes s ON p.solicitante_id = s.id WHERE v.empresa_id = ?");
+        $stmt->execute([$user['empresa_id']]);
+        $candidatos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo "<h1>Candidatos</h1><pre>"; print_r($candidatos); echo "</pre><a href='".ENV_APP['BASE_URL']."/empresa/dashboard'>Volver</a>";
+    }
+    
+    public function facturacion(): void {
+        // Redirección temporal a listar facturas si existe, o mensaje simple
+        echo "<h1>Módulo de Facturación</h1><p>En construcción</p><a href='".ENV_APP['BASE_URL']."/empresa/dashboard'>Volver</a>";
     }
 }

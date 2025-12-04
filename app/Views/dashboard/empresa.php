@@ -516,16 +516,6 @@
         [data-theme="dark"] .alert-box strong {
             color: #fca5a5;
         }
-    </style>
-</head>
-<body>
-    <?php include __DIR__ . '/../components/navbar.php'; ?>
-
-    <div class="dashboard-container">
-        <!-- Welcome Banner -->
-        <div class="welcome-banner">
-            <div class="welcome-content">
-                <h1>👋 Hola, <?= htmlspecialchars($user['nombre'] ?? 'Usuario') ?></h1>
                 <p>Gestiona el talento de <strong><?= htmlspecialchars($user['empresa_nombre'] ?? 'tu empresa') ?></strong></p>
             </div>
             <div class="welcome-meta">
@@ -534,7 +524,7 @@
                 </div>
             </div>
         </div>
-
+        
         <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card vacantes">
@@ -677,5 +667,39 @@
             });
         });
     </script>
+<?php if (isset($contratoAceptado) && !$contratoAceptado): ?>
+<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div style="background: var(--bg-card); padding: 2.5rem; border-radius: 16px; max-width: 600px; width: 90%; border: 1px solid #ef4444; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+        <h2 style="color: #ef4444; margin-bottom: 1rem; display:flex; align-items:center; gap:10px;">
+            ⚠️ Contrato Digital Requerido
+        </h2>
+        <p style="margin-bottom: 1.5rem; color: var(--text-primary);">
+            Para activar su panel y publicar vacantes, debe aceptar los términos de servicio según las regulaciones de <strong>Consultores Chiriquí S.A.</strong>
+        </p>
+        
+        <div style="background: rgba(239, 68, 68, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.2);">
+            <strong style="color: #dc2626; display:block; margin-bottom:0.5rem;">Tarifas de Peaje (Por Interacción):</strong>
+            <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+                <li>👁️ Vista de Vacante: <strong>B/. 0.10</strong></li>
+                <li>👆 Click en Aplicar: <strong>B/. 0.15</strong></li>
+                <li>🤖 Consulta Chatbot: <strong>B/. 0.05</strong></li>
+            </ul>
+            <p style="margin-top: 0.8rem; font-size: 0.85rem; color: var(--text-secondary);">* Tarifas sujetas a ITBMS (7%)</p>
+        </div>
+
+        <form method="POST" action="<?= ENV_APP['BASE_URL'] ?>/empresa/aceptar-contrato">
+            <label style="display: flex; gap: 0.8rem; align-items: flex-start; margin-bottom: 2rem; cursor: pointer; padding: 1rem; background: var(--bg-primary); border-radius: 8px;">
+                <input type="checkbox" required style="margin-top: 4px;">
+                <span style="font-size: 0.95rem; color: var(--text-primary);">
+                    Declaro que represento legalmente a esta empresa y acepto las tarifas y condiciones de uso de la plataforma.
+                </span>
+            </label>
+            <button type="submit" style="width: 100%; padding: 1rem; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: background 0.3s;">
+                ✍️ Firmar y Acceder al Panel
+            </button>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
 </body>
 </html>
