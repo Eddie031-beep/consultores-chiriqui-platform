@@ -17,342 +17,233 @@ $userRole = $isLoggedIn ? ($_SESSION['user']['rol'] ?? '') : '';
 <!-- Estilos del Navbar -->
 <style>
     :root {
-        --navbar-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        --text-white: #ffffff;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    [data-theme="dark"] {
-        --navbar-bg: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        /* User Requested: White Header */
+        --navbar-bg-scrolled: #ffffff;
+        --navbar-text: #1e293b; /* Slate 800 */
+        --navbar-width: 1200px;
     }
 
     .navbar {
-        background: var(--navbar-bg);
-        box-shadow: var(--navbar-shadow);
-        position: sticky;
+        background: #ffffff; /* Always White */
+        position: fixed;
         top: 0;
+        left: 0;
+        width: 100%;
         z-index: 1000;
-        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        padding: 10px 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Slight shadow always */
+    }
+
+    .navbar.scrolled {
+        background: #ffffff;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        padding: 10px 0;
     }
 
     .navbar-container {
-        max-width: 1400px;
+        max-width: var(--navbar-width);
         margin: 0 auto;
-        padding: 0 2rem;
+        padding: 0 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        min-height: 70px;
     }
 
     .navbar-logo {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
         text-decoration: none;
-        color: var(--text-white);
-        font-size: 1.5rem;
-        font-weight: 700;
-        transition: var(--transition);
+        color: var(--navbar-text);
+        margin-right: 5rem;
+        position: relative;
     }
 
     .navbar-menu {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 60px;
         list-style: none;
+        margin: 0;
+        padding: 0;
     }
 
     .navbar-link {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.25rem;
-        color: var(--text-white);
+        gap: 8px;
+        color: #64748b; /* Slate 500 */
         text-decoration: none;
-        font-weight: 500;
-        border-radius: 8px;
-        transition: var(--transition);
-        white-space: nowrap;
-    }
-
-    .navbar-link:hover {
-        background: rgba(255, 255, 255, 0.15);
-        transform: translateY(-2px);
-        color: var(--text-white) !important;
-    }
-
-    .navbar-cta {
-        padding: 0.75rem 1.5rem !important;
-        background: white;
-        color: #667eea !important;
         font-weight: 600;
-        border-radius: 50px;
-        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        padding: 8px 12px;
+        border-radius: 8px;
     }
 
-    .navbar-user-dropdown {
+    .navbar-link:hover, .navbar-link.active {
+        background: #eff6ff; /* Light Blue Hover */
+        color: #2563eb; /* Blue Text */
+    }
+
+    /* User Profile & Dropdown */
+    .navbar-user-section {
         position: relative;
     }
 
-    .navbar-user-button {
+    .user-btn {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.5rem 1rem;
-        background: rgba(255, 255, 255, 0.15);
-        border: none;
-        border-radius: 50px;
-        color: var(--text-white);
+        gap: 10px;
+        background: #f1f5f9; /* Light Gray */
+        border: 1px solid #e2e8f0;
+        padding: 6px 15px;
+        border-radius: 30px;
+        color: #334155;
         cursor: pointer;
-        transition: var(--transition);
-        font-weight: 500;
+        transition: all 0.2s;
     }
 
-    .navbar-user-button:hover {
-        background: rgba(255, 255, 255, 0.25);
+    .user-btn:hover {
+        background: #e2e8f0;
     }
 
-    .navbar-user-avatar {
-        width: 35px;
-        height: 35px;
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        background: #2563eb; /* Brand Blue */
+        color: white; /* White Text */
         border-radius: 50%;
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
 
-    /* Dropdown del usuario */
-    .navbar-dropdown {
+    /* Dropdown */
+    .nav-dropdown {
         position: absolute;
-        top: calc(100% + 0.5rem);
+        top: 120%;
         right: 0;
         background: white;
         border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        min-width: 220px;
+        width: 200px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         opacity: 0;
         visibility: hidden;
         transform: translateY(-10px);
-        transition: var(--transition);
+        transition: all 0.2s;
         overflow: hidden;
-        z-index: 1000;
-        border: 1px solid rgba(0,0,0,0.05);
+        padding: 5px;
+        border: 1px solid #e2e8f0;
     }
 
-    [data-theme="dark"] .navbar-dropdown {
-        background: #1e293b;
-        border: 1px solid #334155;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    }
-
-    /* Mostrar dropdown al hacer hover */
-    .navbar-user-dropdown:hover .navbar-dropdown {
+    .navbar-user-section:hover .nav-dropdown {
         opacity: 1;
         visibility: visible;
         transform: translateY(0);
     }
 
-    .navbar-dropdown-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem 1.5rem;
-        color: #333;
+    .dropdown-item {
+        display: block;
+        padding: 10px 15px;
+        color: #334155;
         text-decoration: none;
-        transition: var(--transition);
-        border-bottom: 1px solid #f0f0f0;
-        font-weight: 500;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        transition: background 0.2s;
     }
 
-    [data-theme="dark"] .navbar-dropdown-item {
-        color: #e2e8f0;
-        border-bottom-color: #334155;
+    .dropdown-item:hover {
+        background: #f1f5f9;
+        color: #2563eb;
     }
 
-    .navbar-dropdown-item:last-child {
-        border-bottom: none;
-    }
-
-    .navbar-dropdown-item:hover {
-        background: #f8f9fa;
-        color: #667eea;
-        padding-left: 1.8rem;
-    }
-
-    [data-theme="dark"] .navbar-dropdown-item:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: #818cf8;
-    }
-
-    /* Botón de tema */
-    .theme-toggle {
-        width: 45px;
-        height: 45px;
-        background: rgba(255, 255, 255, 0.15);
+    /* Theme Toggle */
+    .nav-theme-toggle {
+        background: transparent;
         border: none;
-        border-radius: 50%;
+        color: #64748b;
         cursor: pointer;
-        transition: var(--transition);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        font-size: 1.2rem;
+        padding: 5px;
+        transition: transform 0.3s;
     }
-
-    .theme-toggle:hover {
-        background: rgba(255, 255, 255, 0.25);
-        transform: scale(1.05);
+    
+    .nav-theme-toggle:hover {
+        color: #0f172a;
+        transform: rotate(15deg);
     }
 
     @media (max-width: 768px) {
-        .navbar-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--navbar-bg);
-            flex-direction: column;
-            padding: 1rem;
-            max-height: 0;
-            overflow: hidden;
-            transition: var(--transition);
-        }
-
-        .navbar-menu.active {
-            max-height: 500px;
-        }
+        .navbar-menu { display: none; } /* Simplified mobile for now */
     }
 </style>
 
 <!-- Navbar HTML -->
-<nav class="navbar">
+<nav class="navbar" id="mainNavbar">
     <div class="navbar-container">
         <!-- Logo -->
         <a href="<?= $baseUrl ?>" class="navbar-logo">
-            <span>💼 Consultores Chiriquí</span>
+            <img src="<?= $assetsUrl ?>/img/logo_chiriqui_clean.png" alt="Consultores Chiriquí" style="height: 65px; width: auto; object-fit: contain;">
         </a>
 
-        <!-- Menú de Navegación -->
-        <ul class="navbar-menu" id="navbarMenu">
-            <li class="navbar-item">
-                <a href="<?= $baseUrl ?>" class="navbar-link">
-                    <i>🏠</i>
-                    <span>Inicio</span>
+        <!-- Menú -->
+        <ul class="navbar-menu">
+            <li>
+                <a href="<?= $baseUrl ?>" class="navbar-link <?= $_SERVER['REQUEST_URI'] == '/' ? 'active' : '' ?>">
+                    Inicio
                 </a>
             </li>
-            
-            <li class="navbar-item">
-                <a href="<?= $baseUrl ?>/vacantes" class="navbar-link">
-                    <i>💼</i>
-                    <span>Vacantes</span>
+            <li>
+                <a href="<?= $baseUrl ?>/vacantes" class="navbar-link <?= strpos($_SERVER['REQUEST_URI'], '/vacantes') !== false ? 'active' : '' ?>">
+                    Vacantes
                 </a>
             </li>
 
             <?php if ($isLoggedIn): ?>
-                <!-- USUARIO AUTENTICADO -->
-                <?php if ($userRole === 'empresa' || $userRole === 'empresa_admin'): ?>
-                    <li class="navbar-item">
-                        <a href="<?= $baseUrl ?>/empresa/dashboard" class="navbar-link">
-                            <i>📊</i>
-                            <span>Panel Empresa</span>
-                        </a>
-                    </li>
-                <?php elseif ($userRole === 'candidato'): ?>
-                    <li class="navbar-item">
-                        <a href="<?= $baseUrl ?>/candidato/dashboard" class="navbar-link">
-                            <i>📋</i>
-                            <span>Mis Postulaciones</span>
-                        </a>
-                    </li>
-                <?php elseif ($userRole === 'admin_consultora'): ?>
-                    <li class="navbar-item">
-                        <a href="<?= $baseUrl ?>/consultora/dashboard" class="navbar-link">
-                            <i>👨‍💼</i>
-                            <span>Panel Consultora</span>
-                        </a>
-                    </li>
-                <?php endif; ?>
-
-                <!-- Dropdown de Usuario -->
-                <li class="navbar-item navbar-user-dropdown">
-                    <button class="navbar-user-button">
-                        <div class="navbar-user-avatar">
+                <li class="navbar-user-section">
+                    <button class="user-btn">
+                        <div class="user-avatar">
                             <?= strtoupper(substr($userName, 0, 1)) ?>
                         </div>
-                        <span><?= htmlspecialchars($userName) ?></span>
+                        <span style="font-size: 0.9rem; font-weight: 500;"><?= htmlspecialchars($userName) ?></span>
                     </button>
-                    
-                    <div class="navbar-dropdown">
-                        <a href="<?= $baseUrl ?>/perfil" class="navbar-dropdown-item">
-                            <i>👤</i>
-                            <span>Mi Perfil</span>
-                        </a>
-                        <a href="<?= $baseUrl ?>/logout" class="navbar-dropdown-item">
-                            <i>🚪</i>
-                            <span>Cerrar Sesión</span>
-                        </a>
+                    <!-- Dropdown -->
+                    <div class="nav-dropdown">
+                        <?php if ($userRole === 'empresa' || $userRole === 'empresa_admin'): ?>
+                            <a href="<?= $baseUrl ?>/empresa/dashboard" class="dropdown-item">📊 Panel Empresa</a>
+                        <?php elseif ($userRole === 'candidato'): ?>
+                            <a href="<?= $baseUrl ?>/candidato/dashboard" class="dropdown-item">📋 Mis Postulaciones</a>
+                        <?php endif; ?>
+                        <div style="height: 1px; background: #e2e8f0; margin: 5px 0;"></div>
+                        <a href="<?= $baseUrl ?>/logout" class="dropdown-item" style="color: #ef4444;">🚪 Cerrar Sesión</a>
                     </div>
                 </li>
             <?php else: ?>
-                <!-- USUARIO NO AUTENTICADO - RUTAS CORREGIDAS -->
-                <li class="navbar-item">
+                <li>
                     <a href="<?= $baseUrl ?>/auth" class="navbar-link">
-                        <i>🔑</i>
-                        <span>Acceder</span>
+                        Acceder
                     </a>
                 </li>
             <?php endif; ?>
 
-            <!-- Botón de Tema -->
-            <li class="navbar-item">
-                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                    <span style="font-size: 1.5rem;">🌙</span>
-                </button>
-            </li>
+            <!-- Theme Toggle Removed per User Request -->
         </ul>
     </div>
 </nav>
 
-<!-- JavaScript -->
+<!-- Navbar Script -->
 <script>
-    // Theme Toggle
-    const themeToggle = document.getElementById('themeToggle');
-    const html = document.documentElement;
-    
-    const savedTheme = localStorage.getItem('theme') || 
-                      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    
-    html.setAttribute('data-theme', savedTheme);
-    themeToggle.innerHTML = savedTheme === 'dark' ? '<span style="font-size: 1.5rem;">☀️</span>' : '<span style="font-size: 1.5rem;">🌙</span>';
-    
-    if (themeToggle) {
-        themeToggle.addEventListener('click', function() {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            
-            this.innerHTML = newTheme === 'dark' ? '<span style="font-size: 1.5rem;">☀️</span>' : '<span style="font-size: 1.5rem;">🌙</span>';
-            
-            this.style.transform = 'scale(0.9) rotate(180deg)';
-            setTimeout(() => {
-                this.style.transform = '';
-            }, 300);
-        });
-    }
-
-    // Marcar link activo
-    const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('.navbar-link');
-    
-    navLinks.forEach(link => {
-        if (link.getAttribute('href') === currentPath) {
-            link.style.background = 'rgba(255, 255, 255, 0.25)';
+    // Scroll Effect
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('mainNavbar');
+        if (window.scrollY > 50) {
+            nav.classList.add('scrolled');
+        } else {
+            nav.classList.remove('scrolled');
         }
     });
 </script>

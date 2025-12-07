@@ -1,80 +1,209 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <title>Mis vacantes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Vacantes | Consultores Chiriquí</title>
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/global-dark-mode.css">
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-animations.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body{font-family:system-ui;background:#020617;color:#e5e7eb;margin:0;padding:2rem;}
-        .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}
-        a.btn{display:inline-block;padding:.5rem .9rem;border-radius:.5rem;background:#22c55e;color:#022c22;text-decoration:none;font-weight:600;}
-        table{width:100%;border-collapse:collapse;background:#0f172a;border-radius:.75rem;overflow:hidden;}
-        th,td{padding:.6rem .75rem;font-size:.9rem;border-bottom:1px solid #1e293b;}
-        th{background:#020617;text-align:left;}
-        tr:last-child td{border-bottom:none;}
-        .badge{padding:.15rem .5rem;border-radius:999px;font-size:.7rem;}
-        .abierta{background:#16a34a33;color:#4ade80;}
-        .cerrada{background:#b91c1c33;color:#fca5a5;}
-        form{display:inline;}
-        button.link{background:none;border:none;color:#f97316;cursor:pointer;padding:0;font-size:.85rem;}
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .data-table tr:hover {
+            background-color: rgba(0,0,0,0.02);
+        }
+        
+        [data-theme="dark"] .data-table tr:hover {
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-open {
+            background: rgba(40, 167, 69, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .badge-closed {
+            background: rgba(220, 53, 69, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background: rgba(0, 86, 179, 0.1);
+            color: var(--primary-color);
+        }
+
+        .btn-edit:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-close {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid transparent;
+        }
+
+        .btn-close:hover {
+            background: rgba(220, 53, 69, 0.1);
+            border-color: rgba(220, 53, 69, 0.3);
+        }
     </style>
 </head>
 <body>
-<div class="top">
-    <div>
-        <h1 style="margin:0;font-size:1.4rem;">Vacantes de mi empresa</h1>
-        <p style="margin-top:.25rem;font-size:.9rem;color:#9ca3af;">
-            Usuario: <?= htmlspecialchars($user['email']) ?>
-        </p>
-    </div>
-    <div>
-        <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/nueva" class="btn">+ Nueva vacante</a>
-        <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/dashboard" style="margin-left:.75rem;color:#38bdf8;">Volver al dashboard</a>
-    </div>
-</div>
 
-<?php if (empty($vacantes)): ?>
-    <p>No tienes vacantes registradas todavía.</p>
-<?php else: ?>
-    <table>
-        <thead>
-            <tr>
-                <th>Título</th>
-                <th>Ubicación</th>
-                <th>Modalidad</th>
-                <th>Estado</th>
-                <th>F. publicación</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($vacantes as $v): ?>
-            <tr>
-                <td><?= htmlspecialchars($v['titulo']) ?></td>
-                <td><?= htmlspecialchars($v['ubicacion']) ?></td>
-                <td><?= htmlspecialchars($v['modalidad']) ?></td>
-                <td>
-                    <span class="badge <?= $v['estado'] === 'cerrada' ? 'cerrada' : 'abierta' ?>">
-                        <?= htmlspecialchars($v['estado']) ?>
-                    </span>
-                </td>
-                <td><?= htmlspecialchars($v['fecha_publicacion']) ?></td>
-                <td>
-                    <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/editar?id=<?= (int)$v['id'] ?>" style="color:#38bdf8;font-size:.85rem;">Editar</a>
-                    <?php if ($v['estado'] !== 'cerrada'): ?>
-                        <form method="post" action="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/cerrar" onsubmit="return confirm('¿Cerrar esta vacante?');">
-                            <input type="hidden" name="id" value="<?= (int)$v['id'] ?>">
-                            <button type="submit" class="link">Cerrar</button>
-                        </form>
-                    <?php endif; ?>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
-<?php endif; ?>
+    <!-- NAVBAR -->
+    <nav class="navbar animate-fade-in">
+        <div class="container navbar-content">
+            <div class="brand-logo">
+                Consultores<span>Chiriquí</span>
+            </div>
+            <div class="nav-links">
+                <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/dashboard" class="nav-item">Dashboard</a>
+                <a href="#" class="nav-item active">Mis Vacantes</a>
+                <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/candidatos" class="nav-item">Candidatos</a>
+                <a href="<?= ENV_APP['BASE_URL'] ?>/logout" class="nav-item" style="color: var(--danger);">Salir</a>
+            </div>
+        </div>
+    </nav>
 
-<p style="margin-top:1.5rem;">
-    <a href="<?= ENV_APP['BASE_URL'] ?>/logout" style="color:#f97316;">Cerrar sesión</a>
-</p>
+    <div class="container dashboard-wrapper animate-fade-in">
+        
+        <div class="welcome-section">
+            <div class="welcome-text">
+                <h1>Mis Vacantes</h1>
+                <p>Administre sus ofertas de empleo.</p>
+            </div>
+            <div>
+                <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/crear" class="action-btn" style="flex-direction: row; padding: 10px 20px;">
+                    <span style="font-size: 1.2rem;">📢</span>
+                    <span>Nueva Vacante</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="card-box animate-slide-up delay-100" style="padding: 0; overflow: hidden;">
+            <?php if (empty($vacantes)): ?>
+                <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+                    <p>No tienes vacantes publicadas actualmente.</p>
+                </div>
+            <?php else: ?>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Vacante</th>
+                                <th>Ubicación</th>
+                                <th>Modalidad</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th style="text-align: right;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($vacantes as $v): ?>
+                            <tr class="animate-slide-up">
+                                <td>
+                                    <strong><?= htmlspecialchars($v['titulo']) ?></strong>
+                                </td>
+                                <td><?= htmlspecialchars($v['ubicacion']) ?></td>
+                                <td><?= htmlspecialchars($v['modalidad']) ?></td>
+                                <td>
+                                    <span class="badge-status <?= $v['estado'] === 'abierta' ? 'badge-open' : 'badge-closed' ?>">
+                                        <?= htmlspecialchars($v['estado']) ?>
+                                    </span>
+                                </td>
+                                <td><?= date('d M Y', strtotime($v['fecha_publicacion'])) ?></td>
+                                <td style="text-align: right;">
+                                    <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/<?= $v['id'] ?>" class="btn-sm btn-edit">
+                                        ✏️ Editar
+                                    </a>
+                                    <?php if ($v['estado'] === 'abierta'): ?>
+                                        <!-- Formulario oculto para cerrar -->
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- ELEGANT THEME TOGGLE (Floating Pill) -->
+    <button class="theme-toggle" id="themeToggle" title="Modo Oscuro/Claro" 
+            style="position: fixed; bottom: 30px; right: 30px; width: 55px; height: 55px; border-radius: 50%; background: var(--text-main); color: var(--bg-body); border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2); cursor: pointer; display: grid; place-items: center; z-index: 1000; font-size: 1.5rem; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        🌙
+    </button>
+
+    <script>
+        // Theme Toggle Logic
+        const toggleBtn = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Check saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        toggleBtn.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            // Add rotation animation
+            toggleBtn.style.transform = 'rotate(360deg)';
+            setTimeout(() => toggleBtn.style.transform = 'none', 300);
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
+        });
+
+        function updateIcon(theme) {
+            toggleBtn.textContent = theme === 'light' ? '🌙' : '☀️';
+        }
+    </script>
 </body>
 </html>

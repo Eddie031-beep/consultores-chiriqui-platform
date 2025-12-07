@@ -60,7 +60,7 @@ class AuthController extends Controller
         }
 
         // Login según tipo
-        if ($tipo === 'persona') {
+        if ($tipo === 'persona' || $tipo === 'candidato') {
             $this->loginPersona($email, $password);
         } elseif ($tipo === 'empresa') {
             $this->loginEmpresa($email, $password);
@@ -187,13 +187,100 @@ class AuthController extends Controller
     {
         $tipo = $_POST['tipo'] ?? $_GET['tipo'] ?? 'persona';
 
-        if ($tipo === 'persona') {
+        if ($tipo === 'persona' || $tipo === 'candidato') {
             $this->registroPersona();
         } elseif ($tipo === 'empresa') {
             $this->registroEmpresa();
+        } elseif ($tipo === 'consultora') {
+            $this->registroConsultora();
         } else {
             $_SESSION['error'] = 'Tipo de registro inválido';
             header('Location: ' . ENV_APP['BASE_URL'] . '/auth');
+            exit;
+        }
+    }
+
+    private function registroConsultora(): void
+    {
+        $form_data = [
+            'nombre' => trim($_POST['nombre'] ?? ''),
+            'apellido' => trim($_POST['apellido'] ?? ''),
+            'email' => trim($_POST['email'] ?? ''),
+            'password' => $_POST['password'] ?? '',
+            'password_confirm' => $_POST['password_confirm'] ?? '',
+            'codigo_acceso' => trim($_POST['codigo_acceso'] ?? '')
+        ];
+
+        // Validaciones
+        $error = $this->validateConsultoraData($form_data);
+        if ($error) {
+            $_SESSION['error'] = $error;
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=consultora');
+            exit;
+        }
+
+        // Verificar duplicados
+        $checkStmt = $this->db->prepare('SELECT id FROM usuarios WHERE email = ?');
+        $checkStmt->execute([$form_data['email']]);
+        if ($checkStmt->fetch()) {
+            $_SESSION['error'] = 'Este email ya está registrado';
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=consultora');
+            exit;
+        }
+
+        // Obtener ID del rol admin_consultora
+        // Asumimos que existe. Si no, habría que crearlo o manejar el error.
+        // Buscamos dinámicamente el ID para evitar hardcoding incorrecto.
+        $rolStmt = $this->db->prepare("SELECT id FROM roles WHERE nombre = 'admin_consultora'");
+        $rolStmt->execute();
+        $rol = $rolStmt->fetch(PDO::FETCH_ASSOC);
+        $rol_id = $rol ? $rol['id'] : 1; // Fallback to 1 (usually admin) but risky. Better strictly check.
+
+        if (!$rol) {
+             // Si no existe el rol, podríamos crearlo o fallar. 
+             // Por seguridad, asignaremos un rol predeterminado o fallaremos.
+             $_SESSION['error'] = 'Error interno: Rol de consultora no configurado.';
+             header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=consultora');
+             exit;
+        }
+
+        // Insertar usuario
+        $password_hash = password_hash($form_data['password'], PASSWORD_BCRYPT);
+        // Nota: empresa_id es NULL para consultores independientes o de la misma consultora
+        $sql = "INSERT INTO usuarios (empresa_id, nombre, apellido, email, password_hash, rol_id, estado) 
+                VALUES (NULL, ?, ?, ?, ?, ?, 'activo')";
+        $stmt = $this->db->prepare($sql);
+
+        try {
+            $stmt->execute([
+                $form_data['nombre'],
+                $form_data['apellido'],
+                $form_data['email'],
+                $password_hash,
+                $rol_id
+            ]);
+
+            $usuario_id = $this->db->lastInsertId();
+
+            // Login automático
+            $_SESSION['user'] = [
+                'id' => $usuario_id,
+                'nombre' => $form_data['nombre'],
+                'apellido' => $form_data['apellido'],
+                'email' => $form_data['email'],
+                'rol' => 'admin_consultora',
+                'rol_nombre' => 'admin_consultora'
+            ];
+
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/dashboard');
+            exit;
+
+        } catch (\PDOException $e) {
+            $_SESSION['error'] = 'Error al registrar: ' . $e->getMessage();
+            $_SESSION['form_data'] = $form_data;
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=consultora');
             exit;
         }
     }

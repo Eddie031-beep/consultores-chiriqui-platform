@@ -1,408 +1,191 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso - Consultores Chiriquí</title>
+    <!-- GLOBAL CSS -->
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/global-dark-mode.css">
+    <!-- ELEGANT AUTH CSS -->
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/auth-elegant.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Compact Panel Overrides */
+        body { margin: 0; padding: 0; }
+        .hero-svg { width: 24px; height: 24px; }
+        
+        .compact-panel {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.15);
+            position: relative;
+            z-index: 10;
+            border: 1px solid rgba(255,255,255,0.5);
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+        .compact-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--auth-text-main);
+        }
+
+        .compact-header p {
+            color: var(--auth-text-muted);
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .role-selector {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .role-btn {
             display: flex;
             align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            justify-content: space-between;
+            padding: 15px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--auth-text-main);
+            transition: all 0.2s ease;
+            font-weight: 600;
+            background: transparent;
         }
 
-        /* Animación de fondo */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-            animation: float 15s ease-in-out infinite;
-            pointer-events: none;
+        .role-btn:hover {
+            border-color: var(--auth-accent);
+            background: rgba(37, 99, 235, 0.05); /* very light blue tint */
+            transform: translateY(-2px);
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .container {
-            max-width: 1000px;
-            width: 100%;
-            padding: 2rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 3rem;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .header h1 {
-            font-size: 2.8em;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .header p {
-            font-size: 1.2em;
-            opacity: 0.95;
-        }
-
-        /* Selector de tipo de usuario */
-        .user-type-selector {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .user-type-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 2.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 3px solid transparent;
-            position: relative;
-            overflow: hidden;
-            animation: slideUp 0.6s ease-out;
-            animation-fill-mode: both;
-        }
-
-        .user-type-card:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-
-        .user-type-card:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .user-type-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        .user-type-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            border-color: #667eea;
-        }
-
-        .user-type-card:hover::before {
-            opacity: 0.1;
-        }
-
-        .user-type-icon {
-            font-size: 4em;
-            margin-bottom: 1rem;
-            position: relative;
-            z-index: 1;
-            animation: bounce 2s ease-in-out infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .user-type-card:hover .user-type-icon {
-            animation: bounceHover 0.6s ease-in-out;
-        }
-
-        @keyframes bounceHover {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2) rotate(10deg); }
-        }
-
-        .user-type-title {
-            font-size: 1.8em;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .user-type-description {
-            color: #666;
-            font-size: 1em;
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Dropdown de cascada */
-        .dropdown-cascade {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            z-index: 1;
-        }
-
-        .user-type-card:hover .dropdown-cascade,
-        .dropdown-cascade.active {
-            max-height: 200px;
-        }
-
-        .cascade-buttons {
+        .role-btn .icon-wrapper {
             display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            padding-top: 1rem;
-            border-top: 2px solid #f0f0f0;
+            align-items: center;
+            gap: 12px;
         }
 
-        .cascade-button {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .role-btn .arrow {
+            color: var(--auth-text-muted);
+            transition: transform 0.2s;
+        }
+
+        .role-btn:hover .arrow {
+            color: var(--auth-accent);
+            transform: translateX(4px);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .divider span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 0 10px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .admin-link {
+            font-size: 0.85rem;
+            color: var(--auth-text-muted);
             text-decoration: none;
-            display: block;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(-20px);
-            animation: cascadeFall 0.5s ease-out forwards;
+            opacity: 0.8;
+            transition: opacity 0.2s;
         }
-
-        .cascade-button:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-
-        .cascade-button:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        @keyframes cascadeFall {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .btn-login {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-login:hover {
-            background: #5568d3;
-            transform: translateX(5px);
-        }
-
-        .btn-register {
-            background: #4caf50;
-            color: white;
-        }
-
-        .btn-register:hover {
-            background: #45a049;
-            transform: translateX(5px);
-        }
-
-        /* Sección de acceso especial */
-        .special-access {
-            text-align: center;
-            margin-top: 2rem;
-            animation: fadeIn 1s ease-out 0.8s both;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        .special-access a {
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-
-        .special-access a:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2em;
-            }
-
-            .user-type-selector {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-
-            .user-type-card {
-                padding: 2rem;
-            }
-
-            .user-type-icon {
-                font-size: 3em;
-            }
-
-            .user-type-title {
-                font-size: 1.5em;
-            }
-        }
-
-        /* Estilo adicional para mantener abierto en mobile */
-        @media (hover: none) {
-            .dropdown-cascade {
-                max-height: 200px;
-            }
+        
+        .admin-link:hover {
+            opacity: 1;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🌟 Bienvenido a Consultores Chiriquí</h1>
-            <p>Elige cómo deseas acceder a la plataforma</p>
-        </div>
+    <div class="auth-portal-wrapper" style="justify-content: center; padding-top: 0;">
+        <!-- Floating Shapes (Subdued) -->
+        <div class="auth-shape shape-a" style="opacity: 0.3; width: 300px; height: 300px;"></div>
+        <div class="auth-shape shape-b" style="opacity: 0.3; width: 200px; height: 200px;"></div>
 
-        <div class="user-type-selector">
-            <!-- Opción: Persona -->
-            <div class="user-type-card" onmouseenter="showDropdown(this)" onmouseleave="hideDropdown(this)">
-                <div class="user-type-icon">👤</div>
-                <h2 class="user-type-title">Persona</h2>
-                <p class="user-type-description">
-                    Busco empleo y deseo postularme a las vacantes disponibles
-                </p>
-                
-                <div class="dropdown-cascade">
-                    <div class="cascade-buttons">
-                        <a href="<?= ENV_APP['BASE_URL'] ?>/auth/login?tipo=persona" class="cascade-button btn-login">
-                            🔑 Iniciar Sesión
-                        </a>
-                        <a href="<?= ENV_APP['BASE_URL'] ?>/auth/registro?tipo=persona" class="cascade-button btn-register">
-                            ✨ Registrarse
-                        </a>
-                    </div>
+        <!-- Back to Home Button -->
+        <a href="<?= ENV_APP['BASE_URL'] ?>" class="btn-back-home">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Inicio
+        </a>
+
+        <div class="compact-panel animate-slide-up">
+            <div class="compact-header">
+                <div style="margin-bottom: 20px;">
+                     <!-- Simple Logo Placeholder or Icon -->
+                     <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="var(--auth-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                     </svg>
                 </div>
+                <h1>Consultores Chiriquí</h1>
+                <p>Selecciona cómo deseas ingresar</p>
             </div>
 
-            <!-- Opción: Empresa -->
-            <div class="user-type-card" onmouseenter="showDropdown(this)" onmouseleave="hideDropdown(this)">
-                <div class="user-type-icon">🏢</div>
-                <h2 class="user-type-title">Empresa</h2>
-                <p class="user-type-description">
-                    Representante de una empresa que busca publicar vacantes
-                </p>
-                
-                <div class="dropdown-cascade">
-                    <div class="cascade-buttons">
-                        <a href="<?= ENV_APP['BASE_URL'] ?>/auth/login?tipo=empresa" class="cascade-button btn-login">
-                            🔑 Iniciar Sesión
-                        </a>
-                        <a href="<?= ENV_APP['BASE_URL'] ?>/auth/registro?tipo=empresa" class="cascade-button btn-register">
-                            ✨ Registrarse
-                        </a>
+            <div class="role-selector">
+                <!-- CANDIDATE -->
+                <a href="<?= ENV_APP['BASE_URL'] ?>/auth/login?tipo=persona" class="role-btn">
+                    <div class="icon-wrapper">
+                        <svg class="hero-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span>Soy Candidato</span>
                     </div>
-                </div>
-            </div>
-        </div>
+                    <span class="arrow">→</span>
+                </a>
 
-        <!-- Acceso especial para consultora -->
-        <div class="special-access">
-            <a href="<?= ENV_APP['BASE_URL'] ?>/auth/login?tipo=consultora">
-                👨‍💼 Acceso Consultora
-            </a>
+                <!-- COMPANY -->
+                <a href="<?= ENV_APP['BASE_URL'] ?>/auth/login?tipo=empresa" class="role-btn">
+                    <div class="icon-wrapper">
+                        <svg class="hero-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                            <line x1="9" y1="22" x2="9" y2="22.01"></line>
+                            <line x1="15" y1="22" x2="15" y2="22.01"></line>
+                        </svg>
+                        <span>Soy Empresa</span>
+                    </div>
+                    <span class="arrow">→</span>
+                </a>
+            </div>
+
+            <div class="divider"><span>O registra una cuenta nueva</span></div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; font-size: 0.9rem; margin-bottom: 25px;">
+                <a href="<?= ENV_APP['BASE_URL'] ?>/auth/registro?tipo=persona" style="color: var(--auth-accent); text-decoration: none; font-weight: 600;">Candidato</a>
+                <span style="color: var(--border-color);">|</span>
+                <a href="<?= ENV_APP['BASE_URL'] ?>/auth/registro?tipo=empresa" style="color: var(--auth-accent); text-decoration: none; font-weight: 600;">Empresa</a>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <a href="<?= ENV_APP['BASE_URL'] ?>/auth/login?tipo=consultora" class="admin-link">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;"><path d="M16.5 10.5V6a3 3 0 0 0-3-3h-3a3 3 0 0 0-3 3v4.5"></path><path d="M6 12h12v9H6z"></path></svg>
+                    Acceso Administrativo
+                </a>
+            </div>
         </div>
     </div>
 
+    <!-- Theme Persist Script -->
     <script>
-        function showDropdown(card) {
-            const dropdown = card.querySelector('.dropdown-cascade');
-            dropdown.classList.add('active');
-        }
-
-        function hideDropdown(card) {
-            // En desktop mantener el dropdown visible al hacer hover
-            // En mobile se mantendrá abierto por el CSS
-        }
-
-        // Para mobile: toggle al hacer click
-        if (window.matchMedia('(max-width: 768px)').matches) {
-            document.querySelectorAll('.user-type-card').forEach(card => {
-                card.addEventListener('click', function(e) {
-                    // No cerrar si se hace click en un botón
-                    if (e.target.classList.contains('cascade-button')) {
-                        return;
-                    }
-                    
-                    const dropdown = this.querySelector('.dropdown-cascade');
-                    dropdown.classList.toggle('active');
-                });
-            });
-        }
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
 </body>
 </html>

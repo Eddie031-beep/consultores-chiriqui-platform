@@ -1,0 +1,261 @@
+/* ========================================
+   DASHBOARD ANIMATIONS & ENHANCEMENTS V2 (The Elegance Update)
+   Archivo: public/assets/css/dashboard-animations.css
+======================================== */
+
+/* --- KEYFRAME ANIMATIONS --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse-soft {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 86, 179, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 86, 179, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 86, 179, 0);
+    }
+}
+
+@keyframes float-y {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+/* --- UTILITY CLASSES FOR ANIMATIONS --- */
+.animate-fade-in {
+    animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-slide-up {
+    opacity: 0;
+    animation: slideUp 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-slide-in-right {
+    opacity: 0;
+    animation: slideInRight 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.delay-100 {
+    animation-delay: 100ms;
+}
+
+.delay-200 {
+    animation-delay: 200ms;
+}
+
+.delay-300 {
+    animation-delay: 300ms;
+}
+
+.delay-400 {
+    animation-delay: 400ms;
+}
+
+.delay-500 {
+    animation-delay: 500ms;
+}
+
+/* --- HERO SECTION RESKIN (ROYAL BLUE) --- */
+.hero-welcome {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    /* Royal Blue Gradient */
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.3);
+    color: white;
+}
+
+/* ... (middle content same) ... */
+
+/* Color Variants (BLUE THEME) */
+.card-gradient-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    /* Blue */
+}
+
+.card-gradient-purple {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    /* Lighter Blue (keeping logic consistent) */
+}
+
+.card-gradient-orange {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    /* Darker Blue (No more orange) */
+}
+
+/* Decor circles for cards */
+.stat-card-v2::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.stat-card-v2 h3 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.2rem;
+    line-height: 1;
+}
+
+.stat-card-v2 p {
+    font-size: 0.95rem;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.stat-card-v2 .icon-wrap {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+/* --- ACTION CARDS (Replaces list actions) --- */
+.action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    text-align: center;
+    gap: 12px;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--secondary-color);
+    /* Coral Accent on Hover */
+    box-shadow: 0 10px 20px -5px rgba(255, 107, 107, 0.15);
+}
+
+.action-card i {
+    font-size: 2rem;
+    background: rgba(37, 99, 235, 0.1);
+    /* Blue Tint */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.action-card:hover i {
+    background: var(--primary-color);
+    /* Blue Background on Hover */
+    color: white;
+}
+
+.action-card span {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* --- ACTIVITY LIST REFINED --- */
+.activity-feed-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.activity-feed-item:last-child {
+    border-bottom: none;
+}
+
+.activity-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* --- DARK MODE OVERRIDES --- */
+[data-theme="dark"] .hero-welcome {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: #334155;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    /* Darker blur */
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .action-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .action-card:hover {
+    background: #252b36;
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .activity-avatar {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+}

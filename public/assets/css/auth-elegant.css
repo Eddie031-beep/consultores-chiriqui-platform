@@ -1,0 +1,493 @@
+/* ========================================
+   ELEGANT AUTHENTICATION (Login & Signup)
+   Archivo: public/assets/css/auth-elegant.css
+======================================== */
+
+:root {
+    /* REFINED THEME: Clean Light + Royal Blue */
+    --auth-bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    /* Light Slate */
+
+    /* PRIMARY ACTION: Royal Blue (Trust & Professionalism) */
+    --auth-accent: #2563eb;
+    /* Blue 600 */
+    --auth-accent-hover: #1d4ed8;
+    /* Blue 700 */
+
+    /* Text Colors for Light Background */
+    --auth-text-main: #1e293b;
+    /* Slate 800 */
+    --auth-text-muted: #64748b;
+    /* Slate 500 */
+
+    --auth-input-bg: #ffffff;
+    --auth-input-border: #cbd5e1;
+    --auth-card-bg: white;
+}
+
+[data-theme="dark"] {
+    --auth-bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+    --auth-accent: #3b82f6;
+    --auth-accent-hover: #60a5fa;
+    --auth-text-main: #f1f5f9;
+    --auth-text-muted: #94a3b8;
+    --auth-input-bg: #1e293b;
+    --auth-input-border: #334155;
+    --auth-card-bg: #1e293b;
+    --bg-body: #020617;
+}
+
+/* --- LAYOUT: SPLIT SCREEN --- */
+.auth-page-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    background: var(--bg-body);
+}
+
+/* LEFT SIDE: VISUAL EXPERIENCE (Dark Indigo BG -> Needs White Text) */
+/* LEFT SIDE: VISUAL EXPERIENCE */
+.auth-visual-side {
+    position: relative;
+    background: var(--auth-bg-gradient);
+    /* Light Gradient */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+    color: var(--auth-text-main);
+    /* Dark Text */
+    overflow: hidden;
+}
+
+.auth-visual-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    max-width: 500px;
+    color: var(--auth-text-main);
+}
+
+.visual-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    line-height: 1.1;
+    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.visual-text {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+/* Floating Shapes Animation */
+.auth-shape {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float-auth 25s infinite linear;
+}
+
+.shape-a {
+    width: 400px;
+    height: 400px;
+    top: -100px;
+    right: -100px;
+}
+
+.shape-b {
+    width: 250px;
+    height: 250px;
+    bottom: 50px;
+    left: -50px;
+    animation-duration: 35s;
+    animation-direction: reverse;
+}
+
+.shape-c {
+    width: 100px;
+    height: 100px;
+    top: 40%;
+    left: 20%;
+    background: linear-gradient(45deg, #ff6b6b, #feca57);
+    opacity: 0.2;
+    animation: pulse-auth 5s infinite ease-in-out;
+}
+
+@keyframes float-auth {
+    0% {
+        transform: rotate(0deg) translate(0, 0);
+    }
+
+    50% {
+        transform: rotate(180deg) translate(20px, 20px);
+    }
+
+    100% {
+        transform: rotate(360deg) translate(0, 0);
+    }
+}
+
+@keyframes pulse-auth {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+/* RIGHT SIDE: INTERACTIVE FORM */
+.auth-form-side {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Center Vertically */
+    padding: 40px;
+    position: relative;
+    background: var(--bg-body);
+}
+
+.auth-card-modern {
+    width: 100%;
+    max-width: 450px;
+    padding: 0;
+    /* Form itself handles spacing */
+    animation: slide-in-right 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slide-in-right {
+    0% {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* HEADER */
+.auth-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.auth-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--auth-text-main);
+    margin-bottom: 10px;
+}
+
+.auth-header p {
+    color: var(--auth-text-muted);
+}
+
+/* FLOATING INPUTS */
+.floating-group {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.input-elegant {
+    width: 100%;
+    padding: 16px 20px;
+    background: var(--auth-input-bg);
+    border: 2px solid var(--auth-input-border);
+    border-radius: 12px;
+    font-size: 1rem;
+    color: var(--auth-text-main);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-elegant:focus {
+    outline: none;
+    border-color: var(--auth-accent);
+    background: var(--bg-body);
+    /* Slightly lighter */
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.1);
+}
+
+.label-elegant {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--auth-text-muted);
+    pointer-events: none;
+    transition: all 0.2s ease;
+    background: transparent;
+    padding: 0 5px;
+    font-size: 1rem;
+}
+
+/* Float State (Focus or Value present) */
+.input-elegant:focus~.label-elegant,
+.input-elegant:not(:placeholder-shown)~.label-elegant {
+    top: 0;
+    transform: translateY(-50%) scale(0.9);
+    background: var(--bg-body);
+    /* Mask line */
+    color: var(--auth-accent);
+    font-weight: 600;
+}
+
+/* BUTTONS WITH "POP" */
+.btn-submit-elegant {
+    width: 100%;
+    padding: 16px;
+    background: var(--auth-accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-submit-elegant:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+    background: color-mix(in srgb, var(--auth-accent), black 5%);
+}
+
+.btn-submit-elegant:active {
+    transform: translateY(0);
+}
+
+/* LINKS ROW */
+.auth-links {
+    margin-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+}
+
+.link-elegant {
+    color: var(--auth-text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.link-elegant:hover {
+    color: var(--auth-accent);
+    text-decoration: underline;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .auth-page-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-visual-side {
+        display: none;
+        /* Hide visual on mobile for focus */
+    }
+
+    .auth-form-side {
+        padding: 30px 20px;
+    }
+}
+
+/* --- PORTAL / SELECTION SCREEN --- */
+.auth-portal-wrapper {
+    min-height: 100vh;
+    width: 100%;
+    background: var(--auth-bg-gradient);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--auth-text-main);
+    /* Dark text for light bg */
+}
+
+.portal-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.portal-header {
+    margin-bottom: 60px;
+    animation: fade-in-down 0.8s ease-out;
+}
+
+.portal-header h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.portal-header p {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+.portal-cards-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-bottom: 60px;
+}
+
+.portal-card {
+    background: white;
+    border-radius: 30px;
+    padding: 50px 40px;
+    width: 380px;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+    border: 1px solid white;
+}
+
+.portal-card:hover {
+    transform: translateY(-15px);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.3);
+}
+
+.portal-icon {
+    font-size: 5rem;
+    margin-bottom: 25px;
+    display: inline-block;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.1));
+    transition: transform 0.4s ease;
+}
+
+.portal-card:hover .portal-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.portal-card h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.portal-card p {
+    opacity: 0.85;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 35px;
+}
+
+.portal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn-portal {
+    background: var(--auth-accent);
+    color: white;
+    padding: 16px;
+    border-radius: 16px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(67, 56, 202, 0.3);
+    /* Indigo Shadow */
+}
+
+.btn-portal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(67, 56, 202, 0.4);
+}
+
+.btn-portal.secondary {
+    background: transparent;
+    color: var(--auth-accent);
+    border: 2px solid var(--auth-accent);
+    box-shadow: none;
+}
+
+.btn-portal.secondary:hover {
+    background: rgba(67, 56, 202, 0.05);
+    border-color: var(--auth-accent);
+}
+
+.btn-back-home {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    color: var(--auth-text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.btn-back-home:hover {
+    background: white;
+    color: var(--auth-accent);
+    transform: translateX(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes fade-in-down {
+    0% {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 900px) {
+    .portal-cards-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .portal-card {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .portal-header h1 {
+        font-size: 2.5rem;
+    }
+}

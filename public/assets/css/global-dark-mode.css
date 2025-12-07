@@ -4,63 +4,77 @@
 ======================================== */
 
 :root {
-    /* --- PALETA DE COLORES (Inspiración Konzerta/LinkedIn) --- */
-    --primary-color: #0056b3;
-    /* Azul Corporativo Profundo */
-    --primary-hover: #004494;
-    --secondary-color: #ff6600;
-    /* Naranja de Acción (CTA) */
-    --secondary-hover: #e65c00;
+    /* --- PALETA DE COLORES: BLUE & WHITE (Professional & Clean) --- */
 
-    /* Fondos */
-    --bg-body: #f0f2f5;
-    /* Gris muy claro para fondo general */
+    /* PRIMARY: Royal Blue (Trust, Corporate) */
+    --primary-color: #2563eb;
+    /* Blue 600 */
+    --primary-hover: #1d4ed8;
+    /* Blue 700 */
+
+    /* SECONDARY: Light Blue / Gray (Subtle Contrast) */
+    --secondary-color: #3b82f6;
+    /* Blue 500 */
+    --secondary-hover: #60a5fa;
+
+    /* Backgrounds */
+    --bg-body: #f8fafc;
+    /* Slate 50 */
     --bg-card: #ffffff;
-    /* Blanco puro para tarjetas */
     --bg-header: #ffffff;
-    /* Blanco para navbar */
 
-    /* Texto */
-    --text-main: #333333;
-    /* Gris casi negro */
-    --text-muted: #666666;
-    /* Gris medio */
-    --text-light: #999999;
-    /* Gris claro */
+    /* Text */
+    --text-main: #1e293b;
+    /* Slate 800 */
+    --text-muted: #64748b;
+    /* Slate 500 */
+    --text-light: #94a3b8;
+    /* Slate 400 */
 
-    /* Bordes y Sombras */
-    --border-color: #e0e0e0;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
-    --radius: 8px;
-    /* Bordes redondeados sutiles */
+    /* Borders & Shadows */
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --radius: 12px;
 
-    /* Estados */
-    --success: #28a745;
-    --warning: #ffc107;
-    --danger: #dc3545;
+    /* States */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
 }
 
 [data-theme="dark"] {
-    --primary-color: #3b82f6;
-    /* Azul más brillante para oscuro */
-    --primary-hover: #2563eb;
-    --secondary-color: #f97316;
-    /* Naranja vibrante */
 
+    /* PRIMARY: Indigo (Brighter for Dark Mode) */
+    --primary-color: #6366f1;
+    /* Indigo 500 */
+    --primary-hover: #818cf8;
+    /* Indigo 400 */
+
+    /* SECONDARY: Coral (Brighter for Dark Mode) */
+    --secondary-color: #fb7185;
+    /* Rose/Coral */
+    --secondary-hover: #f43f5e;
+
+    /* Backgrounds */
     --bg-body: #0f172a;
-    /* Azul oscuro profundo */
+    /* Slate 900 */
     --bg-card: #1e293b;
-    /* Azul grisáceo */
+    /* Slate 800 */
     --bg-header: #1e293b;
 
+    /* Text */
     --text-main: #f1f5f9;
+    /* Slate 100 */
     --text-muted: #94a3b8;
+    /* Slate 400 */
     --text-light: #64748b;
+    /* Slate 500 */
 
+    /* Borders */
     --border-color: #334155;
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 }
 
 /* --- RESET & BASE --- */

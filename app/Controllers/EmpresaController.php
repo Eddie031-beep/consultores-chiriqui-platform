@@ -179,10 +179,10 @@ class EmpresaController extends Controller
     
     public function candidatos(): void {
         $user = Auth::user();
-        $stmt = $this->dbRead->prepare("SELECT p.*, v.titulo as vacante_titulo, s.nombre, s.apellido FROM postulaciones p JOIN vacantes v ON p.vacante_id = v.id JOIN solicitantes s ON p.solicitante_id = s.id WHERE v.empresa_id = ?");
+        $stmt = $this->dbRead->prepare("SELECT p.*, v.titulo as vacante_titulo, s.nombre, s.apellido, s.email, s.telefono FROM postulaciones p JOIN vacantes v ON p.vacante_id = v.id JOIN solicitantes s ON p.solicitante_id = s.id WHERE v.empresa_id = ? ORDER BY p.fecha_postulacion DESC");
         $stmt->execute([$user['empresa_id']]);
         $candidatos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo "<h1>Candidatos</h1><pre>"; print_r($candidatos); echo "</pre><a href='".ENV_APP['BASE_URL']."/empresa/dashboard'>Volver</a>";
+        $this->view('empresa/candidatos', compact('candidatos', 'user'));
     }
     
     public function facturacion(): void {

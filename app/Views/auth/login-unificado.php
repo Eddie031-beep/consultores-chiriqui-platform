@@ -5,361 +5,145 @@ $error = $error ?? '';
 $email = $email ?? '';
 
 $titles = [
-    'persona' => '👤 Iniciar Sesión - Persona',
-    'empresa' => '🏢 Iniciar Sesión - Empresa',
-    'consultora' => '👨‍💼 Iniciar Sesión - Consultora'
+    'persona' => 'Bienvenido de nuevo',
+    'candidato' => 'Bienvenido de nuevo',
+    'empresa' => 'Portal Corporativo',
+    'consultora' => 'Administración'
 ];
 
-$descriptions = [
-    'persona' => 'Accede a tu cuenta para postularte a vacantes',
-    'empresa' => 'Accede al panel de gestión de tu empresa',
-    'consultora' => 'Panel de administración de Consultores Chiriquí'
+$subtitles = [
+    'persona' => 'Ingresa para descubrir tu próximo gran empleo.',
+    'candidato' => 'Ingresa para descubrir tu próximo gran empleo.',
+    'empresa' => 'Gestiona tus vacantes y encuentra el talento ideal.',
+    'consultora' => 'Accede al panel de control global.'
 ];
+
+// Icons rendered as SVGs dynamically below
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $titles[$tipo] ?? 'Iniciar Sesión' ?></title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-            animation: float 15s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .login-container {
-            max-width: 450px;
-            width: 100%;
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.6s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-            padding: 3rem 2.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .login-icon {
-            font-size: 4em;
-            margin-bottom: 1rem;
-            animation: bounce 2s ease-in-out infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .login-title {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-
-        .login-subtitle {
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        .alert {
-            background: rgba(239, 68, 68, 0.1);
-            border-left: 4px solid #ef4444;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            border-radius: 8px;
-            color: #dc2626;
-            font-size: 0.9rem;
-            animation: shake 0.5s ease-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #333;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .form-input-wrapper {
-            position: relative;
-        }
-
-        .form-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.2rem;
-            color: #999;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.875rem 1rem 0.875rem 3rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-            background: white;
-            color: #333;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-input::placeholder {
-            color: #999;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin: 2rem 0;
-            color: #999;
-            font-size: 0.85rem;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e5e7eb;
-        }
-
-        .login-footer {
-            text-align: center;
-            margin-top: 2rem;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .login-footer a {
-            color: #667eea;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .login-footer a:hover {
-            color: #764ba2;
-        }
-
-        @media (max-width: 480px) {
-            .login-card {
-                padding: 2rem 1.5rem;
-            }
-
-            .login-title {
-                font-size: 1.75rem;
-            }
-        }
-
-        .loading {
-            pointer-events: none;
-            opacity: 0.7;
-        }
-
-        .loading::after {
-            content: '';
-            width: 16px;
-            height: 16px;
-            border: 2px solid transparent;
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    <title><?= $titles[$tipo] ?></title>
+    <!-- GLOBAL CSS -->
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/global-dark-mode.css">
+    <!-- ELEGANT AUTH CSS -->
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/auth-elegant.css">
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-icon">
-                    <?php
-                    $icons = ['persona' => '👤', 'empresa' => '🏢', 'consultora' => '👨‍💼'];
-                    echo $icons[$tipo] ?? '🔑';
-                    ?>
+    <div class="auth-page-wrapper">
+        
+        <!-- LEFT SIDE: VISUAL EXPERIENCE -->
+        <div class="auth-visual-side">
+            <!-- Animated Background Shapes -->
+            <div class="auth-shape shape-a"></div>
+            <div class="auth-shape shape-b"></div>
+            
+            <div class="auth-visual-content">
+                <div style="margin-bottom: 30px; color: white;">
+                    <?php if($tipo === 'persona' || $tipo === 'candidato'): ?>
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    <?php elseif($tipo === 'empresa'): ?>
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                            <path d="M9 22v-4h6v4"></path>
+                            <path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path>
+                        </svg>
+                    <?php else: ?>
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    <?php endif; ?>
                 </div>
-                <h1 class="login-title"><?= $titles[$tipo] ?? 'Iniciar Sesión' ?></h1>
-                <p class="login-subtitle"><?= $descriptions[$tipo] ?? 'Accede a tu cuenta' ?></p>
+                <h1 class="visual-title"><?= $titles[$tipo] ?></h1>
+                <p class="visual-text"><?= $subtitles[$tipo] ?></p>
             </div>
+        </div>
 
-            <?php if ($error): ?>
-                <div class="alert">
-                    ⚠️ <?= htmlspecialchars($error) ?>
+        <!-- RIGHT SIDE: INTERACTIVE FORM -->
+        <div class="auth-form-side" style="position: relative;">
+            <a href="<?= ENV_APP['BASE_URL'] ?>" style="position: absolute; top: 20px; right: 20px; text-decoration: none; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 5px; z-index: 10;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Inicio
+            </a>
+            <div class="auth-card-modern">
+                <div class="auth-header">
+                    <h2>Iniciar Sesión</h2>
+                    <p>Introduce tus credenciales para continuar</p>
                 </div>
-            <?php endif; ?>
 
-            <form method="POST" action="<?= ENV_APP['BASE_URL'] ?>/auth/login" id="loginForm">
-                <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipo) ?>">
-                
-                <div class="form-group">
-                    <label class="form-label" for="email">Correo Electrónico</label>
-                    <div class="form-input-wrapper">
-                        <span class="form-icon">📧</span>
+                <?php if ($error): ?>
+                    <div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 15px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid #ef4444; display: flex; align-items: center; gap: 10px; font-size: 0.95rem;">
+                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        <span><?= htmlspecialchars($error) ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <form method="POST" action="<?= ENV_APP['BASE_URL'] ?>/auth/login" id="loginForm">
+                    <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipo) ?>">
+
+                    <div class="floating-group">
                         <input 
                             type="email" 
-                            class="form-input" 
                             id="email" 
                             name="email" 
+                            class="input-elegant" 
+                            placeholder=" " 
                             value="<?= htmlspecialchars($email) ?>"
-                            placeholder="tu@email.com"
-                            required
-                            autocomplete="email"
+                            required 
                             autofocus
                         >
+                        <label for="email" class="label-elegant">Correo Electrónico</label>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="password">Contraseña</label>
-                    <div class="form-input-wrapper">
-                        <span class="form-icon">🔒</span>
+                    <div class="floating-group">
                         <input 
                             type="password" 
-                            class="form-input" 
                             id="password" 
                             name="password" 
-                            placeholder="••••••••"
+                            class="input-elegant" 
+                            placeholder=" " 
                             required
-                            autocomplete="current-password"
                         >
+                        <label for="password" class="label-elegant">Contraseña</label>
                     </div>
+
+                    <div style="text-align: right; margin-bottom: 20px;">
+                        <a href="#" class="link-elegant" style="font-size: 0.9rem;">¿Olvidaste tu contraseña?</a>
+                    </div>
+
+                    <button type="submit" class="btn-submit-elegant">
+                        <span>Acceder Ahora</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </button>
+                </form>
+
+                <div class="auth-links">
+                    <span>¿No tienes una cuenta?</span>
+                    <a href="<?= ENV_APP['BASE_URL'] ?>/auth/registro?tipo=<?= htmlspecialchars($tipo) ?>" class="link-elegant" style="font-weight: 700;">
+                        Crear Cuenta Nueva
+                    </a>
                 </div>
 
-                <button type="submit" class="btn btn-primary">
-                    🔓 Iniciar Sesión
-                </button>
-            </form>
-
-            <div class="divider">o</div>
-
-            <div class="login-footer">
-                <p>
-                    ¿No tienes una cuenta? 
-                    <a href="<?= ENV_APP['BASE_URL'] ?>/auth/registro?tipo=<?= htmlspecialchars($tipo) ?>">
-                        Regístrate aquí
+                <div style="margin-top: 30px; text-align: center;">
+                    <a href="<?= ENV_APP['BASE_URL'] ?>/auth" class="link-elegant">
+                        ← Cambiar tipo de usuario
                     </a>
-                </p>
-                <p style="margin-top: 1rem;">
-                    <a href="<?= ENV_APP['BASE_URL'] ?>/auth">← Volver a opciones de acceso</a>
-                </p>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Theme Persist Script -->
     <script>
-        const form = document.getElementById('loginForm');
-        const submitButton = form.querySelector('.btn-primary');
-
-        form.addEventListener('submit', function() {
-            submitButton.classList.add('loading');
-            submitButton.textContent = 'Iniciando sesión...';
-        });
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
 </body>
 </html>
