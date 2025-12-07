@@ -187,7 +187,8 @@ $userRole = $isLoggedIn ? ($_SESSION['user']['rol'] ?? '') : '';
     <div class="navbar-container">
         <!-- Logo -->
         <a href="<?= $baseUrl ?>" class="navbar-logo">
-            <img src="<?= $assetsUrl ?>/img/logo_chiriqui_clean.png" alt="Consultores Chiriquí" style="height: 65px; width: auto; object-fit: contain;">
+            <img src="<?= $assetsUrl ?>/img/logo.png" alt="Consultores Chiriquí" height="50">
+            <span style="font-size: 1.25rem; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">Consultores Chiriquí</span>
         </a>
 
         <!-- Menú -->
@@ -217,6 +218,8 @@ $userRole = $isLoggedIn ? ($_SESSION['user']['rol'] ?? '') : '';
                             <a href="<?= $baseUrl ?>/empresa/dashboard" class="dropdown-item">📊 Panel Empresa</a>
                         <?php elseif ($userRole === 'candidato'): ?>
                             <a href="<?= $baseUrl ?>/candidato/dashboard" class="dropdown-item">📋 Mis Postulaciones</a>
+                        <?php elseif ($userRole === 'admin_consultora'): ?>
+                             <a href="<?= $baseUrl ?>/consultora/dashboard" class="dropdown-item">🏢 Panel Consultora</a>
                         <?php endif; ?>
                         <div style="height: 1px; background: #e2e8f0; margin: 5px 0;"></div>
                         <a href="<?= $baseUrl ?>/logout" class="dropdown-item" style="color: #ef4444;">🚪 Cerrar Sesión</a>

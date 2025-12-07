@@ -23,6 +23,8 @@ class ConsultoraController extends Controller
     // ============ DASHBOARD CONSULTORA ============
     public function dashboard(): void
     {
+        $user = Auth::user();
+
         // Estadísticas generales
         $empresasStmt = $this->db->query("SELECT COUNT(*) as total FROM empresas WHERE estado = 'activa'");
         $totalEmpresas = $empresasStmt->fetch(PDO::FETCH_ASSOC)['total'];
@@ -44,12 +46,37 @@ class ConsultoraController extends Controller
         ");
         $ultimasEmpresas = $ultimasStmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // --- NUEVO: ESTADÍSTICAS FINANCIERAS POR EMPRESA (TOP 5) ---
+        $sqlStats = "
+            SELECT 
+                e.nombre,
+                COUNT(CASE WHEN iv.tipo_interaccion = 'ver_detalle' THEN 1 END) as vistas,
+                COUNT(CASE WHEN iv.tipo_interaccion = 'click_aplicar' THEN 1 END) as aplicaciones,
+                -- Cálculo aproximado de facturación (Vista=0.10, Click=0.15, Chat=0.05)
+                FORMAT(
+                    (COUNT(CASE WHEN iv.tipo_interaccion = 'ver_detalle' THEN 1 END) * 0.10) +
+                    (COUNT(CASE WHEN iv.tipo_interaccion = 'click_aplicar' THEN 1 END) * 0.15) +
+                    (COUNT(CASE WHEN iv.tipo_interaccion = 'chat_consulta' THEN 1 END) * 0.05), 
+                2) as facturacion_estimada
+            FROM empresas e
+            LEFT JOIN vacantes v ON e.id = v.empresa_id
+            LEFT JOIN interacciones_vacante iv ON v.id = iv.vacante_id
+            WHERE e.estado = 'activa'
+            GROUP BY e.id
+            ORDER BY facturacion_estimada DESC
+            LIMIT 5
+        ";
+        $topEmpresasStmt = $this->db->query($sqlStats);
+        $topEmpresas = $topEmpresasStmt->fetchAll(PDO::FETCH_ASSOC);
+
         $this->view('dashboard/consultora', compact(
             'totalEmpresas',
             'totalVacantes',
             'totalPostulaciones',
             'totalInteracciones',
-            'ultimasEmpresas'
+            'ultimasEmpresas',
+            'topEmpresas',
+            'user'
         ));
     }
 
@@ -324,5 +351,61 @@ class ConsultoraController extends Controller
         $contratos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $this->view('dashboard/contratos-consultora', compact('contratos'));
+    }
+
+    // ============ FACTURACIÓN Y ESTADÍSTICAS ============
+    public function facturacion($subpage = null): void
+    {
+        if ($subpage === 'estadisticas') {
+            // Reutilizamos la lógica del dashboard para las estadísticas detalladas
+            // O podríamos cargar una vista específica con más detalles
+            $this->estadisticas();
+            return;
+        }
+
+        // Lógica para la página principal de facturación (Listado de facturas, etc.)
+        // Por ahora, pasamos datos de ejemplo o vacíos
+        $facturas = []; // Aquí iría la consulta a la tabla de facturas
+        $this->view('dashboard/facturacion', compact('facturas'));
+    }
+
+    public function verEstadisticas(): void
+    {
+         // Lógica completa de estadísticas (similar al dashboard pero más detallada)
+         // Por ahora reutilizamos la lógica básica del dashboard para no dejar vacío
+         $sqlStats = "
+            SELECT 
+                e.nombre,
+                COUNT(CASE WHEN iv.tipo_interaccion = 'ver_detalle' THEN 1 END) as vistas,
+                COUNT(CASE WHEN iv.tipo_interaccion = 'click_aplicar' THEN 1 END) as aplicaciones,
+                FORMAT(
+                    (COUNT(CASE WHEN iv.tipo_interaccion = 'ver_detalle' THEN 1 END) * 0.10) +
+                    (COUNT(CASE WHEN iv.tipo_interaccion = 'click_aplicar' THEN 1 END) * 0.15) +
+                    (COUNT(CASE WHEN iv.tipo_interaccion = 'chat_consulta' THEN 1 END) * 0.05), 
+                2) as facturacion_estimada
+            FROM empresas e
+            LEFT JOIN vacantes v ON e.id = v.empresa_id
+            LEFT JOIN interacciones_vacante iv ON v.id = iv.vacante_id
+            WHERE e.estado = 'activa'
+            GROUP BY e.id
+            ORDER BY facturacion_estimada DESC
+        ";
+        $topEmpresasStmt = $this->db->query($sqlStats);
+        $topEmpresas = $topEmpresasStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $this->view('dashboard/estadisticas', compact('topEmpresas'));
+    }
+
+    // ============ INFORMACIÓN CONSULTORA ============
+    public function info(): void
+    {
+        // Datos estáticos o de la BD sobre la consultora
+        $info = [
+            'nombre' => 'Consultores Chiriquí S.A.',
+            'direccion' => 'Plaza Las Lomas, David, Chiriquí',
+            'telefono' => '+507 775-0000',
+            'email' => 'admin@consultoreschiriqui.com'
+        ];
+        $this->view('dashboard/info', compact('info'));
     }
 }

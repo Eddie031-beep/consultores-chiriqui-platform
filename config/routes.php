@@ -45,6 +45,7 @@ $routes = [
         '/consultora/empresas/(?P<id>\d+)/editar' => 'ConsultoraController@editarEmpresa',
         '/consultora/contratos/(?P<id>\d+)' => 'ConsultoraController@verContrato',
         '/consultora/facturacion' => 'FacturacionController@listar',
+        '/consultora/facturacion/estadisticas' => 'ConsultoraController@verEstadisticas', // New explicit route
         '/consultora/facturacion/generar' => 'FacturacionController@generar',
         '/consultora/facturacion/ver/(?P<id>\d+)' => 'FacturacionController@ver',
         '/consultora/info' => 'ConsultoraController@info',
@@ -76,6 +77,7 @@ $routes = [
         '/consultora/empresas/crear' => 'ConsultoraController@storeEmpresa',
         '/consultora/empresas/(?P<id>\d+)/editar' => 'ConsultoraController@updateEmpresa',
         '/consultora/facturacion/generar' => 'FacturacionController@procesarFactura',
+        '/consultora/facturacion/actualizar/(?P<id>\d+)' => 'FacturacionController@actualizarEstado', // New route
         
         // Chatbot
         '/chatbot' => 'ChatbotController@chat',

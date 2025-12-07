@@ -80,12 +80,27 @@ class VacanteController extends Controller
             return;
         }
 
-        // Registrar interacción
-        $interaccionStmt = $this->db->prepare("
-            INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id)
-            VALUES (?, 'ver_detalle', 'web', ?, ?)
+        // 2. Lógica de Contador de Vistas (Única por IP/Sesión hoy)
+        $session_id = session_id() ?: $_COOKIE['PHPSESSID'] ?? '';
+        $ip_address = $_SERVER['REMOTE_ADDR'];
+
+        $checkStmt = $this->db->prepare("
+            SELECT id FROM interacciones_vacante 
+            WHERE vacante_id = ? 
+            AND tipo_interaccion = 'ver_detalle'
+            AND (ip = ? OR session_id = ?)
+            AND DATE(fecha_hora) = CURDATE()
         ");
-        $interaccionStmt->execute([$vacante['id'], $_SERVER['REMOTE_ADDR'], session_id()]);
+        $checkStmt->execute([$vacante['id'], $ip_address, $session_id]);
+        $existe = $checkStmt->fetch();
+
+        if (!$existe) {
+            $interaccionStmt = $this->db->prepare("
+                INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id)
+                VALUES (?, 'ver_detalle', 'web', ?, ?)
+            ");
+            $interaccionStmt->execute([$vacante['id'], $ip_address, $session_id]);
+        }
 
         $this->view('vacantes/detalle', compact('vacante'));
     }

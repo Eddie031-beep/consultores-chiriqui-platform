@@ -161,7 +161,40 @@ class CandidatoController extends Controller
     }
 
     public function postular($vacante_id): void {
-        // (Tu código existente de postulación va aquí...)
-        // Asegúrate de copiar el contenido de tu método postular original
+        $user = Auth::user();
+        
+        // 1. Verificar si ya se postuló
+        $stmtCheck = $this->db->prepare("SELECT id FROM postulaciones WHERE vacante_id = ? AND solicitante_id = ?");
+        $stmtCheck->execute([$vacante_id, $user['id']]);
+        
+        if ($stmtCheck->fetch()) {
+            $_SESSION['message'] = ['type' => 'warning', 'text' => 'Ya te has postulado a esta vacante anteriormente.'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/postulaciones');
+            exit;
+        }
+
+        // 2. Insertar postulación
+        $stmt = $this->db->prepare("
+            INSERT INTO postulaciones (vacante_id, solicitante_id, fecha_postulacion, estado) 
+            VALUES (?, ?, NOW(), 'pendiente')
+        ");
+        
+        try {
+            $stmt->execute([$vacante_id, $user['id']]);
+            
+            // 3. Registrar interacción
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $sid = session_id();
+            $log = $this->db->prepare("INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id) VALUES (?, 'aplicacion_exitosa', 'web', ?, ?)");
+            $log->execute([$vacante_id, $ip, $sid]);
+
+            $_SESSION['message'] = ['type' => 'success', 'text' => '¡Te has postulado exitosamente! La empresa revisará tu perfil.'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/postulaciones');
+            exit;
+        } catch (\PDOException $e) {
+            $_SESSION['message'] = ['type' => 'error', 'text' => 'Error al procesar la postulación. Intenta nuevamente.'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/vacantes/' . $vacante_id); // Fallback redirection
+            exit;
+        }
     }
 }

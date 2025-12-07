@@ -177,7 +177,12 @@ class FacturacionController extends Controller
         $stmtDet->execute([$id]);
         $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
 
-        $this->view('facturacion/ver', compact('factura', 'detalles'));
+        // Generar URL para código QR (usando API pública para compatibilidad)
+        // Simula la URL de la DGI de Panamá
+        $dgiUrl = "https://dgi.mef.gob.pa/consultas?cufe=" . ($factura['token_publico'] ?? 'N/A');
+        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($dgiUrl);
+
+        $this->view('facturacion/ver', compact('factura', 'detalles', 'qrUrl'));
     }
 
     // ============ DESCARGAR PDF ============
@@ -212,6 +217,25 @@ class FacturacionController extends Controller
         echo "ITBMS (7%): B/. " . number_format($factura['itbms'], 2) . "\n";
         echo "TOTAL: B/. " . number_format($factura['total'], 2) . "\n\n";
         echo "Estado: " . ucfirst($factura['estado']) . "\n";
+        exit;
+    }
+    // ============ ACTUALIZAR ESTADO ============
+    public function actualizarEstado($id): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/facturacion');
+            exit;
+        }
+
+        $nuevoEstado = $_POST['estado_factura'] ?? '';
+        $id = (int)$id;
+
+        if (in_array($nuevoEstado, ['emitida', 'pagada', 'anulada'])) {
+            $stmt = $this->db->prepare("UPDATE facturas SET estado = ? WHERE id = ?");
+            $stmt->execute([$nuevoEstado, $id]);
+        }
+
+        header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/facturacion/ver/' . $id);
         exit;
     }
 }

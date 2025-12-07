@@ -98,7 +98,27 @@ class EmpresaController extends Controller
         $stmtContrato->execute([$empresaId]);
         $contratoAceptado = $stmtContrato->fetch() ? true : false;
 
-        $this->view('dashboard/empresa', compact('user', 'vacantesActivas', 'totalCandidatos', 'consumoActual', 'actividadReciente', 'contratoAceptado'));
+        // 6. DATOS MOCK PARA REDISEÑO (Solicitud Frontend)
+        $reputacion = 4.5;
+        $valoraciones = [
+            [
+                'autor' => 'Candidato Anónimo',
+                'fecha' => 'Hace 2 días',
+                'estrellas' => 5,
+                'comentario' => 'Excelente proceso de selección, muy rápidos en contestar.'
+            ],
+            [
+                'autor' => 'Juan Pérez',
+                'fecha' => 'Hace 1 semana',
+                'estrellas' => 3,
+                'comentario' => 'La entrevista fue buena pero el salario no era el publicado.'
+            ]
+        ];
+
+        $this->view('dashboard/empresa', compact(
+            'user', 'vacantesActivas', 'totalCandidatos', 'consumoActual', 
+            'actividadReciente', 'contratoAceptado', 'reputacion', 'valoraciones'
+        ));
     }
 
     // ============ ACEPTAR CONTRATO ============

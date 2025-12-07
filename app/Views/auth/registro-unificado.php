@@ -100,6 +100,22 @@ $subtitles = [
                             </div>
                         </div>
 
+                        <!-- NEW FIELDS ADDED -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="floating-group">
+                                <input type="date" name="fecha_nacimiento" class="input-elegant" placeholder=" " value="<?= htmlspecialchars($form_data['fecha_nacimiento'] ?? '') ?>">
+                                <label class="label-elegant">Fecha de Nacimiento</label>
+                            </div>
+                            <div class="floating-group">
+                                <select name="nacionalidad" class="input-elegant" style="background: white;">
+                                    <option value="" disabled selected>Seleccione...</option>
+                                    <option value="Panamá" <?= ($form_data['nacionalidad']??'') == 'Panamá' ? 'selected' : '' ?>>Panamá</option>
+                                    <option value="Extranjero" <?= ($form_data['nacionalidad']??'') == 'Extranjero' ? 'selected' : '' ?>>Extranjero</option>
+                                </select>
+                                <label class="label-elegant">Nacionalidad</label>
+                            </div>
+                        </div>
+
                     <?php elseif ($tipo === 'empresa'): ?>
                         <!-- FORMULARIO EMPRESA -->
                         <div class="floating-group">

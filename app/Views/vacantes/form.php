@@ -68,6 +68,12 @@
         <input type="text" id="ubicacion" name="ubicacion" value="<?= htmlspecialchars($valor('ubicacion')) ?>" required>
         <?php if (!empty($errores['ubicacion'])): ?><div class="error"><?= htmlspecialchars($errores['ubicacion']) ?></div><?php endif; ?>
 
+        <!-- COST INPUT -->
+        <label for="costo">Costo por Vista ($):</label>
+        <input type="number" id="costo" name="costo_por_vista" step="0.01" min="1.00" max="10.00" value="<?= htmlspecialchars($valor('costo_por_vista', '1.00')) ?>" required>
+        <small style="display:block;margin-top:-0.5rem;margin-bottom:0.75rem;color:#94a3b8;font-size:0.8rem;">El costo debe estar entre B/. 1.00 y B/. 10.00</small>
+        <!-- END COST INPUT -->
+
         <label for="modalidad">Modalidad</label>
         <select id="modalidad" name="modalidad">
             <?php

@@ -156,7 +156,9 @@ try {
 
                         <div class="card-actions-v2" style="margin-top: 15px;">
                             <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes/<?= htmlspecialchars($vacante['slug']) ?>" class="btn-outline">Ver Detalles</a>
-                            <a href="<?= ENV_APP['BASE_URL'] ?>/postular/<?= $vacante['id'] ?>" class="btn-fill">Postulación Rápida ⚡</a>
+                            <a href="<?= ENV_APP['BASE_URL'] ?>/postular/<?= $vacante['id'] ?>" class="btn-fill">
+                                Postularme
+                            </a>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -172,5 +174,7 @@ try {
         localStorage.setItem('theme', 'light');
         document.documentElement.setAttribute('data-theme', 'light');
     </script>
+    <?php include __DIR__ . '/components/chatbot-widget.php'; ?>
+
 </body>
 </html>

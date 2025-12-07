@@ -1,219 +1,113 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Candidatos | Consultores Chiriquí</title>
-    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/global-dark-mode.css">
-    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-animations.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap & Modern Font -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        .candidates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
+        body { background-color: #f8f9fc; font-family: 'Nunito', sans-serif; }
+        .text-primary { color: #4e73df !important; }
+        .shadow-sm { box-shadow: 0 .125rem .25rem 0 rgba(58,59,69,.2)!important; }
         
-        .candidate-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 20px;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
+        /* Navbar Tweaks */
+        .navbar { border-bottom: 1px solid #e3e6f0; }
+        .nav-link { color: #858796; font-weight: 600; }
+        .nav-link.active { color: #4e73df; }
+        .nav-link:hover { color: #2e59d9; }
         
-        .candidate-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary-color);
-        }
-
-        .candidate-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
         .avatar-circle {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.2rem;
-        }
-
-        .candidate-info h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--text-main);
-        }
-
-        .candidate-info p {
-            margin: 2px 0 0;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .meta-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: var(--text-light);
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .action-row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-view {
-            flex: 1;
-            padding: 8px;
-            text-align: center;
-            background: rgba(0, 86, 179, 0.1);
-            color: var(--primary-color);
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .btn-view:hover {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .btn-contact {
-            padding: 8px 12px;
-            background: rgba(40, 167, 69, 0.1);
-            color: var(--success);
-            border-radius: 6px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-contact:hover {
-            background: var(--success);
-            color: white;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-            color: var(--text-muted);
+            width: 40px; height: 40px;
+            background-color: #4e73df; color: white;
+            border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-weight: bold; margin-right: 10px;
         }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar animate-fade-in">
-        <div class="container navbar-content">
-            <div class="brand-logo">
-                Consultores<span>Chiriquí</span>
-            </div>
-            <div class="nav-links">
-                <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/dashboard" class="nav-item">Dashboard</a>
-                <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes" class="nav-item">Mis Vacantes</a>
-                <a href="#" class="nav-item active">Candidatos</a>
-                <a href="<?= ENV_APP['BASE_URL'] ?>/logout" class="nav-item" style="color: var(--danger);">Salir</a>
-            </div>
-        </div>
-    </nav>
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <img src="<?= ENV_APP['ASSETS_URL'] ?>/img/logo.png" alt="Consultores Chiriquí" height="50" class="me-3">
+            <span class="fw-bold text-dark" style="font-size: 1.25rem; letter-spacing: -0.5px;">Consultores Chiriquí</span>
+        </a>
 
-    <div class="container dashboard-wrapper animate-fade-in">
-        <div class="welcome-section">
-            <div class="welcome-text">
-                <h1>Candidatos Postulados</h1>
-                <p>Gestione los talentos interesados en sus vacantes.</p>
-            </div>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-medium" href="<?= ENV_APP['BASE_URL'] ?>/">
+                        <i class="fas fa-home me-1"></i> Inicio / Mercado
+                    </a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="<?= ENV_APP['BASE_URL'] ?>/empresa/dashboard">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes">Mis Vacantes</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#">Candidatos</a></li>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="<?= ENV_APP['BASE_URL'] ?>/logout">Salir <i class="fas fa-sign-out-alt"></i></a>
+                </li>
+            </ul>
         </div>
+    </div>
+</nav>
 
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Candidatos Postulados</h1>
+    </div>
+
+    <div class="row">
         <?php if (empty($candidatos)): ?>
-            <div class="card-box empty-state animate-slide-up">
-                <div style="font-size: 3rem; margin-bottom: 15px;">👥</div>
-                <h3>No hay candidatos aún</h3>
-                <p>Cuando alguien se postule a sus vacantes, aparecerán aquí.</p>
+            <div class="col-12">
+                <div class="card border-0 shadow-sm py-5 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Aún no hay candidatos</h5>
+                        <p class="text-muted small">Tus vacantes están esperando talento.</p>
+                    </div>
+                </div>
             </div>
         <?php else: ?>
-            <div class="candidates-grid">
-                <?php $delay = 100; ?>
-                <?php foreach ($candidatos as $c): ?>
-                    <div class="candidate-card animate-slide-up" style="animation-delay: <?= $delay ?>ms">
-                        <div class="candidate-header">
+            <?php foreach ($candidatos as $c): ?>
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
                             <div class="avatar-circle">
                                 <?= strtoupper(substr($c['nombre'], 0, 1) . substr($c['apellido'], 0, 1)) ?>
                             </div>
-                            <div class="candidate-info">
-                                <h3><?= htmlspecialchars($c['nombre'] . ' ' . $c['apellido']) ?></h3>
-                                <p>Postulado para: <strong><?= htmlspecialchars($c['vacante_titulo']) ?></strong></p>
+                            <div>
+                                <h5 class="card-title mb-0 fw-bold" style="font-size: 1.1rem;"><?= htmlspecialchars($c['nombre'] . ' ' . $c['apellido']) ?></h5>
+                                <small class="text-muted">Solicitante ID: #<?= $c['solicitante_id'] ?></small>
                             </div>
                         </div>
-
-                        <div class="meta-row">
-                            <span>📅 <?= date('d M Y', strtotime($c['fecha_postulacion'])) ?></span>
-                            <span>ID Solicitante: #<?= $c['solicitante_id'] ?></span>
+                        
+                        <div class="mb-3">
+                            <small class="text-uppercase fw-bold text-xs text-primary">Postulado a:</small>
+                            <div class="fw-bold text-dark"><?= htmlspecialchars($c['vacante_titulo']) ?></div>
+                            <small class="text-muted"><i class="far fa-clock me-1"></i> <?= date('d M Y', strtotime($c['fecha_postulacion'])) ?></small>
                         </div>
 
-                        <div class="action-row">
-                            <a href="#" class="btn-view">Ver Perfil</a> 
-                            <a href="mailto:<?= htmlspecialchars($c['email'] ?? '') ?>" class="btn-contact" title="Enviar Correo">
-                                ✉️
+                        <div class="d-grid gap-2">
+                            <a href="mailto:<?= htmlspecialchars($c['email'] ?? '') ?>" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-envelope"></i> Contactar
+                            </a>
+                            <a href="#" class="btn btn-primary btn-sm">
+                                <i class="fas fa-user-circle"></i> Ver Perfil Completo
                             </a>
                         </div>
                     </div>
-                    <?php $delay += 100; ?>
-                <?php endforeach; ?>
+                </div>
             </div>
+            <?php endforeach; ?>
         <?php endif; ?>
     </div>
 
-    <!-- ELEGANT THEME TOGGLE (Floating Pill) -->
-    <button class="theme-toggle" id="themeToggle" title="Modo Oscuro/Claro" 
-            style="position: fixed; bottom: 30px; right: 30px; width: 55px; height: 55px; border-radius: 50%; background: var(--text-main); color: var(--bg-body); border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2); cursor: pointer; display: grid; place-items: center; z-index: 1000; font-size: 1.5rem; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-        🌙
-    </button>
+</div>
 
-    <script>
-        // Theme Toggle Logic
-        const toggleBtn = document.getElementById('themeToggle');
-        const html = document.documentElement;
-        
-        // Check saved theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        updateIcon(savedTheme);
-
-        toggleBtn.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
-            // Add rotation animation
-            toggleBtn.style.transform = 'rotate(360deg)';
-            setTimeout(() => toggleBtn.style.transform = 'none', 300);
-
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateIcon(newTheme);
-        });
-
-        function updateIcon(theme) {
-            toggleBtn.textContent = theme === 'light' ? '🌙' : '☀️';
-        }
-    </script>
 </body>
 </html>

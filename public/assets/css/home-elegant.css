@@ -1,158 +1,33 @@
 /* ========================================
-   HOME PAGE ELEGANCE (Visual Overhaul)
+   HOME PAGE - CORPORATE & CLEAN STYLE
    Archivo: public/assets/css/home-elegant.css
 ======================================== */
 
-/* --- HERO SECTION REIMAGINED --- */
-/* --- HERO SECTION REIMAGINED (ROYAL BLUE + TEAL ACCENT) --- */
+:root {
+    /* PALETA CORPORATIVA */
+    --corp-bg-hero: radial-gradient(circle at top right, #1e3a8a 0%, #0f172a 100%);
+    /* Azul Profundo */
+    --corp-indigo: #4f46e5;
+    /* Índigo Suave (Botones) */
+    --corp-indigo-hover: #4338ca;
+    --corp-slate: #475569;
+    /* Gris Pizarra (Texto secundario) */
+    --corp-border: #e2e8f0;
+}
+
+/* --- HERO SECTION (Serio y Profesional) --- */
 .hero-extended {
     position: relative;
-    /* Richer Gradient: Deep Blue -> Royal Blue -> Teal */
-    background: radial-gradient(circle at top right, #06b6d4 0%, transparent 35%),
-        linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #0891b2 100%);
-    padding: 160px 20px 180px;
+    background: var(--corp-bg-hero);
+    padding: 120px 20px 140px;
+    /* Reduje el padding para que no sea tan gigante */
     color: white;
     text-align: center;
     overflow: hidden;
     margin-bottom: 0;
-    box-shadow: 0 10px 40px -10px rgba(8, 145, 178, 0.4);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.2);
 }
 
-/* ... (Shapes) ... */
-.shape-1 {
-    width: 300px;
-    height: 300px;
-    top: -50px;
-    left: -50px;
-    background: linear-gradient(45deg, #22d3ee, #06b6d4);
-    /* Vibrancy */
-    opacity: 0.15;
-    animation-duration: 25s;
-}
-
-.shape-2 {
-    width: 250px;
-    height: 250px;
-    bottom: 50px;
-    right: -20px;
-    background: #0ea5e9;
-    /* Sky Blue */
-    opacity: 0.1;
-    animation-duration: 18s;
-    animation-delay: -5s;
-}
-
-/* ... (Search Bar) ... */
-.glass-search-bar {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 35px;
-    box-shadow: 0 25px 50px -12px rgba(8, 145, 178, 0.15);
-    /* Teal Tint Shadow */
-    border: 1px solid rgba(255, 255, 255, 0.9);
-    border-top: 4px solid #06b6d4;
-    /* Color Accent Line */
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-/* ... (Button) ... */
-.custom-btn {
-    padding: 14px 30px;
-    background: linear-gradient(135deg, #0891b2, #0284c7);
-    /* Teal to Blue */
-    color: white;
-    font-weight: 700;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    font-size: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.custom-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px -5px rgba(6, 182, 212, 0.4);
-    /* Teal Glow */
-}
-
-/* Dynamic Animated Background */
-.hero-bg-anim {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: 1;
-}
-
-.floating-shape {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    animation: float 20s infinite linear;
-}
-
-.shape-1 {
-    width: 300px;
-    height: 300px;
-    top: -50px;
-    left: -50px;
-    animation-duration: 25s;
-}
-
-.shape-2 {
-    width: 200px;
-    height: 200px;
-    bottom: 50px;
-    right: -20px;
-    background: rgba(255, 255, 255, 0.05);
-    animation-duration: 18s;
-    animation-delay: -5s;
-}
-
-.shape-3 {
-    width: 100px;
-    height: 100px;
-    top: 40%;
-    left: 20%;
-    background: rgba(255, 255, 255, 0.08);
-    animation: pulse-float 8s infinite ease-in-out;
-}
-
-@keyframes float {
-    0% {
-        transform: translate(0, 0) rotate(0deg);
-    }
-
-    50% {
-        transform: translate(20px, 20px) rotate(10deg);
-    }
-
-    100% {
-        transform: translate(0, 0) rotate(0deg);
-    }
-}
-
-@keyframes pulse-float {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
-}
-
-/* Content Z-Index Fix */
 .hero-content {
     position: relative;
     z-index: 10;
@@ -161,376 +36,178 @@
 }
 
 .hero-title {
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: 800;
     line-height: 1.1;
     margin-bottom: 20px;
-    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.5px;
+}
+
+.hero-highlight {
+    color: #93c5fd;
+    /* Azul claro suave, no amarillo neón */
+    position: relative;
+    display: inline-block;
 }
 
 .hero-subtitle {
-    font-size: 1.25rem;
-    font-weight: 500;
-    opacity: 0.9;
+    font-size: 1.15rem;
+    color: #cbd5e1;
+    /* Gris claro, muy legible */
+    font-weight: 400;
     max-width: 600px;
     margin: 0 auto;
+    line-height: 1.6;
 }
 
-/* --- OVERLAPPING SEARCH BAR (Glassmorphism) --- */
+/* Animaciones de fondo sutiles (opcionales) */
+.hero-bg-anim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0.4;
+}
+
+.floating-shape {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.shape-1 {
+    width: 300px;
+    height: 300px;
+    top: -100px;
+    right: -50px;
+}
+
+.shape-2 {
+    width: 200px;
+    height: 200px;
+    bottom: 20px;
+    left: 10%;
+}
+
+/* --- BARRA DE BÚSQUEDA FLOTANTE (Minimalista) --- */
 .search-container-overlap {
     position: relative;
     z-index: 20;
-    max-width: 1000px;
-    margin: -80px auto 60px;
+    max-width: 950px;
+    margin: -60px auto 60px;
     padding: 0 20px;
 }
 
 .glass-search-bar {
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 35px;
-    /* More internal space */
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    /* Stronger shadow */
-    border: 1px solid rgba(255, 255, 255, 0.9);
-    /* Crisper border */
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--corp-border);
+    border-top: 4px solid var(--corp-indigo);
+    /* Acento de color arriba */
 }
 
 .search-title {
-    color: #1e293b;
-    font-size: 1.1rem;
+    color: #0f172a;
+    font-size: 0.95rem;
     font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 5px;
-}
-
-.search-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr auto;
-    gap: 15px;
-    align-items: end;
-}
-
-/* Styled Inputs */
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.input-label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #475569;
-    margin-left: 5px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--corp-slate);
 }
 
 .custom-input {
     width: 100%;
-    padding: 14px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 1rem;
+    padding: 12px 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
     color: #1e293b;
-    transition: all 0.2s ease;
-    background: white;
+    background: #f8fafc;
+    transition: all 0.2s;
 }
 
 .custom-input:focus {
-    border-color: #4f46e5;
-    /* Indigo Focus */
-    background: white;
+    background: #fff;
+    border-color: var(--corp-indigo);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     outline: none;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
+/* Botón de búsqueda principal */
 .custom-btn {
-    padding: 14px 30px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    /* ROYAL BLUE GRADIENT (Action) */
+    padding: 12px 25px;
+    background: var(--corp-indigo);
     color: white;
-    font-weight: 700;
+    font-weight: 600;
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    font-size: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 0.95rem;
+    transition: background 0.2s;
 }
 
 .custom-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
-    /* Blue Shadow */
+    background: var(--corp-indigo-hover);
 }
 
-/* --- VACANCY CARDS (INDIGO + CORAL) --- */
+/* --- TARJETAS DE VACANTES (Limpio y Corporativo) --- */
 .vacantes-grid-v2 {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
     padding-bottom: 60px;
 }
 
 .vacancy-card-elegant {
-    background: var(--bg-card);
-    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid var(--corp-border);
+    border-radius: 12px;
     padding: 25px;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
     flex-direction: column;
-    height: 100%;
 }
 
 .vacancy-card-elegant:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
-    border-color: #2563eb;
-    /* Blue Hover */
-}
-
-.vacancy-card-elegant::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 0;
-    background: #2563eb;
-    /* Blue Accent */
-    transition: height 0.3s ease;
-}
-
-.vacancy-card-elegant:hover::before {
-    height: 100%;
-}
-
-.card-header-v2 {
-    margin-bottom: 15px;
-}
-
-.company-name {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 5px;
-}
-
-.job-title {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: var(--text-main);
-    line-height: 1.3;
-}
-
-.tags-row {
-    display: flex;
-    flex-wrap: wrap;
-    /* Prevent overlap by wrapping */
-    gap: 10px;
-    margin: 15px 0;
-    /* Add spacing around tags */
-}
-
-.btn-outline {
-    flex: 1;
-    padding: 10px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: 600;
-    color: var(--text-main);
-    background: transparent;
-    transition: all 0.2s;
-    text-decoration: none;
-}
-
-.btn-outline:hover {
-    border-color: #2563eb;
-    /* Blue */
-    color: #2563eb;
-    background: #eff6ff;
-}
-
-.btn-fill {
-    flex: 1;
-    padding: 10px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    /* BLUE GRADIENT */
-    color: white;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s;
-    border: none;
-}
-
-.btn-fill:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-/* --- DARK MODE ADJUSTMENTS --- */
-/* --- DARK MODE ADJUSTMENTS --- */
-/* Dark Mode specific overrides */
-[data-theme="dark"] .glass-search-bar {
-    background: rgba(30, 41, 59, 0.95);
-    border-color: #334155;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-[data-theme="dark"] .search-title,
-[data-theme="dark"] .input-label {
-    color: #e2e8f0;
-}
-
-[data-theme="dark"] .custom-input {
-    background: #0f172a;
-    border-color: #334155;
-    color: white;
-}
-
-[data-theme="dark"] .company-name {
-    color: #cbd5e1;
-    /* Even lighter */
-    font-weight: 700;
-}
-
-[data-theme="dark"] .job-title {
-    color: #ffffff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    /* Better readability */
-}
-
-/* Fix for Tags in Dark Mode - Removing "Bad Boxes" look */
-[data-theme="dark"] .tag-pill {
-    background: rgba(255, 255, 255, 0.05);
-    /* Very subtle fill */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    /* Very subtle border */
-    backdrop-filter: blur(5px);
-}
-
-[data-theme="dark"] .tag-blue {
-    color: #93c5fd;
-}
-
-[data-theme="dark"] .tag-green {
-    color: #86efac;
-}
-
-[data-theme="dark"] .tag-gray {
-    color: #e2e8f0;
-}
-
-[data-theme="dark"] .vacancy-card-elegant {
-    background: #1e293b;
-    border-color: #334155;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    /* Add depth */
-}
-
-[data-theme="dark"] .vacancy-card-elegant:hover {
-    background: #1e293b;
-    /* Keep background, lift card */
-    border-color: #60a5fa;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(96, 165, 250, 0.3);
-    /* Glow */
-}
-
-/* HERO HIGHLIGHT */
-.hero-highlight {
-    color: #facc15;
-    /* Yellow-400 - Gold/Yellow */
-    text-shadow: 0 0 30px rgba(250, 204, 21, 0.5);
-    display: inline-block;
-    position: relative;
-    z-index: 10;
-}
-
-/* --- RESPONSIVE --- */
-@media (max-width: 768px) {
-    .hero-extended {
-        padding: 100px 20px 120px;
-        text-align: center;
-    }
-
-    .hero-title {
-        font-size: 2.2rem;
-    }
-
-    .search-container-overlap {
-        margin-top: -50px;
-    }
-
-    .search-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .glass-search-bar {
-        padding: 20px;
-    }
-}
-
-/* --- PORTAL STYLE CARD (User Request) --- */
-.card-portal-style {
-    border: 1px solid #e2e8f0;
-    /* Default subtle border */
-    /* Left border is set inline for dynamic color */
-    background: white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
 }
 
 .portal-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
     font-size: 0.8rem;
     color: #94a3b8;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
 }
 
-.portal-date {
-    font-weight: 500;
-}
-
-.portal-badge-alert {
-    background: #fffbeb;
-    /* Yellow-50 */
-    color: #b45309;
-    /* Yellow-700 */
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
+.job-title {
+    font-size: 1.25rem;
     font-weight: 700;
-    text-transform: uppercase;
+    color: #0f172a;
+    /* Negro suave */
+    margin: 5px 0;
+    line-height: 1.3;
 }
 
-[data-theme="dark"] .portal-badge-alert {
-    background: rgba(251, 191, 36, 0.2);
-    color: #fbbf24;
-}
-
-.portal-desc {
+.company-name {
     font-size: 0.9rem;
-    color: #64748b;
-    line-height: 1.6;
-    margin-bottom: 15px;
+    font-weight: 600;
+    color: var(--corp-indigo);
+    margin-bottom: 10px;
+}
+
+.vacante-info {
+    font-size: 0.9rem;
+    color: var(--corp-slate);
+    line-height: 1.5;
+    margin-bottom: 20px;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
@@ -538,6 +215,71 @@
     overflow: hidden;
 }
 
-[data-theme="dark"] .portal-desc {
-    color: #cbd5e1;
+/* Tags más discretos */
+.tags-row {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    flex-wrap: wrap;
+}
+
+.tag-pill {
+    background: #f1f5f9;
+    color: var(--corp-slate);
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+}
+
+/* --- BOTONES DE ACCIÓN (La parte que querías cambiar) --- */
+.card-actions-v2 {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+/* Base para ambos botones */
+.btn-outline,
+.btn-fill {
+    flex: 1;
+    padding: 10px 15px;
+    /* Más compacto */
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Botón "Ver Detalles" (Gris neutro) */
+.btn-outline {
+    background: transparent;
+    color: var(--corp-slate);
+    border: 1px solid #cbd5e1;
+}
+
+.btn-outline:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+/* Botón "Postularme" (Índigo cálido) */
+.btn-fill {
+    background: var(--corp-indigo);
+    color: white;
+    border: 1px solid var(--corp-indigo);
+}
+
+.btn-fill:hover {
+    background: var(--corp-indigo-hover);
+    border-color: var(--corp-indigo-hover);
+    /* Elevación sutil */
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
 }

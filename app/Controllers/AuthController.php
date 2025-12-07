@@ -318,8 +318,8 @@ class AuthController extends Controller
 
         // Insertar nuevo solicitante
         $password_hash = password_hash($form_data['password'], PASSWORD_BCRYPT);
-        $sql = "INSERT INTO solicitantes (nombre, apellido, email, password_hash, telefono, cedula, estado) 
-                VALUES (?, ?, ?, ?, ?, ?, 'activo')";
+        $sql = "INSERT INTO solicitantes (nombre, apellido, email, password_hash, telefono, cedula, nacionalidad, fecha_nacimiento, estado) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'activo')";
         $stmt = $this->db->prepare($sql);
 
         try {
@@ -329,7 +329,9 @@ class AuthController extends Controller
                 $form_data['email'],
                 $password_hash,
                 $form_data['telefono'] ?: null,
-                $form_data['cedula'] ?: null
+                $form_data['cedula'] ?: null,
+                $_POST['nacionalidad'] ?? null,  // New
+                $_POST['fecha_nacimiento'] ?: null // New
             ]);
 
             $solicitante_id = $this->db->lastInsertId();
