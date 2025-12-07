@@ -148,7 +148,7 @@ $subtitles = [
                         </div>
                         <div class="floating-group">
                             <input type="email" name="email_usuario" class="input-elegant" placeholder=" " value="<?= htmlspecialchars($form_data['email_usuario'] ?? '') ?>" required>
-                            <label class="label-elegant">Email Admin</label>
+                            <label class="label-elegant">Correo Electrónico</label>
                         </div>
 
 
