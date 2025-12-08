@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Consultora - Consultores Chiriquí</title>
     <!-- Premium Styles -->
-    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-consultora.css">
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-consultora.css?v=<?= time() ?>">
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Animations -->
     <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-animations.css">
 </head>
@@ -19,8 +21,18 @@
                 Bienvenido de nuevo, <?= htmlspecialchars($user['nombre']) ?>
             </div>
         </div>
-        <div class="admin-badge">
-            <span style="font-size: 1.2rem;">🛡️</span> Administrador
+        
+        <!-- User Menu with Hover Reveal -->
+        <div class="user-menu">
+            <div class="user-menu-trigger">
+                Administrador
+                <i class="fas fa-chevron-down" style="font-size: 12px; color: #94a3b8;"></i>
+            </div>
+            <div class="user-menu-dropdown">
+                <a href="<?= ENV_APP['BASE_URL'] ?>/logout" class="user-menu-item">
+                    Cerrar Sesión
+                </a>
+            </div>
         </div>
     </header>
 
@@ -94,12 +106,12 @@
             <div class="section-title">
                 📈 Rendimiento Financiero (Top 5)
             </div>
-            <div style="color: var(--text-muted); font-size: 0.9rem;">
+            <div style="color: var(--text-muted); font-size: 0.85rem;">
                 Actualizado: <?= date('d M Y, H:i') ?>
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-container" style="box-shadow: none; padding: 0; margin: 0; border: none;">
             <table class="premium-table">
                 <thead>
                     <tr>
@@ -116,17 +128,17 @@
                         <?php foreach($topEmpresas as $stat): ?>
                         <tr>
                             <td>
-                                <div class="company-cell">
+                                <div style="display: flex; align-items: center;">
                                     <div class="company-logo-placeholder">
                                         <?= strtoupper(substr($stat['nombre'], 0, 1)) ?>
                                     </div>
                                     <?= htmlspecialchars($stat['nombre']) ?>
                                 </div>
                             </td>
-                            <td class="text-right" style="color: #94a3b8;"><?= $stat['vistas'] ?></td>
-                            <td class="text-right" style="color: #94a3b8;"><?= $stat['aplicaciones'] ?></td>
+                            <td class="text-right" style="color: #64748b;"><?= $stat['vistas'] ?></td>
+                            <td class="text-right" style="color: #64748b;"><?= $stat['aplicaciones'] ?></td>
                             <td class="text-right">
-                                <span class="amount-badge">B/. <?= $stat['facturacion_estimada'] ?></span>
+                                <span style="background: #ecfccb; color: #4d7c0f; padding: 4px 10px; border-radius: 6px; font-weight: 600;">B/. <?= $stat['facturacion_estimada'] ?></span>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -135,10 +147,6 @@
             </table>
         </div>
     </div>
-
-    <a href="<?= ENV_APP['BASE_URL'] ?>/logout" class="logout-btn">
-        🚪 Cerrar Sesión
-    </a>
 
 </body>
 </html>

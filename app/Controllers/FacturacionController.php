@@ -54,7 +54,7 @@ class FacturacionController extends Controller
         $this->view('facturacion/generar', compact('empresas', 'error'));
     }
 
-    private function procesarFactura(): void
+    public function procesarFactura(): void
     {
         $empresa_id = (int)($_POST['empresa_id'] ?? 0);
         $periodo_desde = $_POST['periodo_desde'] ?? '';
@@ -69,18 +69,12 @@ class FacturacionController extends Controller
         }
 
         try {
-            // 1. Obtener tarifas vigentes de la BD (DINÁMICO)
-            $stmtT = $this->db->query("SELECT * FROM peajes_tarifas WHERE activo = 1");
-            $tarifas = $stmtT->fetchAll(PDO::FETCH_ASSOC);
-            
-            $p_vista = 0.10; $p_click = 0.15; $p_chat = 0.05; // defaults
-            foreach($tarifas as $t) {
-                if (stripos($t['nombre_plan'], 'Vista') !== false) $p_vista = $t['precio_unitario'];
-                if (stripos($t['nombre_plan'], 'Click') !== false) $p_click = $t['precio_unitario'];
-                if (stripos($t['nombre_plan'], 'Chat') !== false) $p_chat = $t['precio_unitario'];
-            }
+            // 1. Tarifas Oficiales (Rango $1.50 - $5.00)
+            $p_vista = 1.50; 
+            $p_click = 5.00; 
+            $p_chat = 2.50;
 
-            // 2. Calcular interacciones usando precios dinámicos
+            // 2. Calcular interacciones
             $sql = "
                 SELECT 
                     iv.tipo_interaccion,
@@ -118,13 +112,19 @@ class FacturacionController extends Controller
             $numero_fiscal = 'FAC-' . date('YmdHis') . '-' . $empresa_id;
             $token_publico = bin2hex(random_bytes(32));
 
+            // DATOS DGI / FE (Simulación)
+            $cufe = strtoupper(hash('sha1', $numero_fiscal . $token_publico . time())); // 40 chars
+            $protocolo_autorizacion = 'AUT-' . date('Y') . '-' . mt_rand(100000, 999999);
+            $clave_acceso = mt_rand(10000000, 99999999) . mt_rand(10000000, 99999999) . mt_rand(1000,9999); // aprox 20
+            $fecha_autorizacion = date('Y-m-d H:i:s');
+
             // Insertar factura
             $stmtFac = $this->db->prepare("
                 INSERT INTO facturas 
-                (empresa_id, numero_fiscal, periodo_desde, periodo_hasta, subtotal, itbms, total, estado, token_publico)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'emitida', ?)
+                (empresa_id, numero_fiscal, periodo_desde, periodo_hasta, subtotal, itbms, total, estado, token_publico, cufe, protocolo_autorizacion, clave_acceso, fecha_autorizacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'emitida', ?, ?, ?, ?, ?)
             ");
-            $stmtFac->execute([$empresa_id, $numero_fiscal, $periodo_desde, $periodo_hasta, $subtotal, $itbms, $total, $token_publico]);
+            $stmtFac->execute([$empresa_id, $numero_fiscal, $periodo_desde, $periodo_hasta, $subtotal, $itbms, $total, $token_publico, $cufe, $protocolo_autorizacion, $clave_acceso, $fecha_autorizacion]);
 
             $factura_id = $this->db->lastInsertId();
 
@@ -157,7 +157,7 @@ class FacturacionController extends Controller
         $id = (int)$id;
 
         $stmt = $this->db->prepare("
-            SELECT f.*, e.nombre as empresa_nombre, e.ruc, e.direccion
+            SELECT f.*, e.nombre as empresa_nombre, e.ruc, e.direccion, e.email_contacto, e.telefono
             FROM facturas f
             JOIN empresas e ON f.empresa_id = e.id
             WHERE f.id = ?
@@ -178,9 +178,9 @@ class FacturacionController extends Controller
         $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
 
         // Generar URL para código QR (usando API pública para compatibilidad)
-        // Simula la URL de la DGI de Panamá
-        $dgiUrl = "https://dgi.mef.gob.pa/consultas?cufe=" . ($factura['token_publico'] ?? 'N/A');
-        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($dgiUrl);
+        // Datos reales para el QR según DGI
+        $qrData = "CUFE:{$factura['cufe']}|FECHA:{$factura['fecha_autorizacion']}|TOTAL:{$factura['total']}|RUC:{$factura['ruc']}";
+        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrData);
 
         $this->view('facturacion/ver', compact('factura', 'detalles', 'qrUrl'));
     }
@@ -207,15 +207,24 @@ class FacturacionController extends Controller
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename="Factura_' . $factura['numero_fiscal'] . '.pdf"');
 
-        echo "FACTURA DIGITAL\n\n";
-        echo "Número: " . $factura['numero_fiscal'] . "\n";
-        echo "Fecha: " . date('d/m/Y H:i', strtotime($factura['fecha_emision'])) . "\n";
-        echo "Empresa: " . $factura['empresa_nombre'] . "\n";
-        echo "RUC: " . $factura['ruc'] . "\n\n";
+        echo "FACTURA ELECTRÓNICA - DGI PANAMÁ (Simulación)\n\n";
+        echo "Número Fiscal: " . $factura['numero_fiscal'] . "\n";
+        echo "CUFE: " . $factura['cufe'] . "\n";
+        echo "Fecha Emisión: " . date('d/m/Y H:i', strtotime($factura['fecha_emision'])) . "\n";
+        echo "Protocolo: " . $factura['protocolo_autorizacion'] . "\n\n";
+        
+        echo "EMISOR: Consultores Chiriquí S.A.\n";
+        echo "RUC: 8-888-888 DV 88\n\n";
+        
+        echo "CLIENTE: " . $factura['empresa_nombre'] . "\n";
+        echo "RUC/CIP: " . $factura['ruc'] . "\n\n";
+        
+        echo "DETALLE:\n";
+        echo "---------------------------------\n";
         echo "Período: " . $factura['periodo_desde'] . " - " . $factura['periodo_hasta'] . "\n\n";
         echo "Subtotal: B/. " . number_format($factura['subtotal'], 2) . "\n";
         echo "ITBMS (7%): B/. " . number_format($factura['itbms'], 2) . "\n";
-        echo "TOTAL: B/. " . number_format($factura['total'], 2) . "\n\n";
+        echo "TOTAL A PAGAR: B/. " . number_format($factura['total'], 2) . "\n\n";
         echo "Estado: " . ucfirst($factura['estado']) . "\n";
         exit;
     }
@@ -230,12 +239,12 @@ class FacturacionController extends Controller
         $nuevoEstado = $_POST['estado_factura'] ?? '';
         $id = (int)$id;
 
-        if (in_array($nuevoEstado, ['emitida', 'pagada', 'anulada'])) {
+        if (in_array($nuevoEstado, ['emitida', 'pagada', 'anulada', 'en_revision'])) {
             $stmt = $this->db->prepare("UPDATE facturas SET estado = ? WHERE id = ?");
             $stmt->execute([$nuevoEstado, $id]);
         }
 
-        header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/facturacion/ver/' . $id);
+        header('Location: ' . ENV_APP['BASE_URL'] . '/facturacion/ver/' . $id);
         exit;
     }
 }

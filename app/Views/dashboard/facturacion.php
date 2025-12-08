@@ -3,23 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <title>Facturación - Consultora</title>
-    <style>
-        body{font-family:system-ui;background:#020617;color:#e5e7eb;padding:2rem;}
-        .container{max-width:1200px;margin:0 auto;}
-        h1{color:#38bdf8;}
-        .card{background:#0f172a;padding:2rem;border-radius:12px;border:1px solid #1e293b;text-align:center;}
-        .back-btn{display:inline-block;margin-bottom:1rem;color:#94a3b8;text-decoration:none;}
-        .back-btn:hover{color:#38bdf8;}
-    </style>
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-consultora.css?v=<?= time() ?>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/dashboard" class="back-btn">← Volver al Panel</a>
-        <h1>💳 Gestión de Facturación</h1>
-        <div class="card">
-            <p>El módulo de facturación está en construcción.</p>
-            <p style="color:#94a3b8;margin-top:1rem;">Aquí podrá generar facturas fiscales y gestionar cobros a empresas.</p>
+    <div class="dashboard-grid" style="display: block; max-width: 900px; margin: 0 auto;">
+        
+        <div class="page-header">
+            <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/dashboard" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Volver al Panel
+            </a>
+            <h2>💳 Módulo de Facturación</h2>
         </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+            
+            <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/facturacion/generar" class="glass-card" style="text-align: center; justify-content: center; min-height: 200px;">
+                <div class="card-icon-wrapper" style="margin: 0 auto 1.5rem auto;">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <h3>Generar Nueva Factura</h3>
+                <p>Crear facturación manual seleccionando empresa y rango de fechas.</p>
+            </a>
+
+            <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/facturacion" class="glass-card" style="text-align: center; justify-content: center; min-height: 200px;">
+                <div class="card-icon-wrapper" style="margin: 0 auto 1.5rem auto;">
+                    <i class="fas fa-list-alt"></i>
+                </div>
+                <h3>Historial de Facturas</h3>
+                <p>Ver todas las facturas emitidas, estados y descargar PDF.</p>
+            </a>
+
+            <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/facturacion/estadisticas" class="glass-card" style="text-align: center; justify-content: center; min-height: 200px;">
+                <div class="card-icon-wrapper" style="margin: 0 auto 1.5rem auto;">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Estadísticas de Consumo</h3>
+                <p>Ver métricas de vistas y aplicaciones antes de facturar.</p>
+            </a>
+            
+        </div>
+
     </div>
 </body>
 </html>

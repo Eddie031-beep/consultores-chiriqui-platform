@@ -3,49 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <title>Estadísticas - Consultora</title>
-    <style>
-        body{font-family:system-ui;background:#020617;color:#e5e7eb;padding:2rem;}
-        .container{max-width:1200px;margin:0 auto;}
-        h1{color:#38bdf8;margin-bottom:2rem;}
-        .back-btn{display:inline-block;margin-bottom:1rem;color:#94a3b8;text-decoration:none;}
-        .back-btn:hover{color:#38bdf8;}
-        
-        table {width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 12px; overflow: hidden;}
-        th, td {padding: 15px; text-align: left; border-bottom: 1px solid #334155;}
-        th {background: #0f172a; color: #94a3b8; font-weight: 600;}
-        tr:last-child td {border-bottom: none;}
-        .amount {color: #4ade80; font-weight: bold;}
-    </style>
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-consultora.css?v=<?= time() ?>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/dashboard" class="back-btn">← Volver al Panel</a>
-        <h1>📊 Estadísticas Detalladas</h1>
+    <div class="dashboard-grid" style="display: block; max-width: 1000px; margin: 0 auto;">
         
-        <table>
-            <thead>
-                <tr>
-                    <th>Empresa</th>
-                    <th>Vistas</th>
-                    <th>Aplicaciones</th>
-                    <th>Facturación Estimada</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if(empty($topEmpresas)): ?>
-                    <tr><td colspan="4" style="text-align:center;">No hay datos disponibles.</td></tr>
-                <?php else: ?>
-                    <?php foreach($topEmpresas as $emp): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($emp['nombre']) ?></td>
-                        <td><?= $emp['vistas'] ?></td>
-                        <td><?= $emp['aplicaciones'] ?></td>
-                        <td class="amount">B/. <?= $emp['facturacion_estimada'] ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+        <div class="page-header">
+            <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/dashboard" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Volver al Panel
+            </a>
+            <h2>📊 Estadísticas Detalladas</h2>
+        </div>
+
+        <div class="table-container">
+            <div class="section-header">
+                <div class="section-title">Rendimiento por Empresa</div>
+                <div style="font-size: 0.85rem; color: #64748b;">Mes Actual</div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="premium-table">
+                    <thead>
+                        <tr>
+                            <th>Empresa</th>
+                            <th class="text-right">Vistas</th>
+                            <th class="text-right">Aplicaciones</th>
+                            <th class="text-right">Interacciones Chat</th>
+                            <th class="text-right">Facturación Estimada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(empty($topEmpresas)): ?>
+                            <tr><td colspan="5" style="text-align:center; padding: 2rem; color: #94a3b8;">No hay datos registrados aún.</td></tr>
+                        <?php else: ?>
+                            <?php foreach($topEmpresas as $emp): ?>
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 600; color: #1e293b;"><?= htmlspecialchars($emp['nombre']) ?></div>
+                                    <div style="font-size: 0.8rem; color: #94a3b8;"><?= $emp['sector'] ?? 'General' ?></div>
+                                </td>
+                                <td align="right" style="color: #64748b;"><?= $emp['vistas'] ?></td>
+                                <td align="right" style="color: #64748b;"><?= $emp['aplicaciones'] ?></td>
+                                <td align="right" style="color: #64748b;">-</td> <!-- Placeholder if not available -->
+                                <td align="right">
+                                    <span style="background: #ecfccb; color: #4d7c0f; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">
+                                        B/. <?= $emp['facturacion_estimada'] ?>
+                                    </span>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </body>
 </html>

@@ -3,61 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <title>Gestionar Empresas - Consultora</title>
-    <style>
-        body{font-family:system-ui;background:#020617;color:#e5e7eb;padding:2rem;}
-        .container{max-width:1200px;margin:0 auto;}
-        h1{color:#38bdf8;margin-bottom:2rem;}
-        .back-btn{display:inline-block;margin-bottom:1rem;color:#94a3b8;text-decoration:none;}
-        .back-btn:hover{color:#38bdf8;}
-        .btn-create{background:#2563eb;color:white;padding:10px 20px;text-decoration:none;border-radius:8px;float:right;}
-        
-        table {width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 12px; overflow: hidden; margin-top: 1rem;}
-        th, td {padding: 15px; text-align: left; border-bottom: 1px solid #334155;}
-        th {background: #0f172a; color: #94a3b8; font-weight: 600;}
-        tr:last-child td {border-bottom: none;}
-        .action-link {color: #38bdf8; text-decoration: none; margin-right: 10px;}
-        .status-active {color: #4ade80;}
-        .status-inactive {color: #f87171;}
-    </style>
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-consultora.css?v=<?= time() ?>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/dashboard" class="back-btn">← Volver al Panel</a>
-        <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/empresas/crear" class="btn-create">+ Nueva Empresa</a>
+    <div class="dashboard-grid" style="display: block; max-width: 1200px; margin: 0 auto;">
         
-        <h1>🏢 Gestión de Empresas</h1>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>RUC</th>
-                    <th>Sector</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if(empty($empresas)): ?>
-                    <tr><td colspan="5" style="text-align:center;">No hay empresas registradas.</td></tr>
-                <?php else: ?>
-                    <?php foreach($empresas as $emp): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($emp['nombre']) ?></td>
-                        <td><?= htmlspecialchars($emp['ruc'] . '-' . $emp['dv']) ?></td>
-                        <td><?= htmlspecialchars($emp['sector']) ?></td>
-                        <td class="<?= $emp['estado'] === 'activa' ? 'status-active' : 'status-inactive' ?>">
-                            <?= ucfirst($emp['estado']) ?>
-                        </td>
-                        <td>
-                            <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/empresas/<?= $emp['id'] ?>/editar" class="action-link">Editar</a>
-                            <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/contratos/<?= $emp['id'] ?>" class="action-link">Contrato</a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+        <div class="page-header">
+            <div>
+                <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/dashboard" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Volver al Panel
+                </a>
+                <h2 style="margin-top: 10px;">🏢 Gestión de Empresas</h2>
+            </div>
+            <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/empresas/crear" class="btn-primary">
+                <i class="fas fa-plus"></i> Nueva Empresa
+            </a>
+        </div>
+
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="premium-table">
+                    <thead>
+                        <tr>
+                            <th width="30%">Nombre</th>
+                            <th width="20%">RUC</th>
+                            <th width="20%">Sector</th>
+                            <th width="15%">Estado</th>
+                            <th width="15%" style="text-align: right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(empty($empresas)): ?>
+                            <tr><td colspan="5" style="text-align:center; padding: 3rem; color: #94a3b8;">No hay empresas registradas.</td></tr>
+                        <?php else: ?>
+                            <?php foreach($empresas as $emp): ?>
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 600; font-size: 1rem; color: #1e293b;"><?= htmlspecialchars($emp['nombre']) ?></div>
+                                    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 2px;">ID: #<?= $emp['id'] ?></div>
+                                </td>
+                                <td style="font-family: monospace; color: #64748b; font-size: 0.95rem;">
+                                    <?= htmlspecialchars($emp['ruc'] . '-' . $emp['dv']) ?>
+                                </td>
+                                <td><?= htmlspecialchars($emp['sector']) ?></td>
+                                <td>
+                                    <?php
+                                        $statusClass = 'status-active';
+                                        if($emp['estado'] === 'inactiva') $statusClass = 'status-inactive';
+                                        if($emp['estado'] === 'pendiente') $statusClass = 'status-pending';
+                                    ?>
+                                    <span class="status-badge <?= $statusClass ?>">
+                                        <?= ucfirst($emp['estado']) ?>
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/empresas/<?= $emp['id'] ?>/editar" class="action-icon" title="Editar">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                    <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/contratos/<?= $emp['id'] ?>" class="action-icon" title="Ver Contrato">
+                                        <i class="fas fa-file-contract"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </body>
 </html>
