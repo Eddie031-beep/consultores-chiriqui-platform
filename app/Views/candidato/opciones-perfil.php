@@ -24,7 +24,7 @@
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../components/navbar.php'; ?>
+    <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <div class="container">
         <h1>🚀 Completa tu Perfil Profesional</h1>

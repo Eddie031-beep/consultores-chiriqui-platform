@@ -3,329 +3,254 @@ use App\Helpers\Auth;
 
 $user = Auth::user();
 $postulaciones = $postulaciones ?? [];
+// Filter strictly for correct count if not already done in controller
+$acceptedCount = count(array_filter($postulaciones, fn($p) => $p['estado'] === 'aceptado'));
+$pendingCount = count(array_filter($postulaciones, fn($p) => $p['estado'] === 'pendiente'));
 ?>
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Candidato | Consultores Chiriquí</title>
     <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/global-dark-mode.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* ===== HEADER ===== */
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white !important;
-            padding: 40px 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        [data-theme="dark"] .header {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-        }
-
-        .header h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-            color: white !important;
-        }
-
-        .header p {
-            color: rgba(255, 255, 255, 0.9) !important;
-            font-size: 1.1em;
-        }
-
-        /* ===== CARDS GRID ===== */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px var(--shadow-color);
-            text-align: center;
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+        
+        /* Hero Section - Elegant Dark Theme */
+        .welcome-header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); /* Dark Slate Gradient */
             border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            color: white;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
+            position: relative;
+            overflow: hidden;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px var(--shadow-color);
+        .welcome-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 40%);
+            opacity: 0.6;
         }
 
-        [data-theme="dark"] .card {
-            background: var(--bg-card);
-            border: 1px solid #334155;
-        }
+        .welcome-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; position: relative; color: #f8fafc; }
+        .welcome-subtitle { font-size: 1.1rem; opacity: 0.9; margin-bottom: 1.5rem; position: relative; color: #cbd5e1; }
 
-        .card-numero {
-            font-size: 2.5em;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        [data-theme="dark"] .card-numero {
-            color: #818cf8;
-        }
-
-        .card-titulo {
-            color: var(--text-secondary);
-            margin-top: 10px;
-            font-weight: 600;
-        }
-
-        /* ===== POSTULACIONES ===== */
-        .postulaciones {
-            background: var(--bg-card);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px var(--shadow-color);
-            border: 1px solid var(--border-color);
-        }
-
-        [data-theme="dark"] .postulaciones {
-            background: var(--bg-card);
-            border: 1px solid #334155;
-        }
-
-        .postulaciones h2 {
-            margin-bottom: 20px;
-            color: var(--text-heading);
-        }
-
-        .postulacion-item {
-            padding: 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
+        .btn-edit-profile {
+            display: inline-flex;
             align-items: center;
-            transition: background-color 0.2s ease;
-        }
-
-        .postulacion-item:hover {
-            background: var(--bg-secondary);
-        }
-
-        [data-theme="dark"] .postulacion-item:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .postulacion-item:last-child {
-            border-bottom: none;
-        }
-
-        .postulacion-info h3 {
-            color: var(--text-heading);
-            margin-bottom: 5px;
-            font-size: 1.1em;
-        }
-
-        .postulacion-empresa {
-            color: #667eea;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        [data-theme="dark"] .postulacion-empresa {
-            color: #818cf8;
-        }
-
-        .postulacion-fecha {
-            color: var(--text-secondary);
-            font-size: 0.85em;
-        }
-
-        /* ===== BADGES ===== */
-        .badge-estado {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .badge-pendiente {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .badge-revisado {
-            background: #cfe2ff;
-            color: #084298;
-        }
-
-        .badge-aceptado {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .badge-rechazado {
-            background: #f8d7da;
-            color: #842029;
-        }
-
-        /* Badges en modo oscuro */
-        [data-theme="dark"] .badge-pendiente {
-            background: rgba(251, 191, 36, 0.2);
-            color: #fcd34d;
-        }
-
-        [data-theme="dark"] .badge-revisado {
-            background: rgba(59, 130, 246, 0.2);
-            color: #60a5fa;
-        }
-
-        [data-theme="dark"] .badge-aceptado {
-            background: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
-        }
-
-        [data-theme="dark"] .badge-rechazado {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-        }
-
-        /* ===== BOTÓN EXPLORAR ===== */
-        .btn-explorar {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white !important;
-            padding: 12px 25px;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 24px;
             border-radius: 50px;
-            text-decoration: none;
-            margin-top: 20px;
-            transition: all 0.3s ease;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            border: 1px solid rgba(255,255,255,0.1);
+            text-decoration: none;
+            transition: all 0.2s;
+            position: relative;
         }
-
-        .btn-explorar:hover {
+        .btn-edit-profile:hover {
+            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        /* Mensaje sin postulaciones */
-        .sin-postulaciones {
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px var(--shadow-color);
             text-align: center;
-            padding: 60px 20px;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+
+        .stat-value { font-size: 3rem; font-weight: 800; color: #4f46e5; line-height: 1; margin-bottom: 0.5rem; }
+        .stat-label { color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; }
+
+        /* Recent Applications Section */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .section-title { font-size: 1.5rem; font-weight: 700; color: var(--text-heading); display: flex; align-items: center; gap: 10px; }
+        
+        .recent-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px var(--shadow-color);
+            overflow: hidden;
+        }
+
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .dashboard-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        
+        .dashboard-table th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
             color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .sin-postulaciones p {
-            font-size: 1.1em;
-            margin-bottom: 20px;
+        .dashboard-table td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            vertical-align: middle;
         }
+        .dashboard-table tr:last-child td { border-bottom: none; }
+        .dashboard-table tr:hover { background-color: rgba(125, 125, 125, 0.05); }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.5em;
-            }
+        .company-name { font-weight: 600; color: #4f46e5; display: block; margin-bottom: 2px; }
+        .job-role { font-weight: 700; color: var(--text-heading); font-size: 1rem; }
+        .job-location { font-size: 0.85rem; color: var(--text-secondary); }
 
-            .cards-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .postulacion-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35em 0.85em;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
+        .status-badge.pendiente { background: rgba(245, 158, 11, 0.1); color: #b45309; }
+        .status-badge.revisado { background: rgba(37, 99, 235, 0.1); color: #1d4ed8; }
+        .status-badge.aceptado { background: rgba(16, 185, 129, 0.1); color: #047857; }
+        .status-badge.rechazado { background: rgba(239, 68, 68, 0.1); color: #b91c1c; }
+
+        .btn-view-all {
+            color: #4f46e5;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .btn-view-all:hover { text-decoration: underline; }
+
+        .empty-dash { text-align: center; padding: 3rem; color: var(--text-secondary); }
     </style>
 </head>
 <body>
-    <!-- NAVBAR -->
     <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>👋 ¡Bienvenido, <?= htmlspecialchars($user['nombre']) ?>!</h1>
-            <p>Panel de control de candidato</p>
+        
+        <!-- Welcome Hero -->
+        <div class="welcome-header">
+            <h1 class="welcome-title">👋 ¡Hola, <?= htmlspecialchars($user['nombre']) ?>!</h1>
+            <p class="welcome-subtitle">Aquí tienes un resumen de tu actividad reciente</p>
+            <a href="<?= ENV_APP['BASE_URL'] ?>/candidato/editar-perfil" class="btn-edit-profile">
+                <i class="fas fa-user-edit"></i> Editar Perfil
+            </a>
         </div>
 
-        <!-- Stats -->
-        <div class="cards-grid">
-            <div class="card">
-                <div class="card-numero"><?= count($postulaciones) ?></div>
-                <div class="card-titulo">Postulaciones Enviadas</div>
+        <!-- KPI Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value"><?= count($postulaciones) ?></div>
+                <div class="stat-label">Postulaciones Totales</div>
             </div>
-
-            <div class="card">
-                <div class="card-numero">
-                    <?= count(array_filter($postulaciones, fn($p) => $p['estado'] === 'aceptado')) ?>
-                </div>
-                <div class="card-titulo">Aceptadas</div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #10b981;"><?= $acceptedCount ?></div>
+                <div class="stat-label">Aceptadas</div>
             </div>
-
-            <div class="card">
-                <div class="card-numero">
-                    <?= count(array_filter($postulaciones, fn($p) => $p['estado'] === 'pendiente')) ?>
-                </div>
-                <div class="card-titulo">En Revisión</div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #f59e0b;"><?= $pendingCount ?></div>
+                <div class="stat-label">En Revisión</div>
             </div>
         </div>
 
-        <!-- Postulaciones -->
-        <div class="postulaciones">
-            <h2>📋 Mis Postulaciones Recientes</h2>
+        <!-- Recent Applications -->
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-history" style="color: #4f46e5;"></i> Postulaciones Recientes
+            </div>
+            <a href="<?= ENV_APP['BASE_URL'] ?>/candidato/postulaciones" class="btn-view-all">
+                Ver todas <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
 
+        <div class="recent-card">
             <?php if (empty($postulaciones)): ?>
-                <div class="sin-postulaciones">
-                    <p>Aún no has realizado postulaciones.</p>
-                    <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes" class="btn-explorar">
-                        🔍 Explorar vacantes disponibles
-                    </a>
+                <div class="empty-dash">
+                    <i class="fas fa-folder-open fa-3x mb-3" style="opacity:0.3"></i>
+                    <p>Aún no te has postulado a ninguna vacante.</p>
+                    <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes" class="btn btn-primary mt-2">Buscar Empleo</a>
                 </div>
             <?php else: ?>
-                <?php foreach ($postulaciones as $post): ?>
-                    <div class="postulacion-item">
-                        <div class="postulacion-info">
-                            <div class="postulacion-empresa">
-                                <?= htmlspecialchars($post['empresa_nombre']) ?>
-                            </div>
-                            <h3><?= htmlspecialchars($post['titulo']) ?></h3>
-                            <div class="postulacion-fecha">
-                                📅 <?= date('d/m/Y H:i', strtotime($post['fecha_postulacion'])) ?>
-                            </div>
-                        </div>
-                        <span class="badge-estado badge-<?= htmlspecialchars($post['estado']) ?>">
-                            <?= ucfirst(htmlspecialchars($post['estado'])) ?>
-                        </span>
-                    </div>
-                <?php endforeach; ?>
+                <div class="table-responsive">
+                    <table class="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Empresa / Vacante</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Show only top 5 -->
+                            <?php foreach (array_slice($postulaciones, 0, 5) as $post): ?>
+                            <tr>
+                                <td>
+                                    <span class="company-name"><?= htmlspecialchars($post['empresa_nombre']) ?></span>
+                                    <div class="job-role"><?= htmlspecialchars($post['titulo']) ?></div>
+                                    <div class="job-location">
+                                        <i class="fas fa-map-marker-alt" style="font-size:0.8em"></i> <?= htmlspecialchars($post['ubicacion'] ?? 'Panamá') ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <?= date('d/m/Y', strtotime($post['fecha_postulacion'])) ?>
+                                    <br>
+                                    <small class="text-muted"><?= date('H:i', strtotime($post['fecha_postulacion'])) ?></small>
+                                </td>
+                                <td>
+                                    <?php if ($post['estado'] === 'pendiente'): ?>
+                                        <form action="<?= ENV_APP['BASE_URL'] ?>/candidato/cancelar-postulacion" method="POST" onsubmit="return confirm('¿Cancelar postulación?');" style="display:inline; float:right;">
+                                            <input type="hidden" name="vacante_id" value="<?= $post['vacante_id'] ?>">
+                                            <input type="hidden" name="redirect" value="/candidato/dashboard">
+                                            <button type="submit" style="background: none; border: none; color: #ef4444; cursor: pointer;" title="Cancelar">
+                                                <i class="fas fa-times-circle"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <span class="status-badge <?= $post['estado'] ?>">
+                                        <?= ucfirst($post['estado']) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php endif; ?>
         </div>
+
     </div>
 </body>
 </html>

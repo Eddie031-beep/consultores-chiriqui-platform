@@ -203,6 +203,11 @@ $userRole = $isLoggedIn ? ($_SESSION['user']['rol'] ?? '') : '';
                     Vacantes
                 </a>
             </li>
+            <li>
+                <a href="<?= $baseUrl ?>/guia-candidato" class="navbar-link <?= strpos($_SERVER['REQUEST_URI'], '/guia-candidato') !== false ? 'active' : '' ?>">
+                    Guía de Postulación
+                </a>
+            </li>
 
             <?php if ($isLoggedIn): ?>
                 <li class="navbar-user-section">

@@ -7,7 +7,9 @@ $routes = [
     // ============ GET ROUTES ============
     'GET' => [
         // Home
+        // Home
         '/' => 'HomeController@index',
+        '/guia-candidato' => 'HomeController@guia',
         
         // Autenticación Unificada
         '/auth' => 'AuthController@index',                    // Modal de selección
@@ -27,6 +29,7 @@ $routes = [
         '/candidato/postular/(?P<vacante_id>\d+)' => 'CandidatoController@postular', // Permitir GET para procesar postulación tras redirección
         '/candidato/opciones-perfil' => 'CandidatoController@opcionesPerfil',
         '/candidato/perfil-manual' => 'CandidatoController@perfilManual',
+        '/candidato/editar-perfil' => 'CandidatoController@editarPerfil',
 
         // Dashboard Empresa
         '/empresa/dashboard' => 'EmpresaController@dashboard',
@@ -67,6 +70,8 @@ $routes = [
         '/candidato/perfil' => 'CandidatoController@perfil',
         '/candidato/subir-cv' => 'CandidatoController@subirCV',
         '/candidato/guardar-manual' => 'CandidatoController@guardarManual',
+        '/candidato/actualizar' => 'CandidatoController@actualizarPerfil',
+        '/candidato/cancelar-postulacion' => 'CandidatoController@cancelarPostulacion',
         
         // Empresa
         '/empresa/vacantes/crear' => 'EmpresaController@storeVacante',

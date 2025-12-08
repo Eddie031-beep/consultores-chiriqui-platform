@@ -51,4 +51,8 @@ class HomeController extends Controller
 
         $this->view('home', compact('vacantes'));
     }
+    public function guia(): void
+    {
+        $this->view('home/guia');
+    }
 }
