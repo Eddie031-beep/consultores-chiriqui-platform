@@ -238,4 +238,80 @@ class CandidatoController extends Controller
             exit;
         }
     }
+    public function actualizarPerfil(): void
+    {
+        $user = Auth::user();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nombre = $_POST['nombre'] ?? '';
+            $apellido = $_POST['apellido'] ?? '';
+            $email = $_POST['email'] ?? '';
+            $telefono = $_POST['telefono'] ?? '';
+            
+            // Basic update
+            $stmt = $this->db->prepare("UPDATE solicitantes SET nombre = ?, apellido = ?, email = ?, telefono = ? WHERE id = ?");
+            try {
+                $stmt->execute([$nombre, $apellido, $email, $telefono, $user['id']]);
+                // Update Session
+                $_SESSION['user']['nombre'] = $nombre;
+                $_SESSION['user']['apellido'] = $apellido;
+                
+                $_SESSION['message'] = ['type' => 'success', 'text' => 'Información personal actualizada.'];
+            } catch (\Exception $e) {
+                $_SESSION['message'] = ['type' => 'error', 'text' => 'Error al actualizar: ' . $e->getMessage()];
+            }
+            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/perfil');
+            exit;
+        }
+    }
+
+    public function subirCV(): void
+    {
+        $user = Auth::user();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['cv_file'])) {
+            $file = $_FILES['cv_file'];
+            
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                $_SESSION['message'] = ['type' => 'error', 'text' => 'Error al subir archivo.'];
+                header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/perfil');
+                exit;
+            }
+
+            // Validate PDF
+            $mime = mime_content_type($file['tmp_name']);
+            if ($mime !== 'application/pdf') {
+                $_SESSION['message'] = ['type' => 'error', 'text' => 'Solo se permiten archivos PDF.'];
+                header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/perfil');
+                exit;
+            }
+
+            $ext = 'pdf';
+            $filename = 'cv_' . $user['id'] . '_' . time() . '.' . $ext;
+            $uploadDir = __DIR__ . '/../../public/uploads/cvs/';
+            
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            
+            if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
+                $webPath = '/uploads/cvs/' . $filename;
+                $stmt = $this->db->prepare("UPDATE solicitantes SET cv_path = ?, perfil_completado = 1 WHERE id = ?");
+                $stmt->execute([$webPath, $user['id']]);
+                
+                $_SESSION['message'] = ['type' => 'success', 'text' => 'CV subido correctamente.'];
+            } else {
+                $_SESSION['message'] = ['type' => 'error', 'text' => 'Error al guardar el archivo.'];
+            }
+            
+            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/perfil');
+            exit;
+        }
+    }
+
+    public function perfil(): void
+    {
+        $user = Auth::user();
+        $stmt = $this->db->prepare("SELECT * FROM solicitantes WHERE id = ?");
+        $stmt->execute([$user['id']]);
+        $perfil = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $this->view('candidato/perfil', compact('perfil'));
+    }
 }

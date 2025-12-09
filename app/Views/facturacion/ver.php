@@ -17,7 +17,9 @@ $user = Auth::user();
             padding: 3rem;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            font-family: 'Arial', sans-serif;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            /* font-family: 'Arial', sans-serif; Removed to match global theme */
+            position: relative;
             position: relative;
         }
         .invoice-header {
@@ -196,7 +198,7 @@ $user = Auth::user();
         <!-- ACTIONS (Only for Consultora) -->
         <?php if ($user['rol'] === 'admin_consultora'): ?>
         <div class="actions-bar no-print">
-            <form action="<?= ENV_APP['BASE_URL'] ?>/facturacion/actualizar-estado" method="POST" style="display:flex; align-items:center; gap: 10px;">
+            <form action="<?= ENV_APP['BASE_URL'] ?>/consultora/facturacion/actualizar/<?= $factura['id'] ?>" method="POST" style="display:flex; align-items:center; gap: 10px;">
                 <input type="hidden" name="factura_id" value="<?= $factura['id'] ?>">
                 <select name="estado_factura" class="form-select" style="padding: 0.6rem; border-radius: 6px; border: 1px solid #ddd;">
                     <option value="emitida" <?= $factura['estado'] === 'emitida' ? 'selected' : '' ?>>Emitida</option>
@@ -206,9 +208,10 @@ $user = Auth::user();
                 </select>
                 <button type="submit" class="btn btn-primary">Actualizar Estado</button>
             </form>
-            <a href="<?= ENV_APP['BASE_URL'] ?>/facturacion/descargar/<?= $factura['id'] ?>" class="btn btn-secondary">
+            <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/facturacion/descargar/<?= $factura['id'] ?>" class="btn btn-secondary">
                 <i class="fas fa-download"></i> PDF
             </a>
+
             <a href="javascript:window.print()" class="btn btn-secondary">
                 <i class="fas fa-print"></i> Imprimir
             </a>

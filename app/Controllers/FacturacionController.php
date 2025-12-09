@@ -47,7 +47,7 @@ class FacturacionController extends Controller
         }
 
         // Obtener empresas
-        $stmt = $this->db->query("SELECT id, nombre FROM empresas WHERE estado = 'activa' ORDER BY nombre");
+        $stmt = $this->db->query("SELECT MIN(id) as id, nombre FROM empresas WHERE estado = 'activa' GROUP BY nombre ORDER BY nombre");
         $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $error = '';
@@ -140,7 +140,7 @@ class FacturacionController extends Controller
             }
 
             $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Factura generada exitosamente: ' . $numero_fiscal];
-            header('Location: ' . ENV_APP['BASE_URL'] . '/facturacion/ver/' . $factura_id);
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/facturacion/ver/' . $factura_id);
             exit;
 
         } catch (\PDOException $e) {
@@ -166,7 +166,7 @@ class FacturacionController extends Controller
         $factura = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$factura) {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/facturacion');
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/facturacion');
             exit;
         }
 
@@ -244,7 +244,7 @@ class FacturacionController extends Controller
             $stmt->execute([$nuevoEstado, $id]);
         }
 
-        header('Location: ' . ENV_APP['BASE_URL'] . '/facturacion/ver/' . $id);
+        header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/facturacion/ver/' . $id);
         exit;
     }
 }

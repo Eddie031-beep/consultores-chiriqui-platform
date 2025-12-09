@@ -46,39 +46,43 @@ class EmpresaController extends Controller
         $totalCandidatos = $stmtCand->fetch(PDO::FETCH_ASSOC)['total'];
 
         // 3. CONSUMO DINÁMICO (Requisito de BD)
-        // Traemos precios de la tabla, no fijos
-        $stmtTarifas = $this->dbRead->query("SELECT nombre_plan, precio_unitario FROM peajes_tarifas WHERE activo = 1");
-        $tarifas = [];
-        while ($row = $stmtTarifas->fetch(PDO::FETCH_ASSOC)) {
-            if (stripos($row['nombre_plan'], 'Vista') !== false) $tarifas['ver_detalle'] = $row['precio_unitario'];
-            if (stripos($row['nombre_plan'], 'Click') !== false) $tarifas['click_aplicar'] = $row['precio_unitario'];
-            if (stripos($row['nombre_plan'], 'Chat') !== false) $tarifas['chat_consulta'] = $row['precio_unitario'];
+        $consumoActual = 0.0;
+        try {
+            // Traemos precios de la tabla, no fijos
+            $stmtTarifas = $this->dbRead->query("SELECT nombre_plan, precio_unitario FROM peajes_tarifas WHERE activo = 1");
+            $tarifas = [];
+            if ($stmtTarifas) {
+                while ($row = $stmtTarifas->fetch(PDO::FETCH_ASSOC)) {
+                    if (stripos($row['nombre_plan'], 'Vista') !== false) $tarifas['ver_detalle'] = $row['precio_unitario'];
+                    if (stripos($row['nombre_plan'], 'Click') !== false) $tarifas['click_aplicar'] = $row['precio_unitario'];
+                    if (stripos($row['nombre_plan'], 'Chat') !== false) $tarifas['chat_consulta'] = $row['precio_unitario'];
+                }
+            }
+            
+            $p_vista = (float)($tarifas['ver_detalle'] ?? 0.10);
+            $p_click = (float)($tarifas['click_aplicar'] ?? 0.15);
+            $p_chat  = (float)($tarifas['chat_consulta'] ?? 0.05);
+
+            $stmtPeaje = $this->dbRead->prepare("
+                SELECT SUM(CASE 
+                    WHEN tipo_interaccion = 'ver_detalle' THEN ? 
+                    WHEN tipo_interaccion = 'click_aplicar' THEN ? 
+                    WHEN tipo_interaccion = 'chat_consulta' THEN ? 
+                    ELSE 0 END) as total_consumo
+                FROM interacciones_vacante iv
+                JOIN vacantes v ON iv.vacante_id = v.id
+                WHERE v.empresa_id = ? AND MONTH(iv.fecha_hora) = MONTH(CURRENT_DATE())
+            ");
+            $stmtPeaje->execute([$p_vista, $p_click, $p_chat, $empresaId]);
+            $resultado = $stmtPeaje->fetch(PDO::FETCH_ASSOC);
+
+            // Forzamos a float para evitar errores en number_format
+            $consumoActual = (float) ($resultado['total_consumo'] ?? 0);
+        } catch (\Exception $e) {
+            // Fail silently or log error, but don't break dashboard
+            error_log("Error calculando consumo: " . $e->getMessage());
+            $consumoActual = 0.00;
         }
-        
-        $p_vista = $tarifas['ver_detalle'] ?? 0.10;
-        $p_click = $tarifas['click_aplicar'] ?? 0.15;
-        $p_chat  = $tarifas['chat_consulta'] ?? 0.05;
-
-        // Validamos que los precios sean numéricos para evitar errores SQL
-        $p_vista = (float)$p_vista;
-        $p_click = (float)$p_click;
-        $p_chat  = (float)$p_chat;
-
-        $stmtPeaje = $this->dbRead->prepare("
-            SELECT SUM(CASE 
-                WHEN tipo_interaccion = 'ver_detalle' THEN $p_vista 
-                WHEN tipo_interaccion = 'click_aplicar' THEN $p_click 
-                WHEN tipo_interaccion = 'chat_consulta' THEN $p_chat 
-                ELSE 0 END) as total_consumo
-            FROM interacciones_vacante iv
-            JOIN vacantes v ON iv.vacante_id = v.id
-            WHERE v.empresa_id = ? AND MONTH(iv.fecha_hora) = MONTH(CURRENT_DATE())
-        ");
-       $stmtPeaje->execute([$empresaId]);
-       $resultado = $stmtPeaje->fetch(PDO::FETCH_ASSOC);
-
-        // Forzamos a float para evitar errores en number_format
-        $consumoActual = (float) ($resultado['total_consumo'] ?? 0);
 
         // 4. Actividad
         $stmtAct = $this->dbRead->prepare("
@@ -205,8 +209,51 @@ class EmpresaController extends Controller
         $this->view('empresa/candidatos', compact('candidatos', 'user'));
     }
     
+    public function postulantes(): void {
+        $user = Auth::user();
+        // Agrupar por vacante
+        $stmt = $this->dbRead->prepare("
+            SELECT v.id as vacante_id, v.titulo, COUNT(p.id) as cantidad_postulantes 
+            FROM vacantes v 
+            LEFT JOIN postulaciones p ON v.id = p.vacante_id 
+            WHERE v.empresa_id = ? 
+            GROUP BY v.id, v.titulo 
+            ORDER BY cantidad_postulantes DESC
+        ");
+        $stmt->execute([$user['empresa_id']]);
+        $vacantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Si se selecciona una vacante, traer sus postulantes
+        $selectedVacante = $_GET['vacante_id'] ?? null;
+        $detalles = [];
+        
+        if ($selectedVacante) {
+            $stmtDet = $this->dbRead->prepare("
+                SELECT p.*, s.nombre, s.apellido, s.email, s.telefono, s.habilidades,cv_path
+                FROM postulaciones p 
+                JOIN solicitantes s ON p.solicitante_id = s.id 
+                WHERE p.vacante_id = ? 
+                ORDER BY p.fecha_postulacion DESC
+            ");
+            $stmtDet->execute([$selectedVacante]);
+            $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $this->view('empresa/postulantes', compact('vacantes', 'detalles', 'selectedVacante'));
+    }
+
     public function facturacion(): void {
-        // Redirección temporal a listar facturas si existe, o mensaje simple
-        echo "<h1>Módulo de Facturación</h1><p>En construcción</p><a href='".ENV_APP['BASE_URL']."/empresa/dashboard'>Volver</a>";
+        $user = Auth::user();
+        $stmt = $this->dbRead->prepare("
+            SELECT f.*, 
+            CASE WHEN f.estado = 'emitida' THEN 1 ELSE 2 END as orden_estado
+            FROM facturas f 
+            WHERE f.empresa_id = ? 
+            ORDER BY orden_estado ASC, f.fecha_emision DESC
+        ");
+        $stmt->execute([$user['empresa_id']]);
+        $facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('empresa/facturacion', compact('facturas'));
     }
 }
