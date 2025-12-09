@@ -6,103 +6,108 @@ $user = Auth::user();
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Postulantes | Consultores Chiriquí</title>
-    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/style.css">
-    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-consultora.css">
+    <title>Candidatos por Vacante</title>
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-consultora.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/dashboard-animations.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .split-layout { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; align-items: start; }
+        .sidebar-list { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .sidebar-item { display: block; padding: 1rem; border-bottom: 1px solid #f1f5f9; cursor: pointer; text-decoration: none; color: #475569; transition: all 0.2s; }
+        .sidebar-item:hover, .sidebar-item.active { background: #eff6ff; color: #2563eb; font-weight: 600; border-left: 4px solid #2563eb; }
+        .sidebar-item:last-child { border-bottom: none; }
+        
+        .candidate-card { background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid #e2e8f0; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .candidate-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0,0,0,0.05); border-color: #cbd5e1; }
+        
+        .badge-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; background: #f1f5f9; color: #64748b; margin-right: 5px; }
+        
+        @media(max-width: 768px) { .split-layout { grid-template-columns: 1fr; } }
+    </style>
 </head>
 <body>
 <?php include __DIR__ . '/../components/navbar.php'; ?>
 
 <div class="dashboard-wrapper">
-    <div class="page-header">
-    <div class="header-left">
-        <h2><i class="fas fa-users" style="color: #4f46e5; margin-right: 10px;"></i> Gestión de Postulantes</h2>
-        <p style="color: #64748b; margin: 5px 0 0;">Selecciona una vacante para ver los candidatos interesados.</p>
+    <div class="page-header animate-slide-up">
+        <div>
+            <h2><i class="fas fa-users" style="color: #2563eb; margin-right: 10px;"></i> Candidatos</h2>
+            <p style="color: #64748b; margin: 5px 0 0;">Selecciona una vacante para ver quiénes se han postulado.</p>
+        </div>
+        <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Volver</a>
     </div>
-    <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Volver</a>
-</div>
 
-<div class="form-row">
-    <!-- Sidebar: Lista de Vacantes -->
-    <div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; height: fit-content;">
-        <h3 style="font-size: 1rem; color: #64748b; text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.05em;">Vacantes</h3>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <?php foreach ($vacantes as $v): ?>
-                <a href="?vacante_id=<?= $v['vacante_id'] ?>" 
-                   style="display: flex; justify-content: space-between; padding: 10px; border-radius: 6px; text-decoration: none; color: #334155; <?= $selectedVacante == $v['vacante_id'] ? 'background: #eff6ff; color: #2563eb; font-weight: 600;' : 'background: #f8fafc;' ?>">
-                    <span><?= htmlspecialchars($v['titulo']) ?></span>
-                    <span style="background: <?= $selectedVacante == $v['vacante_id'] ? '#bfdbfe' : '#e2e8f0' ?>; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">
-                        <?= $v['cantidad_postulantes'] ?>
-                    </span>
-                </a>
-            <?php endforeach; ?>
-            <?php if (empty($vacantes)): ?>
-                <p style="color: #94a3b8; font-size: 0.9rem;">No tienes vacantes con postulantes aún.</p>
+    <div class="split-layout animate-slide-up delay-100">
+        <div class="sidebar-list">
+            <div style="padding: 1rem; background: #f8fafc; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0;">
+                Tus Vacantes Activas
+            </div>
+            <?php if(empty($vacantes)): ?>
+                <div style="padding: 2rem; text-align: center; color: #94a3b8; font-size: 0.9rem;">No hay postulantes aún.</div>
+            <?php else: ?>
+                <?php foreach($vacantes as $v): ?>
+                    <a href="?vacante_id=<?= $v['id'] ?>" class="sidebar-item <?= $selectedVacante == $v['id'] ? 'active' : '' ?>">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><?= htmlspecialchars($v['titulo']) ?></span>
+                            <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem;">
+                                <?= $v['total_postulantes'] ?>
+                            </span>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+        <div class="candidates-area">
+            <?php if(!$selectedVacante): ?>
+                <div style="text-align: center; padding: 4rem; color: #cbd5e1;">
+                    <i class="fas fa-mouse-pointer fa-3x"></i>
+                    <p style="margin-top: 1rem; color: #94a3b8;">Selecciona una vacante a la izquierda.</p>
+                </div>
+            <?php elseif(empty($candidatos)): ?>
+                <div style="text-align: center; padding: 3rem; background: white; border-radius: 12px;">
+                    <p>No hay candidatos para esta vacante.</p>
+                </div>
+            <?php else: ?>
+                <h3 style="margin-bottom: 1.5rem; color: #334155;">Postulantes (<?= count($candidatos) ?>)</h3>
+                <?php foreach($candidatos as $c): ?>
+                    <div class="candidate-card animate-slide-up">
+                        <div style="display: flex; gap: 1.5rem; align-items: center;">
+                            <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #60a5fa); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
+                                <?= strtoupper(substr($c['nombre'], 0, 1)) ?>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; color: #1e293b; font-size: 1.1rem;"><?= htmlspecialchars($c['nombre'] . ' ' . $c['apellido']) ?></h4>
+                                <div style="color: #64748b; font-size: 0.9rem; margin: 5px 0;">
+                                    <i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($c['ciudad'] ?? 'Panamá') ?> • 
+                                    <i class="fas fa-envelope"></i> <?= htmlspecialchars($c['email']) ?>
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    <?php if(!empty($c['habilidades'])): 
+                                        $skills = explode(',', $c['habilidades']);
+                                        foreach(array_slice($skills, 0, 3) as $skill): ?>
+                                        <span class="badge-pill"><?= htmlspecialchars(trim($skill)) ?></span>
+                                    <?php endforeach; endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">
+                                Postulado: <?= date('d/m/Y', strtotime($c['fecha_postulacion'])) ?>
+                            </div>
+                            <?php if(!empty($c['cv_ruta'])): ?>
+                                <a href="<?= ENV_APP['BASE_URL'] . $c['cv_ruta'] ?>" target="_blank" class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem;">
+                                    <i class="fas fa-download"></i> Descargar CV
+                                </a>
+                            <?php else: ?>
+                                <span style="color: #94a3b8; font-size: 0.85rem;">Sin CV adjunto</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             <?php endif; ?>
         </div>
     </div>
-
-    <!-- Main: Lista de Candidatos -->
-    <div class="table-container" style="margin-top: 0;">
-        <?php if (!$selectedVacante): ?>
-            <div style="text-align: center; padding: 3rem; color: #94a3b8;">
-                <i class="fas fa-mouse-pointer" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                <p>Selecciona una vacante de la izquierda para ver los detalles.</p>
-            </div>
-        <?php else: ?>
-            <h3 style="margin-bottom: 1.5rem; color: #1e293b;">Postulantes para esta vacante</h3>
-            <?php if (empty($detalles)): ?>
-                <p style="color: #64748b;">No hay candidatos para mostrar.</p>
-            <?php else: ?>
-                <table class="premium-table">
-                    <thead>
-                        <tr>
-                            <th>Candidato</th>
-                            <th>Contacto</th>
-                            <th>Habilidades</th>
-                            <th>CV</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($detalles as $candidato): ?>
-                        <tr>
-                            <td>
-                                <div style="font-weight: 500;"><?= htmlspecialchars($candidato['nombre'] . ' ' . $candidato['apellido']) ?></div>
-                                <div style="font-size: 0.85rem; color: #64748b;">Postulado: <?= date('d/m/Y', strtotime($candidato['fecha_postulacion'])) ?></div>
-                            </td>
-                            <td>
-                                <div style="font-size: 0.9rem;"><i class="fas fa-envelope" style="width: 15px;"></i> <?= htmlspecialchars($candidato['email']) ?></div>
-                                <div style="font-size: 0.9rem;"><i class="fas fa-phone" style="width: 15px;"></i> <?= htmlspecialchars($candidato['telefono']) ?></div>
-                            </td>
-                            <td>
-                                <div style="max-width: 200px; font-size: 0.85rem; color: #475569;">
-                                    <?= htmlspecialchars($candidato['habilidades'] ?: 'No especificadas') ?>
-                                </div>
-                            </td>
-                            <td>
-                                <?php if (!empty($candidato['cv_path'])): ?>
-                                    <a href="<?= ENV_APP['BASE_URL'] . $candidato['cv_path'] ?>" target="_blank" class="status-badge status-active" style="text-decoration: none;">
-                                        <i class="fas fa-file-pdf"></i> Ver CV
-                                    </a>
-                                <?php else: ?>
-                                    <span class="status-badge status-inactive">Sin CV</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <button class="btn-secondary" disabled title="Próximamente"><i class="fas fa-comment"></i> Chat</button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        <?php endif; ?>
-    </div>
 </div>
-
-</div> <!-- End dashboard-wrapper -->
 </body>
 </html>

@@ -62,6 +62,17 @@ $valor = function(string $campo, $default = '') use ($v) {
 
             <div class="form-row">
                 <div class="form-group">
+                    <label class="form-label" for="cantidad_plazas">Cantidad de Plazas</label>
+                    <input type="number" id="cantidad_plazas" name="cantidad_plazas" class="form-input" value="<?= htmlspecialchars($valor('cantidad_plazas', '1')) ?>" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="fecha_cierre">Fecha de Cierre</label>
+                    <input type="date" id="fecha_cierre" name="fecha_cierre" class="form-input" value="<?= htmlspecialchars($valor('fecha_cierre')) ?>" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
                     <label class="form-label" for="modalidad">Modalidad</label>
                     <select id="modalidad" name="modalidad" class="form-select">
                         <?php $mod = $valor('modalidad', 'presencial'); ?>
