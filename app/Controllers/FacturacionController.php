@@ -50,8 +50,11 @@ class FacturacionController extends Controller
         $stmt = $this->db->query("SELECT MIN(id) as id, nombre FROM empresas WHERE estado = 'activa' GROUP BY nombre ORDER BY nombre");
         $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Pre-selección si viene por GET
+        $selectedEmpresa = (int)($_GET['empresa_id'] ?? 0);
+
         $error = '';
-        $this->view('facturacion/generar', compact('empresas', 'error'));
+        $this->view('facturacion/generar', compact('empresas', 'error', 'selectedEmpresa'));
     }
 
     public function procesarFactura(): void

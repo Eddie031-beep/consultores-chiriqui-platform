@@ -185,6 +185,14 @@
                     <input type="url" name="sitio_web" placeholder="https://www.empresa.com">
                 </div>
 
+                <div class="form-group" style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border: 1px dashed #86efac; display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" name="generar_contrato" value="1" checked style="width: 20px; height: 20px; accent-color: #16a34a;">
+                    <div>
+                        <strong style="color: #166534; display: block;">Generar Acuerdo de Servicio Comercial</strong>
+                        <span style="font-size: 0.85rem; color: #15803d;">Se creará un contrato digital PDF versión v1.0 automáticamente.</span>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-submit">
                     <i class="fas fa-file-contract"></i> Registrar Empresa y Generar Contrato
                 </button>

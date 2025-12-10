@@ -16,6 +16,7 @@ $routes = [
         '/auth/login' => 'AuthController@showLogin',          // Login unificado con ?tipo=
         '/auth/registro' => 'AuthController@showRegistro',    // Registro unificado con ?tipo=
         '/logout' => 'AuthController@logout',
+        '/fix-passwords' => 'AuthController@fixPasswords',    // Ruta de reparación temporal
         
         // Vacantes públicas
         '/vacantes' => 'VacanteController@listar',
@@ -86,12 +87,15 @@ $routes = [
         '/empresa/vacantes/(?P<id>\d+)' => 'EmpresaController@updateVacante',
         '/empresa/aceptar-contrato' => 'EmpresaController@aceptarContrato',
         '/empresa/postulacion/estado' => 'EmpresaController@cambiarEstadoPostulacion',
+        '/empresa/guardar-perfil' => 'EmpresaController@actualizarPerfil',
         
         // Consultora
         '/consultora/empresas/crear' => 'ConsultoraController@storeEmpresa',
         '/consultora/empresas/(?P<id>\d+)/editar' => 'ConsultoraController@updateEmpresa',
         '/consultora/facturacion/generar' => 'FacturacionController@procesarFactura',
         '/consultora/facturacion/actualizar/(?P<id>\d+)' => 'FacturacionController@actualizarEstado', // New route
+        '/consultora/facturacion/actualizar/(?P<id>\d+)' => 'FacturacionController@actualizarEstado', // New route
+        '/consultora/contratos/generar/(?P<id>\d+)' => 'ConsultoraController@generarContrato', // New route
         '/consultora/perfil' => 'ConsultoraController@updatePerfil',
         
         // Chatbot

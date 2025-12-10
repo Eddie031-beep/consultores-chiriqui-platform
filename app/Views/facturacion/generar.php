@@ -46,7 +46,9 @@ $user = Auth::user();
                         <select name="empresa_id" required class="form-select" style="padding-left: 2.5rem;">
                             <option value="">Seleccione una empresa...</option>
                             <?php foreach ($empresas as $empresa): ?>
-                                <option value="<?= $empresa['id'] ?>"><?= htmlspecialchars($empresa['nombre']) ?></option>
+                                <option value="<?= $empresa['id'] ?>" <?= (isset($selectedEmpresa) && $selectedEmpresa == $empresa['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($empresa['nombre']) ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>

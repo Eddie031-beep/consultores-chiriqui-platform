@@ -83,7 +83,8 @@ class ConsultoraController extends Controller
     // ============ LISTAR EMPRESAS ============
     public function empresas(): void
     {
-        $sql = "SELECT e.*, COUNT(v.id) as total_vacantes, COUNT(DISTINCT p.id) as total_postulaciones
+        $sql = "SELECT e.*, COUNT(v.id) as total_vacantes, COUNT(DISTINCT p.id) as total_postulaciones,
+                       (SELECT id FROM contratos_empresas WHERE empresa_id = e.id LIMIT 1) as contrato_id
                 FROM empresas e
                 LEFT JOIN vacantes v ON e.id = v.empresa_id
                 LEFT JOIN postulaciones p ON v.id = p.vacante_id
@@ -145,24 +146,15 @@ class ConsultoraController extends Controller
             ]);
 
             $empresa_id = $this->db->lastInsertId();
+            
+            // Verificar si se solicitó contrato
+            if (!empty($_POST['generar_contrato'])) {
+                $this->crearContratoInterno($empresa_id, $nombre, $ruc, $dv);
+            }
 
-            // Crear contrato digital
-            $contrato = "CONTRATO DIGITAL DE SERVICIOS\n\n";
-            $contrato .= "EMPRESA: " . $nombre . "\n";
-            $contrato .= "RUC: " . $ruc . "-" . $dv . "\n\n";
-            $contrato .= "TARIFAS DE PEAJE POR INTERACCIÓN:\n";
-            $contrato .= "- Vista de Vacante: B/. 0.10\n";
-            $contrato .= "- Click en Aplicar: B/. 0.15\n";
-            $contrato .= "- Consulta Chatbot: B/. 0.05\n\n";
-            $contrato .= "Impuesto ITBMS: 7%\n";
-            $contrato .= "Fecha de Aceptación: " . date('Y-m-d H:i:s') . "\n";
-            $contrato .= "IP: " . $_SERVER['REMOTE_ADDR'];
-
-            $sqlContrato = "INSERT INTO contratos_empresas 
-                            (empresa_id, version_contrato, texto_resumen, ip_aceptacion)
-                            VALUES (?, 'v1.0', ?, ?)";
-            $stmtContrato = $this->db->prepare($sqlContrato);
-            $stmtContrato->execute([$empresa_id, $contrato, $_SERVER['REMOTE_ADDR']]);
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Empresa creada exitosamente'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/empresas');
+            exit;
 
             $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Empresa creada exitosamente'];
             header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/empresas');
@@ -282,6 +274,70 @@ class ConsultoraController extends Controller
         }
 
         $this->view('dashboard/contrato-empresa', compact('contrato'));
+    }
+
+    // ============ GENERAR CONTRATO MANUAL ============
+    public function generarContrato($id): void
+    {
+        $id = (int)$id;
+        
+        // Obtener datos de empresa
+        $stmt = $this->db->prepare("SELECT * FROM empresas WHERE id = ?");
+        $stmt->execute([$id]);
+        $emp = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$emp) {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/empresas');
+            exit;
+        }
+
+        try {
+            // Verificar si ya existe
+            $stmtCheck = $this->db->prepare("SELECT id FROM contratos_empresas WHERE empresa_id = ?");
+            $stmtCheck->execute([$id]);
+            if ($stmtCheck->fetch()) {
+                $_SESSION['mensaje'] = ['tipo' => 'warning', 'texto' => 'Esta empresa ya tiene un contrato activo.'];
+                header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/contratos/' . $id);
+                exit;
+            }
+
+            $this->crearContratoInterno($id, $emp['nombre'], $emp['ruc'], $emp['dv']);
+            
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Contrato Comercial generado exitosamente'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/contratos/' . $id);
+            exit;
+
+        } catch (\Exception $e) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Error al generar: ' . $e->getMessage()];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/empresas');
+            exit;
+        }
+    }
+
+    private function crearContratoInterno($empresaId, $nombre, $ruc, $dv): void
+    {
+        $contrato = "ACUERDO DE SERVICIO COMERCIAL (Términos y Condiciones)\n\n";
+        $contrato .= "ENTRE: Consultores Chiriquí S.A. (La Plataforma)\n";
+        $contrato .= "Y: " . $nombre . " (El Cliente)\n";
+        $contrato .= "RUC: " . $ruc . "-" . $dv . "\n\n";
+        $contrato .= "OBJETO: Prestación de servicios de intermediación laboral y publicidad de vacantes.\n\n";
+        $contrato .= "TARIFAS VIGENTES (MODELO DE PEAJE):\n";
+        $contrato .= "1. Visualización de Vacante: B/. 1.50\n";
+        $contrato .= "2. Postulación (Click Apply): B/. 5.00\n";
+        $contrato .= "3. Consulta IA (Chatbot): B/. 2.50\n\n";
+        $contrato .= "CONDICIONES DE PAGO:\n";
+        $contrato .= "Las facturas se emitirán mensualmente según el consumo real registrado por el sistema.\n";
+        $contrato .= "El cliente acepta los registros electrónicos como prueba de servicio.\n\n";
+        $contrato .= "ACEPTACIÓN:\n";
+        $contrato .= "Fecha de Registro/Generación: " . date('Y-m-d H:i:s') . "\n";
+        $contrato .= "IP Autoridad: " . $_SERVER['REMOTE_ADDR'] . "\n\n";
+        $contrato .= "-- Documento generado electrónicamente --";
+
+        $sqlContrato = "INSERT INTO contratos_empresas 
+                        (empresa_id, version_contrato, texto_resumen, ip_aceptacion, fecha_aceptacion)
+                        VALUES (?, 'v1.0-COMERCIAL', ?, ?, NOW())";
+        $stmtContrato = $this->db->prepare($sqlContrato);
+        $stmtContrato->execute([$empresaId, $contrato, $_SERVER['REMOTE_ADDR']]);
     }
 
     // ============ CREAR USUARIO PARA EMPRESA ============

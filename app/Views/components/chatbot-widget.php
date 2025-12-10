@@ -92,10 +92,11 @@
     </div>
 </div>
 
-<script>
+    <script>
     function toggleChat() {
         const w = document.getElementById('chatWindow');
         w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
+        if(w.style.display === 'flex') setTimeout(() => document.getElementById('chatInput').focus(), 100);
     }
 
     function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
@@ -108,35 +109,76 @@
         // 1. Mostrar mensaje usuario
         addMessage(text, 'user');
         input.value = '';
+        input.disabled = true;
 
-        // 2. Llamar a tu ChatbotController existente
-        // Note: ENV_APP constant might need to be checked if it exists, otherwise fallback or dynamic URL
-        // Assuming the user knows their environment, but I will check if ENV_APP is standard or if I should use base_url()
         const baseUrl = '<?= ENV_APP['BASE_URL'] ?>'; 
         
+        const formData = new FormData();
+        formData.append('pregunta', text);
+
         fetch(baseUrl + '/chatbot', {
             method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'pregunta=' + encodeURIComponent(text)
+            body: formData
         })
         .then(res => res.json())
         .then(data => {
+            input.disabled = false;
+            input.focus();
             if(data.success) {
                 addMessage(data.respuesta, 'bot');
+                if(data.acciones && data.acciones.length > 0) {
+                    renderAcciones(data.acciones);
+                }
+            } else {
+                addMessage("⚠️ Hubo un error.", 'bot');
             }
         })
         .catch(err => {
             console.error(err);
-            addMessage('Error de conexión...', 'bot');
+            input.disabled = false;
+            addMessage('❌ Error de conexión.', 'bot');
         });
     }
 
-    function addMessage(text, type) {
+    function addMessage(htmlText, type) {
         const div = document.createElement('div');
         div.className = `msg msg-${type}`;
-        div.textContent = text;
+        div.innerHTML = htmlText; // Usar innerHTML para soportar <br> y <b>
         const container = document.getElementById('chatMessages');
         container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function renderAcciones(acciones) {
+        const container = document.getElementById('chatMessages');
+        const actionsDiv = document.createElement('div');
+        actionsDiv.style.display = 'flex';
+        actionsDiv.style.gap = '5px';
+        actionsDiv.style.flexWrap = 'wrap';
+        actionsDiv.style.marginBottom = '10px';
+        actionsDiv.style.marginLeft = '10px';
+
+        acciones.forEach(accion => {
+            const btn = document.createElement('button');
+            btn.textContent = accion;
+            btn.style.padding = '5px 10px';
+            btn.style.border = '1px solid #2563eb';
+            btn.style.borderRadius = '15px';
+            btn.style.background = 'white';
+            btn.style.color = '#2563eb';
+            btn.style.cursor = 'pointer';
+            btn.style.fontSize = '0.8rem';
+            
+            btn.onclick = () => {
+                const input = document.getElementById('chatInput');
+                input.value = accion;
+                sendMessage();
+                actionsDiv.remove(); // Quitar botones al elegir
+            };
+            actionsDiv.appendChild(btn);
+        });
+
+        container.appendChild(actionsDiv);
         container.scrollTop = container.scrollHeight;
     }
 </script>

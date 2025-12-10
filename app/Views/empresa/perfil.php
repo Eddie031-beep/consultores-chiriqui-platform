@@ -42,7 +42,7 @@ use App\Helpers\Auth;
         <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/dashboard" class="back-btn">Volver</a>
     </div>
 
-    <form action="" method="POST" class="animate-slide-up delay-100">
+    <form action="<?= ENV_APP['BASE_URL'] ?>/empresa/guardar-perfil" method="POST" class="animate-slide-up delay-100">
         <div class="dashboard-grid" style="grid-template-columns: 2fr 1fr;">
             
             <div class="form-card" style="margin: 0; max-width: 100%;">
@@ -60,7 +60,14 @@ use App\Helpers\Auth;
                     </div>
                     <div class="form-group">
                         <label class="form-label">Sector</label>
-                        <input type="text" class="form-input" value="<?= htmlspecialchars($data['sector']) ?>" disabled style="background: #f1f5f9; color: #64748b;">
+                        <select name="sector_id" class="form-input" required>
+                            <option value="">Seleccione un sector...</option>
+                            <?php foreach ($sectores as $sec): ?>
+                                <option value="<?= htmlspecialchars($sec) ?>" <?= ($data['sector'] === $sec) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($sec) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
 

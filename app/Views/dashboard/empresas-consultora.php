@@ -61,8 +61,19 @@
                                     <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/empresas/<?= $emp['id'] ?>/editar" class="action-icon" title="Editar">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
-                                    <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/contratos/<?= $emp['id'] ?>" class="action-icon" title="Ver Contrato">
-                                        <i class="fas fa-file-contract"></i>
+                                    
+                                    <?php if (!empty($emp['contrato_id'])): ?>
+                                        <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/contratos/<?= $emp['id'] ?>" class="action-icon" title="Ver Contrato">
+                                            <i class="fas fa-file-contract"></i>
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/contratos/generar/<?= $emp['id'] ?>" class="action-icon" title="Generar Contrato" style="color: #16a34a;" onclick="return confirm('¿Generar contrato comercial para esta empresa?');">
+                                            <i class="fas fa-file-signature"></i>
+                                        </a>
+                                    <?php endif; ?>
+
+                                    <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/facturacion/generar?empresa_id=<?= $emp['id'] ?>" class="action-icon" title="Generar Factura" style="color: #2563eb;">
+                                        <i class="fas fa-file-invoice-dollar"></i>
                                     </a>
                                 </td>
                             </tr>

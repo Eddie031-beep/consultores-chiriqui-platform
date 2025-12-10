@@ -129,27 +129,44 @@ class EmpresaController extends Controller
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->updatePerfil($user['empresa_id'], $user['id']);
+            // Deprecated: ahora se usa actualizarPerfil via POST route
+            $this->actualizarPerfil(); 
             return;
         }
 
-        $this->view('empresa/perfil', compact('data'));
+        // Lista de sectores estática (ya que no tenemos tabla)
+        $sectores = [
+            'Tecnología', 'Salud', 'Educación', 'Construcción', 
+            'Comercio', 'Finanzas', 'Turismo', 'Logística', 
+            'Alimentos', 'Servicios Profesionales', 'Otro'
+        ];
+
+        $this->view('empresa/perfil', compact('data', 'sectores'));
     }
 
-    private function updatePerfil($empresaId, $userId): void
+    public function actualizarPerfil(): void
     {
+        $user = Auth::user();
+        if ($user['rol'] !== 'empresa_admin') {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/login');
+            exit;
+        }
+
+        $empresaId = $user['empresa_id'];
+        $userId = $user['id'];
         try {
             $this->dbWrite->beginTransaction();
 
             // Actualizar Empresa
             $stmtEmp = $this->dbWrite->prepare("
                 UPDATE empresas SET 
-                direccion = ?, telefono = ?, email_contacto = ?, sitio_web = ?
+                direccion = ?, telefono = ?, email_contacto = ?, sitio_web = ?, sector = ?
                 WHERE id = ?
             ");
             $stmtEmp->execute([
                 $_POST['direccion'], $_POST['telefono'], 
                 $_POST['email_contacto'], $_POST['sitio_web'], 
+                $_POST['sector_id'], // Usamos el nombre 'sector_id' del form, aunque guardamos en columna 'sector'
                 $empresaId
             ]);
 

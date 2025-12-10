@@ -518,4 +518,36 @@ class AuthController extends Controller
         }
         exit;
     }
+    // ============ REPARACIÓN DE CONTRASEÑAS ============
+    public function fixPasswords(): void
+    {
+        $updates = [
+            1 => 'empresa123',
+            3 => 'admin123',
+            7 => '12345',
+            8 => '12345',
+            9 => '12345',
+            10 => '12345',
+            11 => '12345'
+        ];
+        
+        echo "<h1>Reparando contraseñas...</h1>";
+        
+        foreach ($updates as $id => $pass) {
+            $hash = password_hash($pass, PASSWORD_BCRYPT);
+            // Usamos consulta directa para forzar la actualización
+            $stmt = $this->db->prepare("UPDATE usuarios SET password_hash = ? WHERE id = ?");
+            $success = $stmt->execute([$hash, $id]);
+            
+            if ($success) {
+                echo "Usuario ID $id actualizado correctamente. (Pass: $pass -> Hash)<br>";
+            } else {
+                echo "<span style='color:red'>Error actualizando ID $id</span><br>";
+            }
+        }
+        
+        echo "<br><strong>¡Listo! Ahora puedes intentar iniciar sesión.</strong>";
+        echo "<br><a href='" . ENV_APP['BASE_URL'] . "/auth/login'>Ir al Login</a>";
+        exit;
+    }
 }
