@@ -202,24 +202,35 @@ class ConsultoraController extends Controller
     }
 
     // ============ ACTUALIZAR EMPRESA ============
-    private function updateEmpresa($id): void
+    // CAMBIO IMPORTANTE: Debe ser 'public' para que el Router pueda acceder a ella
+    public function updateEmpresa($id): void
     {
+        // 1. Recibir datos básicos
         $tipo = $_POST['tipo'] ?? 'privada';
         $nombre = trim($_POST['nombre'] ?? '');
+        $estado = $_POST['estado'] ?? 'activa';
+        $sector = trim($_POST['sector'] ?? '');
+        
+        // 2. Recibir datos fiscales
+        $razon_social = trim($_POST['razon_social'] ?? '');
+        $ruc = trim($_POST['ruc'] ?? '');
+        $dv = trim($_POST['dv'] ?? '');
+        $datos_completos = isset($_POST['datos_facturacion_completos']) ? 1 : 0;
+
+        // 3. Recibir datos de contacto
         $direccion = trim($_POST['direccion'] ?? '');
         $provincia = trim($_POST['provincia'] ?? '');
         $telefono = trim($_POST['telefono'] ?? '');
         $email_contacto = trim($_POST['email_contacto'] ?? '');
         $sitio_web = trim($_POST['sitio_web'] ?? '');
-        $sector = trim($_POST['sector'] ?? '');
-        $estado = $_POST['estado'] ?? 'activa';
 
+        // Validaciones básicas
         $errores = [];
-
         if (empty($nombre)) $errores['nombre'] = 'El nombre es obligatorio';
+        if (empty($ruc)) $errores['ruc'] = 'El RUC es obligatorio';
         if (empty($direccion)) $errores['direccion'] = 'La dirección es obligatoria';
-        if (empty($provincia)) $errores['provincia'] = 'La provincia es obligatoria';
 
+        // Si hay errores, recargar vista
         if (!empty($errores)) {
             $stmt = $this->db->prepare("SELECT * FROM empresas WHERE id = ?");
             $stmt->execute([$id]);
@@ -228,18 +239,25 @@ class ConsultoraController extends Controller
             return;
         }
 
-        $sql = "UPDATE empresas 
-                SET tipo = ?, nombre = ?, direccion = ?, provincia = ?, 
-                    telefono = ?, email_contacto = ?, sitio_web = ?, sector = ?, estado = ?
-                WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            $tipo, $nombre, $direccion, $provincia, 
-            $telefono ?: null, $email_contacto ?: null, $sitio_web ?: null, $sector ?: null, 
-            $estado, $id
-        ]);
+        try {
+            $sql = "UPDATE empresas 
+                    SET tipo = ?, nombre = ?, razon_social = ?, ruc = ?, dv = ?, datos_facturacion_completos = ?,
+                        direccion = ?, provincia = ?, telefono = ?, email_contacto = ?, sitio_web = ?, sector = ?, estado = ?
+                    WHERE id = ?";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $tipo, $nombre, $razon_social ?: null, $ruc, $dv, $datos_completos,
+                $direccion, $provincia, $telefono ?: null, $email_contacto ?: null, 
+                $sitio_web ?: null, $sector ?: null, $estado, $id
+            ]);
 
-        $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Empresa actualizada exitosamente'];
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Empresa actualizada correctamente'];
+            
+        } catch (\PDOException $e) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Error al guardar: ' . $e->getMessage()];
+        }
+
         header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/empresas');
         exit;
     }
@@ -407,5 +425,65 @@ class ConsultoraController extends Controller
             'email' => 'admin@consultoreschiriqui.com'
         ];
         $this->view('dashboard/info', compact('info'));
+    }
+
+    // ============ PERFIL DEL ADMINISTRADOR (NUEVO) ============
+    public function perfil(): void
+    {
+        $user = Auth::user();
+        
+        // Obtenemos datos frescos de la BD
+        $stmt = $this->db->prepare("SELECT * FROM usuarios WHERE id = ?");
+        $stmt->execute([$user['id']]);
+        $perfil = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $this->view('dashboard/perfil-admin', compact('perfil'));
+    }
+
+    public function updatePerfil(): void
+    {
+        $user = Auth::user();
+        $nombre = trim($_POST['nombre'] ?? '');
+        $apellido = trim($_POST['apellido'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        if (empty($nombre) || empty($email)) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Nombre y Email son obligatorios.'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/perfil');
+            exit;
+        }
+
+        try {
+            // Actualizar password solo si se escribe algo
+            if (!empty($password)) {
+                if (strlen($password) < 6) {
+                    $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'La contraseña debe tener al menos 6 caracteres.'];
+                    header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/perfil');
+                    exit;
+                }
+                $hash = password_hash($password, PASSWORD_BCRYPT);
+                $sql = "UPDATE usuarios SET nombre=?, apellido=?, email=?, password_hash=? WHERE id=?";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([$nombre, $apellido, $email, $hash, $user['id']]);
+            } else {
+                $sql = "UPDATE usuarios SET nombre=?, apellido=?, email=? WHERE id=?";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([$nombre, $apellido, $email, $user['id']]);
+            }
+
+            // Actualizar sesión
+            $_SESSION['user']['nombre'] = $nombre;
+            $_SESSION['user']['apellido'] = $apellido;
+            $_SESSION['user']['email'] = $email;
+
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Perfil actualizado correctamente.'];
+
+        } catch (\PDOException $e) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Error al actualizar: ' . $e->getMessage()];
+        }
+
+        header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/perfil');
+        exit;
     }
 }

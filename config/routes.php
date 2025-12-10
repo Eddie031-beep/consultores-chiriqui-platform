@@ -30,6 +30,7 @@ $routes = [
         '/candidato/opciones-perfil' => 'CandidatoController@opcionesPerfil',
         '/candidato/perfil-manual' => 'CandidatoController@perfilManual',
         '/candidato/editar-perfil' => 'CandidatoController@editarPerfil',
+        '/candidato/descargar-cv-generado' => 'CandidatoController@generarPDF',
 
         // Dashboard Empresa
         '/empresa/dashboard' => 'EmpresaController@dashboard',
@@ -58,6 +59,10 @@ $routes = [
         '/consultora/dashboard' => 'ConsultoraController@dashboard',
         '/consultora/perfil' => 'ConsultoraController@perfil',
 
+        // Facturación Pública y Pagos
+        '/factura/ver/(?P<token>[\w-]+)' => 'FacturaController@ver',
+        '/pagos/pagar/(?P<id>\d+)' => 'PagosController@checkout',
+        
         // Chatbot
         '/chatbot' => 'ChatbotController@chat',
     ],
@@ -80,15 +85,25 @@ $routes = [
         '/empresa/vacantes/crear' => 'EmpresaController@storeVacante',
         '/empresa/vacantes/(?P<id>\d+)' => 'EmpresaController@updateVacante',
         '/empresa/aceptar-contrato' => 'EmpresaController@aceptarContrato',
+        '/empresa/postulacion/estado' => 'EmpresaController@cambiarEstadoPostulacion',
         
         // Consultora
         '/consultora/empresas/crear' => 'ConsultoraController@storeEmpresa',
         '/consultora/empresas/(?P<id>\d+)/editar' => 'ConsultoraController@updateEmpresa',
         '/consultora/facturacion/generar' => 'FacturacionController@procesarFactura',
         '/consultora/facturacion/actualizar/(?P<id>\d+)' => 'FacturacionController@actualizarEstado', // New route
+        '/consultora/perfil' => 'ConsultoraController@updatePerfil',
         
         // Chatbot
         '/chatbot' => 'ChatbotController@chat',
+
+        // Reseñas
+        '/resenas/guardar' => 'ResenaController@guardar',
+        '/resenas/eliminar/(?P<id>\d+)' => 'ResenaController@eliminar', // Usamos POST para eliminar por seguridad
+        '/resenas/reportar/(?P<id>\d+)' => 'ResenaController@reportar',
+        
+        // Pagos
+        '/pagos/procesar' => 'PagosController@procesar',
     ],
 ];
 

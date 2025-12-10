@@ -133,10 +133,10 @@ class FacturacionController extends Controller
                 $total_linea = $int['cantidad'] * $int['precio_unitario'];
                 $stmtDet = $this->db->prepare("
                     INSERT INTO facturas_detalle 
-                    (factura_id, cantidad_interacciones, tarifa_unitaria, total_linea)
-                    VALUES (?, ?, ?, ?)
+                    (factura_id, tipo_interaccion, cantidad_interacciones, tarifa_unitaria, total_linea)
+                    VALUES (?, ?, ?, ?, ?)
                 ");
-                $stmtDet->execute([$factura_id, $int['cantidad'], $int['precio_unitario'], $total_linea]);
+                $stmtDet->execute([$factura_id, $int['tipo_interaccion'], $int['cantidad'], $int['precio_unitario'], $total_linea]);
             }
 
             $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Factura generada exitosamente: ' . $numero_fiscal];
@@ -185,7 +185,7 @@ class FacturacionController extends Controller
         $this->view('facturacion/ver', compact('factura', 'detalles', 'qrUrl'));
     }
 
-    // ============ DESCARGAR PDF ============
+    // ============ DESCARGAR RESUMEN (TXT) ============
     public function descargarPDF($id): void
     {
         $id = (int)$id;
@@ -203,29 +203,39 @@ class FacturacionController extends Controller
             die('Factura no encontrada');
         }
 
-        // Generar contenido PDF (básico)
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="Factura_' . $factura['numero_fiscal'] . '.pdf"');
+        // CORRECCIÓN: Cambiamos a text/plain porque estamos generando texto, no un binario PDF real.
+        // Si quieres un PDF con diseño, usa la opción "Imprimir -> Guardar como PDF" del navegador.
+        header('Content-Type: text/plain');
+        header('Content-Disposition: attachment; filename="Factura_' . $factura['numero_fiscal'] . '.txt"');
 
-        echo "FACTURA ELECTRÓNICA - DGI PANAMÁ (Simulación)\n\n";
-        echo "Número Fiscal: " . $factura['numero_fiscal'] . "\n";
-        echo "CUFE: " . $factura['cufe'] . "\n";
-        echo "Fecha Emisión: " . date('d/m/Y H:i', strtotime($factura['fecha_emision'])) . "\n";
-        echo "Protocolo: " . $factura['protocolo_autorizacion'] . "\n\n";
+        echo "=================================================\n";
+        echo "          FACTURA ELECTRÓNICA - RESUMEN          \n";
+        echo "=================================================\n\n";
         
         echo "EMISOR: Consultores Chiriquí S.A.\n";
-        echo "RUC: 8-888-888 DV 88\n\n";
+        echo "RUC: 155694852-2-2025 DV 55\n";
+        echo "-------------------------------------------------\n\n";
         
         echo "CLIENTE: " . $factura['empresa_nombre'] . "\n";
-        echo "RUC/CIP: " . $factura['ruc'] . "\n\n";
+        echo "RUC/CIP: " . $factura['ruc'] . "\n";
+        echo "DIRECCIÓN: " . $factura['direccion'] . "\n\n";
         
-        echo "DETALLE:\n";
-        echo "---------------------------------\n";
-        echo "Período: " . $factura['periodo_desde'] . " - " . $factura['periodo_hasta'] . "\n\n";
-        echo "Subtotal: B/. " . number_format($factura['subtotal'], 2) . "\n";
-        echo "ITBMS (7%): B/. " . number_format($factura['itbms'], 2) . "\n";
-        echo "TOTAL A PAGAR: B/. " . number_format($factura['total'], 2) . "\n\n";
-        echo "Estado: " . ucfirst($factura['estado']) . "\n";
+        echo "DETALLES FISCALES:\n";
+        echo "No. Fiscal: " . $factura['numero_fiscal'] . "\n";
+        echo "Fecha: " . date('d/m/Y H:i', strtotime($factura['fecha_emision'])) . "\n";
+        echo "CUFE: " . ($factura['cufe'] ?? 'N/A') . "\n";
+        echo "-------------------------------------------------\n\n";
+        
+        echo "DESGLOSE:\n";
+        echo "Período: " . date('d/m/Y', strtotime($factura['periodo_desde'])) . " al " . date('d/m/Y', strtotime($factura['periodo_hasta'])) . "\n\n";
+        
+        echo "Subtotal:      B/. " . number_format($factura['subtotal'], 2) . "\n";
+        echo "ITBMS (7%):    B/. " . number_format($factura['itbms'], 2) . "\n";
+        echo "=================================================\n";
+        echo "TOTAL A PAGAR: B/. " . number_format($factura['total'], 2) . "\n";
+        echo "=================================================\n";
+        
+        echo "\nEstado: " . strtoupper($factura['estado']) . "\n";
         exit;
     }
     // ============ ACTUALIZAR ESTADO ============

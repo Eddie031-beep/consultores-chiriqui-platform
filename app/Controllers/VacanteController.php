@@ -65,14 +65,17 @@ class VacanteController extends Controller
     // Ver detalle de vacante
     public function detalle($slug): void
     {
+        // 1. Obtener datos de la vacante y empresa
         $stmt = $this->db->prepare("
-            SELECT v.*, e.nombre as empresa_nombre, e.telefono, e.email_contacto, e.sitio_web, e.sector
+            SELECT v.*, 
+                   e.nombre as empresa_nombre, e.telefono, e.email_contacto, e.sitio_web, e.sector,
+                   e.tipo, e.direccion, e.provincia, e.fecha_registro as empresa_registro
             FROM vacantes v
             JOIN empresas e ON v.empresa_id = e.id
             WHERE v.slug = ? AND v.estado = 'abierta'
         ");
         $stmt->execute([$slug]);
-        $vacante = $stmt->fetch(PDO::FETCH_ASSOC);
+        $vacante = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$vacante) {
             header("HTTP/1.1 404 Not Found");
@@ -80,29 +83,72 @@ class VacanteController extends Controller
             return;
         }
 
-        // 2. Lógica de Contador de Vistas (Única por IP/Sesión hoy)
+        // Datos simulados (como acordamos antes)
+        $vacante['empresa_tamano'] = "51 - 200 empleados"; 
+        $vacante['empresa_descripcion'] = "Líderes en transformación digital y soluciones tecnológicas.";
+
+        // --- NUEVO: VERIFICAR SI YA SE POSTULÓ ---
+        $haPostulado = false;
+        if (Auth::check() && Auth::user()['rol'] === 'candidato') {
+            $user = Auth::user();
+            $checkPost = $this->db->prepare("SELECT id FROM postulaciones WHERE vacante_id = ? AND solicitante_id = ?");
+            $checkPost->execute([$vacante['id'], $user['id']]);
+            if ($checkPost->fetch()) {
+                $haPostulado = true;
+            }
+        }
+
+        // --- Lógica del Contador de Vistas ---
         $session_id = session_id() ?: $_COOKIE['PHPSESSID'] ?? '';
         $ip_address = $_SERVER['REMOTE_ADDR'];
 
         $checkStmt = $this->db->prepare("
             SELECT id FROM interacciones_vacante 
-            WHERE vacante_id = ? 
-            AND tipo_interaccion = 'ver_detalle'
-            AND (ip = ? OR session_id = ?)
-            AND DATE(fecha_hora) = CURDATE()
+            WHERE vacante_id = ? AND tipo_interaccion = 'ver_detalle'
+            AND (ip = ? OR session_id = ?) AND DATE(fecha_hora) = CURDATE()
         ");
         $checkStmt->execute([$vacante['id'], $ip_address, $session_id]);
-        $existe = $checkStmt->fetch();
-
-        if (!$existe) {
-            $interaccionStmt = $this->db->prepare("
+        
+        if (!$checkStmt->fetch()) {
+            $this->db->prepare("
                 INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id)
                 VALUES (?, 'ver_detalle', 'web', ?, ?)
-            ");
-            $interaccionStmt->execute([$vacante['id'], $ip_address, $session_id]);
+            ")->execute([$vacante['id'], $ip_address, $session_id]);
         }
 
-        $this->view('vacantes/detalle', compact('vacante'));
+        // Pasamos $haPostulado a la vista
+
+        // --- OBTENER RESEÑAS ---
+        $stmtResenas = $this->db->prepare("
+            SELECT r.*, s.nombre, s.apellido, s.id as autor_id
+            FROM resenas_vacante r
+            JOIN solicitantes s ON r.solicitante_id = s.id
+            WHERE r.vacante_id = ?
+            ORDER BY r.fecha_creacion DESC
+        ");
+        $stmtResenas->execute([$vacante['id']]);
+        $resenas = $stmtResenas->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Calcular promedio
+        $promedio = 0;
+        if (count($resenas) > 0) {
+            $suma = array_sum(array_column($resenas, 'calificacion'));
+            $promedio = round($suma / count($resenas), 1);
+        }
+
+        // Verificar si el usuario actual ya dejó reseña (para mostrar form editar o crear)
+        $miResena = null;
+        if (Auth::check() && Auth::user()['rol'] === 'candidato') {
+            foreach ($resenas as $r) {
+                if ($r['solicitante_id'] == Auth::user()['id']) {
+                    $miResena = $r;
+                    break;
+                }
+            }
+        }
+
+        // Pasa las nuevas variables a la vista
+        $this->view('vacantes/detalle', compact('vacante', 'haPostulado', 'resenas', 'promedio', 'miResena'));
     }
 
     // Redirigir a postulación (validar si está autenticado)

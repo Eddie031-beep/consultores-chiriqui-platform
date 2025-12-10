@@ -11,7 +11,40 @@
 <body>
 <?php include __DIR__ . '/../components/navbar.php'; ?>
 
+<style>
+    body { padding-top: 90px; }
+    .alert-box {
+        padding: 1rem 1.5rem; 
+        border-radius: 12px; 
+        margin-bottom: 2rem;
+        display: flex; 
+        align-items: center; 
+        gap: 12px; 
+        font-weight: 600;
+        animation: slideDown 0.4s ease-out;
+    }
+    .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+</style>
 <div class="dashboard-wrapper">
+    <?php if(isset($_SESSION['mensaje'])): ?>
+        <div class="animate-slide-up" style="
+            background: <?= $_SESSION['mensaje']['tipo'] === 'success' ? '#dcfce7' : '#fee2e2' ?>;
+            color: <?= $_SESSION['mensaje']['tipo'] === 'success' ? '#166534' : '#991b1b' ?>;
+            border: 1px solid <?= $_SESSION['mensaje']['tipo'] === 'success' ? '#bbf7d0' : '#fecaca' ?>;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 500;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        ">
+            <i class="fas <?= $_SESSION['mensaje']['tipo'] === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' ?> fa-lg"></i>
+            <div><?= $_SESSION['mensaje']['texto'] ?></div>
+        </div>
+        <?php unset($_SESSION['mensaje']); ?>
+    <?php endif; ?>
     <div class="page-header">
     <div class="header-left">
         <h2><i class="fas fa-user-circle" style="color: #4f46e5; margin-right: 10px;"></i> Mi Perfil</h2>
@@ -59,11 +92,12 @@
         </div>
         
         <div style="text-align: center; padding: 2rem; border: 2px dashed #cbd5e1; border-radius: 12px; margin-bottom: 2rem;">
-            <?php if (!empty($perfil['cv_path'])): ?>
+            <?php if (!empty($perfil['cv_ruta'])): ?>
                 <i class="fas fa-file-pdf" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
-                <p style="margin-bottom: 1rem;">CV Actual: <strong><?= basename($perfil['cv_path']) ?></strong></p>
-                <a href="<?= ENV_APP['BASE_URL'] . $perfil['cv_path'] ?>" target="_blank" class="btn-secondary">
-                    <i class="fas fa-download"></i> Ver Actual
+                <p style="margin-bottom: 1rem;">CV Actual: <strong><?= basename($perfil['cv_ruta']) ?></strong></p>
+                
+                <a href="<?= ENV_APP['BASE_URL'] . $perfil['cv_ruta'] ?>" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-eye"></i> Ver / Descargar
                 </a>
             <?php else: ?>
                 <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
@@ -80,6 +114,13 @@
                 <button type="submit" class="btn-primary" style="background: #0f172a;"><i class="fas fa-upload"></i> Subir CV</button>
             </div>
         </form>
+
+        <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+            <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 10px;">¿No tienes el archivo a mano?</p>
+            <a href="<?= ENV_APP['BASE_URL'] ?>/candidato/descargar-cv-generado" target="_blank" class="btn-secondary" style="width: 100%; display: block; text-align: center;">
+                <i class="fas fa-magic"></i> Generar y Descargar CV Automático
+            </a>
+        </div>
     </div>
 </div>
 

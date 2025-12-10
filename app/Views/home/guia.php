@@ -6,270 +6,155 @@
     <title>Guía de Postulación | Consultores Chiriquí</title>
     
     <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/global-dark-mode.css">
-    <link rel="stylesheet" href="<?= ENV_APP['ASSETS_URL'] ?>/css/home-elegant.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        /* Estilos Específicos para la Guía */
-        .guide-hero {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            padding: 4rem 2rem;
+        /* --- CORRECCIÓN DE ESTILOS GLOBAL --- */
+        body {
+            font-family: 'Inter', sans-serif; /* Fuerza la fuente correcta */
+            background-color: #f8fafc;
+            color: #334155;
+            /* Padding superior para evitar que la navbar tape el contenido */
+            padding-top: 90px; 
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        /* Encabezado de Página Estándar */
+        .page-header {
             text-align: center;
-            color: white;
-            border-radius: 0 0 50% 50% / 4%;
             margin-bottom: 3rem;
         }
 
-        .guide-hero h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 800; /* Negrita estándar del sitio */
+            color: #1e293b;
             margin-bottom: 1rem;
-            color: white !important;
+            letter-spacing: -0.5px;
         }
 
-        .guide-intro {
-            max-width: 800px;
-            margin: 0 auto 3rem;
-            text-align: center;
-            color: var(--text-muted);
+        .page-subtitle {
             font-size: 1.1rem;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto;
             line-height: 1.6;
         }
 
-        .guide-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
-        }
-
+        /* Tarjetas de Contenido */
         .guide-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            background: white;
             border-radius: 16px;
-            padding: 2rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            padding: 2.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
         }
 
-        .guide-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border-color: var(--primary-color);
-        }
-
-        .card-icon {
-            font-size: 2rem;
-            color: var(--primary-color);
-            background: rgba(37, 99, 235, 0.1);
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-title {
-            font-size: 1.25rem;
+        /* Títulos dentro del contenido */
+        .guide-card h2 {
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 1rem;
-            color: var(--text-main);
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 10px;
         }
+        .guide-card h2 i { color: #2563eb; }
 
-        .card-text {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.5;
+        /* Texto y Listas */
+        .guide-content p { line-height: 1.8; margin-bottom: 1.5rem; }
+        .guide-list { padding-left: 1.5rem; margin-bottom: 1.5rem; }
+        .guide-list li { margin-bottom: 1rem; line-height: 1.6; position: relative; }
+        
+        /* Pasos numerados */
+        .step-list { counter-reset: step; list-style: none; padding: 0; }
+        .step-list li { position: relative; padding-left: 50px; margin-bottom: 2rem; }
+        .step-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute; left: 0; top: 0;
+            width: 35px; height: 35px;
+            background: #eff6ff; color: #2563eb;
+            border-radius: 50%; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
         }
+        .step-title { font-weight: 700; color: #1e293b; font-size: 1.1rem; margin-bottom: 0.5rem; display: block; }
 
-        .tip-box {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background: #eff6ff;
-            border-left: 4px solid var(--primary-color);
-            border-radius: 4px;
-            font-size: 0.85rem;
-            color: #1e3a8a;
+        .cta-box {
+            text-align: center; padding: 3rem 1rem;
+            background: radial-gradient(circle at center, #1e3a8a 0%, #0f172a 100%);
+            color: white; border-radius: 16px;
         }
-
-        [data-theme="dark"] .tip-box {
-            background: rgba(37, 99, 235, 0.1);
-            color: #bfdbfe;
+        .btn-primary-cta {
+            display: inline-block; background: #2563eb; color: white; 
+            padding: 12px 30px; border-radius: 10px; font-weight: 700; 
+            text-decoration: none; margin-top: 20px; transition: background 0.2s;
         }
-
-        .error-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .error-list li {
-            padding-left: 1.5rem;
-            position: relative;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-        }
-
-        .error-list li::before {
-            content: "✕";
-            color: #ef4444;
-            position: absolute;
-            left: 0;
-            font-weight: bold;
-        }
-
-        .cta-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 3rem;
-            text-align: center;
-            margin-bottom: 4rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-
-        .btn-cta {
-            display: inline-block;
-            background: var(--primary-color);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            font-weight: 600;
-            text-decoration: none;
-            margin-top: 1.5rem;
-            transition: background 0.3s;
-        }
-
-        .btn-cta:hover {
-            background: var(--primary-hover);
-            transform: scale(1.05);
-        }
+        .btn-primary-cta:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
-
     <?php include __DIR__ . '/../components/navbar.php'; ?>
 
-    <header class="guide-hero animate-fade-in">
-        <div class="container">
-            <h1>📝 Cómo postularte con éxito</h1>
-            <p style="opacity: 0.9; font-size: 1.2rem;">Tu guía paso a paso para conseguir empleo en Consultores Chiriquí</p>
-        </div>
-    </header>
-
     <div class="container">
-        <section class="guide-intro animate-slide-up">
-            <p>
-                Bienvenido al portal de gestión de vacantes líder en la región. Aquí conectamos a empresas públicas y privadas con talento como tú. 
-                <strong style="color: var(--primary-color);">¿Lo mejor? No necesitas cargar una hoja de vida tradicional (PDF/Word).</strong> 
-                Nuestra plataforma utiliza tu <strong>Perfil Digital</strong> para presentarte ante los reclutadores. Sigue estos consejos para destacar.
-            </p>
-        </section>
-
-        <div class="guide-grid">
-            
-            <article class="guide-card animate-slide-up delay-100">
-                <div class="card-icon"><i class="fas fa-id-card"></i></div>
-                <h3 class="card-title">1. Tu Perfil es tu Hoja de Vida</h3>
-                <p class="card-text">
-                    Olvídate de adjuntar archivos. El sistema genera tu CV automáticamente basado en los datos que ingresas. Asegúrate de completar:
-                </p>
-                <ul class="card-text" style="margin-top: 0.5rem; padding-left: 1.2rem;">
-                    <li>Información personal y contacto.</li>
-                    <li>Formación académica y experiencia.</li>
-                    <li>Habilidades técnicas y blandas.</li>
-                </ul>
-                <div class="tip-box">
-                    💡 <strong>Tip:</strong> Un perfil completo al 100% tiene 3 veces más probabilidades de ser contactado.
-                </div>
-            </article>
-
-            <article class="guide-card animate-slide-up delay-200">
-                <div class="card-icon"><i class="fas fa-search-plus"></i></div>
-                <h3 class="card-title">2. Lectura Estratégica</h3>
-                <p class="card-text">
-                    Antes de dar clic en "Aplicar", revisa los detalles. Fíjate si la empresa es pública o privada, la modalidad (remoto/presencial) y los requisitos mínimos.
-                </p>
-                <div class="tip-box">
-                    🎯 Postúlate solo si cumples con lo esencial. Calidad es mejor que cantidad.
-                </div>
-            </article>
-
-            <article class="guide-card animate-slide-up delay-300">
-                <div class="card-icon"><i class="fas fa-star"></i></div>
-                <h3 class="card-title">3. Destaca tus Habilidades</h3>
-                <p class="card-text">
-                    Las empresas buscan algo más que títulos. En tu perfil, asegúrate de listar tus:
-                </p>
-                <ul class="card-text" style="margin-top: 0.5rem; padding-left: 1.2rem;">
-                    <li><strong>Hard Skills:</strong> Excel, Inglés, Programación, Contabilidad.</li>
-                    <li><strong>Soft Skills:</strong> Liderazgo, Trabajo en equipo, Puntualidad.</li>
-                </ul>
-            </article>
-
-            <article class="guide-card animate-slide-up delay-100">
-                <div class="card-icon"><i class="fas fa-robot"></i></div>
-                <h3 class="card-title">4. Usa nuestro Asistente IA</h3>
-                <p class="card-text">
-                    ¿Tienes dudas sobre una vacante o no sabes cómo completar un campo? Nuestro Chatbot está disponible 24/7.
-                </p>
-                <p class="card-text" style="margin-top: 0.5rem;">
-                    Úsalo para consultar vacantes rápidas o resolver dudas sobre la plataforma al instante.
-                </p>
-            </article>
-
-            <article class="guide-card animate-slide-up delay-200">
-                <div class="card-icon"><i class="fas fa-folder-open"></i></div>
-                <h3 class="card-title">5. Documentación Adicional</h3>
-                <p class="card-text">
-                    Aunque no subas CV ahora, ten listos tus documentos digitales. Si pasas el primer filtro, las empresas podrían pedirte:
-                </p>
-                <ul class="card-text" style="margin-top: 0.5rem; padding-left: 1.2rem;">
-                    <li>Copia de Cédula.</li>
-                    <li>Récord Policivo (si aplica).</li>
-                    <li>Referencias laborales.</li>
-                </ul>
-            </article>
-
-            <article class="guide-card animate-slide-up delay-300">
-                <div class="card-icon"><i class="fas fa-check-circle"></i></div>
-                <h3 class="card-title">6. Buenas Prácticas</h3>
-                <p class="card-text">
-                    La honestidad es clave. Mantén tus datos de contacto (teléfono/email) siempre actualizados y revisa tu panel de "Postulaciones" frecuentemente para ver el estado de tus solicitudes.
-                </p>
-            </article>
+        
+        <div class="page-header animate-slide-up">
+            <h1 class="page-title">Guía de Postulación</h1>
+            <p class="page-subtitle">Sigue estos pasos sencillos para encontrar y aplicar a tu próximo empleo ideal en nuestra plataforma.</p>
         </div>
 
-        <section class="guide-card animate-slide-up" style="margin-bottom: 4rem; border-left: 5px solid #ef4444;">
-            <h3 class="card-title" style="color: #ef4444;">⚠️ Errores comunes que debes evitar</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <ul class="error-list">
-                    <li>Dejar el perfil incompleto o sin foto profesional.</li>
-                    <li>Postularse a vacantes sin leer la ubicación (ej. aplicar a Chiriquí viviendo en Panamá).</li>
-                </ul>
-                <ul class="error-list">
-                    <li>Poner información de contacto errónea.</li>
-                    <li>No revisar los mensajes o notificaciones de la plataforma.</li>
-                </ul>
+        <div class="guide-card animate-slide-up delay-100">
+            <h2><i class="fas fa-clipboard-check"></i> Cómo funciona el proceso</h2>
+            
+            <div class="guide-content">
+                <ol class="step-list">
+                    <li>
+                        <span class="step-title">Crea tu cuenta de candidato</span>
+                        Regístrate gratuitamente. Asegúrate de completar tu perfil con tu experiencia, educación y habilidades clave. Un perfil completo aumenta tus posibilidades.
+                    </li>
+                    <li>
+                        <span class="step-title">Explora las vacantes disponibles</span>
+                        Utiliza nuestro buscador y filtros avanzados para encontrar ofertas que se adapten a tu perfil, ubicación y modalidad de trabajo preferida.
+                    </li>
+                    <li>
+                        <span class="step-title">Postúlate con un clic</span>
+                        Cuando encuentres una vacante que te interese, presiona el botón "Postularme Ahora". Tu perfil se enviará directamente a la empresa.
+                    </li>
+                    <li>
+                        <span class="step-title">Seguimiento de tus aplicaciones</span>
+                        Desde tu panel de control, podrás ver el estado de todas tus postulaciones (Pendiente, Visto, En Proceso) en tiempo real.
+                    </li>
+                </ol>
             </div>
-        </section>
+        </div>
 
-        <section class="cta-section animate-slide-up">
-            <h2 style="margin-bottom: 1rem; color: var(--text-heading);">¿Estás listo para dar el siguiente paso?</h2>
-            <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
-                Antes de postularte, revisa si la vacante encaja contigo y si tu perfil está completo. Si la respuesta es sí, ¡aplica ahora! Consultores Chiriquí te conecta con oportunidades reales.
-            </p>
-            <div style="margin-top: 2rem;">
-                <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes" class="btn-cta">Ver Vacantes Disponibles</a>
-                <a href="<?= ENV_APP['BASE_URL'] ?>/auth/registro?tipo=candidato" class="btn-cta" style="background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); margin-left: 1rem;">Crear mi Perfil</a>
+        <div class="guide-card animate-slide-up delay-200">
+            <h2><i class="fas fa-lightbulb"></i> Consejos para destacar</h2>
+            <div class="guide-content">
+                <ul class="guide-list">
+                    <li><strong>Mantén tu perfil actualizado:</strong> Agrega tus últimas experiencias y logros.</li>
+                    <li><strong>Sé específico en tus habilidades:</strong> Usa palabras clave relevantes para tu sector.</li>
+                    <li><strong>Revisa los requisitos:</strong> Asegúrate de cumplir con los puntos clave antes de postularte.</li>
+                </ul>
             </div>
-        </section>
+        </div>
+
+        <div class="cta-box animate-slide-up delay-300">
+            <h2 style="color: white; margin-bottom: 1rem;">¿Listo para empezar?</h2>
+            <p style="color: #cbd5e1; max-width: 500px; margin: 0 auto;">
+                Miles de empresas están buscando talento como el tuyo. No esperes más.
+            </p>
+            <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes" class="btn-primary-cta">
+                Ver Vacantes Ahora
+            </a>
+        </div>
 
     </div>
-
-    <?php include __DIR__ . '/../components/chatbot-widget.php'; ?>
-
 </body>
 </html>

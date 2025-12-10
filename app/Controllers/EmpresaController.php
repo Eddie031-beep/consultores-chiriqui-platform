@@ -64,38 +64,46 @@ class EmpresaController extends Controller
         $stmtAct->execute([$empresaId]);
         $actividadReciente = $stmtAct->fetchAll(PDO::FETCH_ASSOC);
 
-        // 5. CONSUMO DINÁMICO (Lógica existente preservada)
+        // 5. CONSUMO DINÁMICO (Optimizado)
         $consumoActual = 0.0;
         try {
+            // Obtener tarifas (Cacheable idealmente, por ahora directo)
             $stmtTarifas = $this->dbRead->query("SELECT nombre_plan, precio_unitario FROM peajes_tarifas WHERE activo = 1");
             $tarifas = [];
-            if ($stmtTarifas) {
-                while ($row = $stmtTarifas->fetch(PDO::FETCH_ASSOC)) {
-                    if (stripos($row['nombre_plan'], 'Vista') !== false) $tarifas['ver_detalle'] = $row['precio_unitario'];
-                    if (stripos($row['nombre_plan'], 'Click') !== false) $tarifas['click_aplicar'] = $row['precio_unitario'];
-                    if (stripos($row['nombre_plan'], 'Chat') !== false) $tarifas['chat_consulta'] = $row['precio_unitario'];
-                }
+            while ($row = $stmtTarifas->fetch(PDO::FETCH_ASSOC)) {
+                if (stripos($row['nombre_plan'], 'Vista') !== false) $tarifas['ver_detalle'] = $row['precio_unitario'];
+                if (stripos($row['nombre_plan'], 'Click') !== false) $tarifas['click_aplicar'] = $row['precio_unitario'];
+                if (stripos($row['nombre_plan'], 'Chat') !== false) $tarifas['chat_consulta'] = $row['precio_unitario'];
             }
             
             $p_vista = (float)($tarifas['ver_detalle'] ?? 0.10);
             $p_click = (float)($tarifas['click_aplicar'] ?? 0.15);
             $p_chat  = (float)($tarifas['chat_consulta'] ?? 0.05);
 
+            // Rango de fechas para optimizar índice (SARGABLE)
+            $inicioMes = date('Y-m-01 00:00:00');
+            $finMes = date('Y-m-t 23:59:59');
+
             $stmtPeaje = $this->dbRead->prepare("
-                SELECT SUM(CASE 
-                    WHEN tipo_interaccion = 'ver_detalle' THEN ? 
-                    WHEN tipo_interaccion = 'click_aplicar' THEN ? 
-                    WHEN tipo_interaccion = 'chat_consulta' THEN ? 
-                    ELSE 0 END) as total_consumo
+                SELECT SUM(
+                    CASE 
+                        WHEN iv.tipo_interaccion = 'ver_detalle' THEN ? 
+                        WHEN iv.tipo_interaccion = 'click_aplicar' THEN ? 
+                        WHEN iv.tipo_interaccion = 'chat_consulta' THEN ? 
+                        ELSE 0 
+                    END
+                ) as total_consumo
                 FROM interacciones_vacante iv
                 JOIN vacantes v ON iv.vacante_id = v.id
-                WHERE v.empresa_id = ? AND MONTH(iv.fecha_hora) = MONTH(CURRENT_DATE())
+                WHERE v.empresa_id = ? 
+                AND iv.fecha_hora >= ? AND iv.fecha_hora <= ?
             ");
-            $stmtPeaje->execute([$p_vista, $p_click, $p_chat, $empresaId]);
+            $stmtPeaje->execute([$p_vista, $p_click, $p_chat, $empresaId, $inicioMes, $finMes]);
             $resultado = $stmtPeaje->fetch(PDO::FETCH_ASSOC);
 
             $consumoActual = (float) ($resultado['total_consumo'] ?? 0);
         } catch (\Exception $e) {
+            // Silencioso para no romper dashboard, loguear error
             error_log("Error calculando consumo: " . $e->getMessage());
             $consumoActual = 0.00;
         }
@@ -294,10 +302,23 @@ class EmpresaController extends Controller
     // ============ FACTURACIÓN Y TÉRMINOS ============
     public function facturacion(): void {
         $user = Auth::user();
-        $stmt = $this->dbRead->prepare("SELECT * FROM facturas WHERE empresa_id = ? ORDER BY fecha_emision DESC");
+
+        // Consultar facturas de ESTA empresa
+        $stmt = $this->dbRead->prepare("
+            SELECT * FROM facturas 
+            WHERE empresa_id = ? 
+            ORDER BY fecha_emision DESC
+        ");
         $stmt->execute([$user['empresa_id']]);
         $facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $this->view('empresa/facturacion', compact('facturas'));
+
+        // Calcular deuda pendiente
+        $deuda = 0;
+        foreach($facturas as $f) {
+            if($f['estado'] === 'emitida') $deuda += $f['total'];
+        }
+
+        $this->view('empresa/facturacion', compact('facturas', 'deuda'));
     }
 
     public function aceptarContrato(): void {
@@ -315,4 +336,35 @@ class EmpresaController extends Controller
         header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
         exit;
     }
+    // ============ CAMBIAR ESTADO DE POSTULACIÓN ============
+    public function cambiarEstadoPostulacion(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/dashboard');
+            exit;
+        }
+
+        $postulacion_id = $_POST['postulacion_id'] ?? 0;
+        $vacante_id = $_POST['vacante_id'] ?? 0;
+        $nuevo_estado = $_POST['nuevo_estado'] ?? '';
+
+        if (!$postulacion_id || !in_array($nuevo_estado, ['aceptado', 'rechazado'])) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Datos inválidos.'];
+            header("Location: " . ENV_APP['BASE_URL'] . "/empresa/postulantes?vacante_id=$vacante_id");
+            exit;
+        }
+
+        try {
+            $stmt = $this->dbWrite->prepare("UPDATE postulaciones SET estado = ? WHERE id = ?");
+            $stmt->execute([$nuevo_estado, $postulacion_id]);
+
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => "Candidato marcado como " . strtoupper($nuevo_estado)];
+        } catch (\Exception $e) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Error al actualizar: ' . $e->getMessage()];
+        }
+
+        header("Location: " . ENV_APP['BASE_URL'] . "/empresa/postulantes?vacante_id=$vacante_id");
+        exit;
+    }   
+
 }

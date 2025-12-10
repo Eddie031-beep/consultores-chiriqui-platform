@@ -22,6 +22,22 @@ $user = Auth::user();
         
         .badge-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; background: #f1f5f9; color: #64748b; margin-right: 5px; }
         
+        /* ALERT STYLES */
+        body { padding-top: 90px; }
+        .alert-box {
+            padding: 1rem 1.5rem; 
+            border-radius: 12px; 
+            margin-bottom: 2rem;
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            font-weight: 600;
+            animation: slideDown 0.4s ease-out;
+        }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+
         @media(max-width: 768px) { .split-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -29,6 +45,14 @@ $user = Auth::user();
 <?php include __DIR__ . '/../components/navbar.php'; ?>
 
 <div class="dashboard-wrapper">
+    <?php if(isset($_SESSION['mensaje'])): ?>
+        <div class="alert-box <?= $_SESSION['mensaje']['tipo'] === 'success' ? 'alert-success' : 'alert-error' ?>">
+            <i class="fas <?= $_SESSION['mensaje']['tipo'] === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
+            <?= $_SESSION['mensaje']['texto'] ?>
+        </div>
+        <?php unset($_SESSION['mensaje']); ?>
+    <?php endif; ?>
+
     <div class="page-header animate-slide-up">
         <div>
             <h2><i class="fas fa-users" style="color: #2563eb; margin-right: 10px;"></i> Candidatos</h2>
@@ -91,17 +115,45 @@ $user = Auth::user();
                                 </div>
                             </div>
                         </div>
-                        <div style="text-align: right;">
+                        <div style="text-align: right; min-width: 180px;">
                             <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">
                                 Postulado: <?= date('d/m/Y', strtotime($c['fecha_postulacion'])) ?>
                             </div>
-                            <?php if(!empty($c['cv_ruta'])): ?>
-                                <a href="<?= ENV_APP['BASE_URL'] . $c['cv_ruta'] ?>" target="_blank" class="btn-primary" style="padding: 8px 15px; font-size: 0.85rem;">
-                                    <i class="fas fa-download"></i> Descargar CV
-                                </a>
+                            
+                            <?php if($c['estado'] === 'pendiente' || $c['estado'] === 'revisado'): ?>
+                                <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                                    <form action="<?= ENV_APP['BASE_URL'] ?>/empresa/postulacion/estado" method="POST">
+                                        <input type="hidden" name="postulacion_id" value="<?= $c['id'] ?>"> <input type="hidden" name="vacante_id" value="<?= $selectedVacante ?>">
+                                        <input type="hidden" name="nuevo_estado" value="aceptado">
+                                        <button type="submit" class="btn-primary" style="background: #10b981; padding: 6px 12px; font-size: 0.8rem;" title="Aceptar Candidato">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+
+                                    <form action="<?= ENV_APP['BASE_URL'] ?>/empresa/postulacion/estado" method="POST" onsubmit="return confirm('¿Estás seguro de rechazar a este candidato?');">
+                                        <input type="hidden" name="postulacion_id" value="<?= $c['id'] ?>">
+                                        <input type="hidden" name="vacante_id" value="<?= $selectedVacante ?>">
+                                        <input type="hidden" name="nuevo_estado" value="rechazado">
+                                        <button type="submit" class="btn-primary" style="background: #ef4444; padding: 6px 12px; font-size: 0.8rem;" title="Rechazar Candidato">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             <?php else: ?>
-                                <span style="color: #94a3b8; font-size: 0.85rem;">Sin CV adjunto</span>
+                                <span class="status-badge <?= $c['estado'] ?>">
+                                    <?= ucfirst($c['estado']) ?>
+                                </span>
                             <?php endif; ?>
+
+                            <div style="margin-top: 10px; text-align: right;">
+                                <?php if(!empty($c['cv_ruta'])): ?>
+                                    <a href="<?= ENV_APP['BASE_URL'] . $c['cv_ruta'] ?>" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; background: #2563eb; display: inline-block;">
+                                        <i class="fas fa-file-pdf"></i> Ver CV
+                                    </a>
+                                <?php else: ?>
+                                    <span style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">Sin CV adjunto</span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>

@@ -154,12 +154,27 @@ $pendingCount = count(array_filter($postulaciones, fn($p) => $p['estado'] === 'p
         .btn-view-all:hover { text-decoration: underline; }
 
         .empty-dash { text-align: center; padding: 3rem; color: var(--text-secondary); }
-    </style>
+
+        /* ALERTS */
+        .alert-box {
+            padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 2rem;
+            display: flex; align-items: center; gap: 10px; font-weight: 500;
+        }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 </head>
 <body>
     <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <div class="container">
+        
+        <?php if(isset($_SESSION['mensaje'])): ?>
+            <div class="alert-box <?= $_SESSION['mensaje']['tipo'] === 'success' ? 'alert-success' : 'alert-error' ?>">
+                <i class="fas <?= $_SESSION['mensaje']['tipo'] === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
+                <?= $_SESSION['mensaje']['texto'] ?>
+            </div>
+            <?php unset($_SESSION['mensaje']); ?>
+        <?php endif; ?>
         
         <!-- Welcome Hero -->
         <div class="welcome-header">
@@ -170,21 +185,70 @@ $pendingCount = count(array_filter($postulaciones, fn($p) => $p['estado'] === 'p
             </a>
         </div>
 
-        <!-- KPI Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value"><?= count($postulaciones) ?></div>
-                <div class="stat-label">Postulaciones Totales</div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 30px; align-items: start;">
+            
+            <!-- Perfil Card -->
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                    <div style="width: 50px; height: 50px; background: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem;">
+                        <?= strtoupper(substr($user['nombre'], 0, 1)) ?>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b;"><?= htmlspecialchars($perfil['nombre']) ?></h3>
+                        <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Candidato</p>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <p style="margin-bottom: 8px; font-size: 0.9rem; color: #475569;">
+                        <i class="fas fa-envelope" style="width: 20px; color: #94a3b8;"></i> <?= htmlspecialchars($perfil['email']) ?>
+                    </p>
+                    <p style="margin-bottom: 8px; font-size: 0.9rem; color: #475569;">
+                        <i class="fas fa-phone" style="width: 20px; color: #94a3b8;"></i> <?= htmlspecialchars($perfil['telefono'] ?? 'Sin teléfono') ?>
+                    </p>
+                    <p style="margin-bottom: 8px; font-size: 0.9rem; color: #475569;">
+                        <i class="fas fa-map-marker-alt" style="width: 20px; color: #94a3b8;"></i> <?= htmlspecialchars($perfil['direccion'] ?? 'Sin dirección') ?>
+                    </p>
+                    <?php if (!empty($perfil['cv_path'])): ?>
+                        <p style="margin-bottom: 8px; font-size: 0.9rem; color: #10b981; font-weight: 500;">
+                            <i class="fas fa-file-pdf" style="width: 20px;"></i> CV Cargado
+                        </p>
+                    <?php else: ?>
+                        <p style="margin-bottom: 8px; font-size: 0.9rem; color: #f59e0b; font-weight: 500;">
+                            <i class="fas fa-exclamation-triangle" style="width: 20px;"></i> Sin CV
+                        </p>
+                    <?php endif; ?>
+                </div>
+
+                <a href="<?= ENV_APP['BASE_URL'] ?>/candidato/editar-perfil" style="display: block; text-align: center; background: #f8fafc; color: #2563eb; padding: 8px; border-radius: 6px; text-decoration: none; font-weight: 600; border: 1px solid #e2e8f0;">
+                    Ver / Editar Perfil Completo
+                </a>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" style="color: #10b981;"><?= $acceptedCount ?></div>
-                <div class="stat-label">Aceptadas</div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" style="margin-bottom: 0;">
+                <div class="stat-card">
+                    <div class="stat-value"><?= count($postulaciones) ?></div>
+                    <div class="stat-label">Postulaciones Totales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #10b981;"><?= $acceptedCount ?></div>
+                    <div class="stat-label">Aceptadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #f59e0b;"><?= $pendingCount ?></div>
+                    <div class="stat-label">En Revisión</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" style="color: #f59e0b;"><?= $pendingCount ?></div>
-                <div class="stat-label">En Revisión</div>
-            </div>
+
         </div>
+
+        <style>
+            @media (max-width: 768px) {
+                div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+            }
+        </style>
 
         <!-- Recent Applications -->
         <div class="section-header">

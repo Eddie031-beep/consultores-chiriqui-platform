@@ -28,6 +28,33 @@
 <body>
     <?php include __DIR__ . '/../components/navbar.php'; ?>
 
+    <style>
+        body { padding-top: 100px; }
+        .alert-box {
+            padding: 1rem 1.5rem; 
+            border-radius: 12px; 
+            margin-bottom: 2rem;
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            font-weight: 600;
+            animation: slideDown 0.4s ease-out;
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+        }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+    </style>
+
+    <?php if(isset($_SESSION['mensaje'])): ?>
+        <div class="alert-box <?= $_SESSION['mensaje']['tipo'] === 'success' ? 'alert-success' : 'alert-error' ?>">
+            <i class="fas <?= $_SESSION['mensaje']['tipo'] === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
+            <?= $_SESSION['mensaje']['texto'] ?>
+        </div>
+        <?php unset($_SESSION['mensaje']); ?>
+    <?php endif; ?>
+
     <div class="layout">
         <aside>
             <div class="card" style="text-align: center; position: sticky; top: 20px;">
@@ -45,6 +72,12 @@
         </aside>
 
         <main>
+            <div style="margin-bottom: 20px;">
+                <a href="<?= ENV_APP['BASE_URL'] ?>/candidato/opciones-perfil" style="text-decoration: none; color: #64748b; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-arrow-left"></i> Volver a elegir método de carga
+                </a>
+            </div>
+
             <form action="<?= ENV_APP['BASE_URL'] ?>/candidato/guardar-manual" method="POST">
                 
                 <!-- 1. Datos Personales -->
