@@ -332,6 +332,11 @@ class CandidatoController extends Controller
             header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/perfil');
             exit;
         }
+
+        // Fallback para evitar pantalla blanca
+        $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'No se recibió ningún archivo.'];
+        header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/opciones-perfil');
+        exit;
     }
 
     public function perfil(): void

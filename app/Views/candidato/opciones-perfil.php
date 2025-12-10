@@ -51,7 +51,7 @@
         <div class="modal">
             <h2>Subir Hoja de Vida</h2>
             <form action="<?= ENV_APP['BASE_URL'] ?>/candidato/subir-cv" method="POST" enctype="multipart/form-data" style="margin-top: 1.5rem;">
-                <input type="file" name="cv_archivo" required accept=".pdf,.doc,.docx" style="margin-bottom: 1rem; width: 100%;">
+                <input type="file" name="cv_file" required accept=".pdf,.doc,.docx" style="margin-bottom: 1rem; width: 100%;">
                 <div style="display:flex; gap:1rem;">
                     <button type="button" onclick="document.getElementById('modalCV').style.display = 'none'" class="btn btn-outline" style="margin:0;">Cancelar</button>
                     <button type="submit" class="btn btn-primary" style="margin:0;">Subir</button>
