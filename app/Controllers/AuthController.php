@@ -427,6 +427,11 @@ class AuthController extends Controller
 
             $empresa_id = $this->db->lastInsertId();
 
+            // Generar Contrato si aceptó términos
+            if (!empty($_POST['aceptar_terminos'])) {
+                $this->crearContratoInterno($empresa_id, $form_data['nombre_empresa'], $form_data['ruc'], $form_data['dv']);
+            }
+
             // Insertar usuario admin
             $password_hash = password_hash($form_data['password'], PASSWORD_BCRYPT);
             $usuarioSql = "INSERT INTO usuarios (empresa_id, nombre, apellido, email, password_hash, rol_id, estado) 
@@ -517,6 +522,32 @@ class AuthController extends Controller
             header('Location: ' . ENV_APP['BASE_URL'] . '/');
         }
         exit;
+    }
+
+    private function crearContratoInterno($empresaId, $nombre, $ruc, $dv): void
+    {
+        $contrato = "ACUERDO DE SERVICIO COMERCIAL (Términos y Condiciones)\n\n";
+        $contrato .= "ENTRE: Consultores Chiriquí S.A. (La Plataforma)\n";
+        $contrato .= "Y: " . $nombre . " (El Cliente)\n";
+        $contrato .= "RUC: " . $ruc . "-" . $dv . "\n\n";
+        $contrato .= "OBJETO: Prestación de servicios de intermediación laboral y publicidad de vacantes.\n\n";
+        $contrato .= "TARIFAS VIGENTES (MODELO DE PEAJE):\n";
+        $contrato .= "1. Visualización de Vacante: B/. 1.50\n";
+        $contrato .= "2. Postulación (Click Apply): B/. 5.00\n";
+        $contrato .= "3. Consulta IA (Chatbot): B/. 2.50\n\n";
+        $contrato .= "CONDICIONES DE PAGO:\n";
+        $contrato .= "Las facturas se emitirán mensualmente según el consumo real registrado por el sistema.\n";
+        $contrato .= "El cliente acepta los registros electrónicos como prueba de servicio.\n\n";
+        $contrato .= "ACEPTACIÓN:\n";
+        $contrato .= "Fecha de Registro (Aceptación T&C): " . date('Y-m-d H:i:s') . "\n";
+        $contrato .= "IP Autoridad: " . ($_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN') . "\n\n";
+        $contrato .= "-- Documento generado electrónicamente --";
+
+        $sqlContrato = "INSERT INTO contratos_empresas 
+                        (empresa_id, version_contrato, texto_resumen, ip_aceptacion, fecha_aceptacion)
+                        VALUES (?, 'v1.0-REGISTRO', ?, ?, NOW())";
+        $stmtContrato = $this->db->prepare($sqlContrato);
+        $stmtContrato->execute([$empresaId, $contrato, $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN']);
     }
     // ============ REPARACIÓN DE CONTRASEÑAS ============
     public function fixPasswords(): void

@@ -42,11 +42,16 @@
                                 <td>
                                     <div style="font-weight: 600; font-size: 1rem; color: #1e293b;"><?= htmlspecialchars($emp['nombre']) ?></div>
                                     <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 2px;">ID: #<?= $emp['id'] ?></div>
+                                    <?php if(isset($emp['consumo_pendiente']) && $emp['consumo_pendiente'] > 0): ?>
+                                        <div style="margin-top: 5px; display: inline-block; background: #fff7ed; color: #c2410c; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; border: 1px solid #ffedd5; font-weight: 600;">
+                                            <i class="fas fa-coins"></i> Pendiente: B/. <?= number_format($emp['consumo_pendiente'], 2) ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td style="font-family: monospace; color: #64748b; font-size: 0.95rem;">
                                     <?= htmlspecialchars($emp['ruc'] . '-' . $emp['dv']) ?>
                                 </td>
-                                <td><?= htmlspecialchars($emp['sector']) ?></td>
+                                <td><?= htmlspecialchars($emp['sector'] ?? 'Vacío') ?></td>
                                 <td>
                                     <?php
                                         $statusClass = 'status-active';
@@ -65,10 +70,6 @@
                                     <?php if (!empty($emp['contrato_id'])): ?>
                                         <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/contratos/<?= $emp['id'] ?>" class="action-icon" title="Ver Contrato">
                                             <i class="fas fa-file-contract"></i>
-                                        </a>
-                                    <?php else: ?>
-                                        <a href="<?= ENV_APP['BASE_URL'] ?>/consultora/contratos/generar/<?= $emp['id'] ?>" class="action-icon" title="Generar Contrato" style="color: #16a34a;" onclick="return confirm('¿Generar contrato comercial para esta empresa?');">
-                                            <i class="fas fa-file-signature"></i>
                                         </a>
                                     <?php endif; ?>
 

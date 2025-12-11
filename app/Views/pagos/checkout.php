@@ -28,20 +28,20 @@
             <span style="font-size: 2rem; font-weight: 800; color: #2563eb;">B/. <?= number_format($factura['total'], 2) ?></span>
         </div>
 
-        <form action="<?= ENV_APP['BASE_URL'] ?>/pagos/procesar" method="POST" id="paymentForm">
+        <form action="<?= ENV_APP['BASE_URL'] ?>/pagos/procesar" method="POST" id="paymentForm" onsubmit="return startPayment(this);">
             <input type="hidden" name="factura_id" value="<?= $factura['id'] ?>">
 
             <div class="form-group" style="margin-bottom: 15px;">
                 <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 5px;">Titular de la Tarjeta</label>
-                <input type="text" class="form-control" placeholder="Como aparece en la tarjeta" required 
-                       style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <input type="text" class="form-control" name="titular" value="EMPRESA DEMO S.A." required 
+                       style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
             </div>
 
             <div class="form-group" style="margin-bottom: 15px;">
                 <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 5px;">Número de Tarjeta</label>
                 <div style="position: relative;">
-                    <input type="text" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19" required
-                           style="width: 100%; padding: 10px 10px 10px 40px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <input type="text" class="form-control" name="tarjeta" value="4242 4242 4242 4242" maxlength="19" required
+                           style="width: 100%; padding: 10px 10px 10px 40px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                     <i class="far fa-credit-card" style="position: absolute; left: 12px; top: 12px; color: #94a3b8;"></i>
                 </div>
             </div>
@@ -49,17 +49,17 @@
             <div style="display: flex; gap: 15px; margin-bottom: 25px;">
                 <div style="flex: 1;">
                     <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 5px;">Vencimiento</label>
-                    <input type="text" placeholder="MM/YY" maxlength="5" required
-                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <input type="text" name="vencimiento" value="12/28" maxlength="5" required
+                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                 </div>
                 <div style="flex: 1;">
                     <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 5px;">CVV</label>
-                    <input type="password" placeholder="123" maxlength="3" required
-                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <input type="password" name="cvv" value="123" maxlength="3" required
+                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                 </div>
             </div>
 
-            <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;">
+            <button type="submit" id="btnPay" class="btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;">
                 <i class="fas fa-lock"></i> Pagar B/. <?= number_format($factura['total'], 2) ?>
             </button>
             
@@ -69,5 +69,25 @@
         </form>
     </div>
 
+    <script>
+        function startPayment(form) {
+            const btn = document.getElementById('btnPay');
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Procesando...';
+            btn.style.opacity = '0.8';
+            btn.style.cursor = 'not-allowed';
+            btn.disabled = true;
+            
+            // Allow form submission to continue
+            // We use setTimeout to re-enable in case the page doesn't unload immediately (e.g. error) or simply to let the POST happen.
+            // But since it's a synchronous POST, the browser will likely navigate away.
+             
+            // IMPORTANT: If we disable the button immediately, the form might not submit in some browsers if the button triggered the submit.
+            // Better strategy: create a hidden input to submit. But standard behavior usually works if we dont prevent default.
+            
+            // Actually, simply returning true lets it submit.
+            // But to be safe against double clicks:
+            return true;
+        }
+    </script>
 </body>
 </html>

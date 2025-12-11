@@ -35,7 +35,16 @@ class FacturaController extends Controller
         $stmtDet->execute([$factura['id']]);
         $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
 
-        // 3. Renderizar Vista Pública (Sin navbar de admin, solo la factura)
-        $this->view('facturacion/publica', compact('factura', 'detalles'));
+        // 3. Generar QR (Igual que en admin)
+        $cufe = $factura['cufe'] ?? 'N/A';
+        $fecha = $factura['fecha_autorizacion'] ?? date('Y-m-d');
+        $total = $factura['total'];
+        $ruc = $factura['ruc'];
+
+        $qrData = "CUFE:{$cufe}|FECHA:{$fecha}|TOTAL:{$total}|RUC:{$ruc}";
+        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrData);
+
+        // 4. Renderizar Vista Pública
+        $this->view('facturacion/publica', compact('factura', 'detalles', 'qrUrl'));
     }
 }

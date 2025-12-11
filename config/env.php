@@ -1,13 +1,18 @@
 <?php
 $APP_ENV = 'local';
 
-$WIN_HOST_APP = '127.0.0.1';      // PHP en Windows
-$UB_HOST      = '192.168.1.140';  // IP de tu MySQL en Ubuntu
+// IPs reales de cada máquina
+$WIN_HOST_APP = '127.0.0.1';  // Windows (XAMPP / MySQL maestro)
+$UB_HOST      = '192.168.1.140';  // Ubuntu (MySQL réplica)
 
+// Configuración de conexiones a BD
 define('ENV_DB', [
     // Maestro: Windows
     'local' => [
-        'host'      => $WIN_HOST_APP,
+        // Si el código corre en Windows, puedes usar '127.0.0.1' o la IP real.
+        // Si quieres que también funcione cuando el código corra desde otra máquina,
+        // usa la IP del Windows:
+        'host'      => $WIN_HOST_APP,   // antes: '127.0.0.1'
         'port'      => 3306,
         'db'        => 'consultores_chiriqui',
         'user'      => 'win',
@@ -18,7 +23,7 @@ define('ENV_DB', [
 
     // Réplica: Ubuntu
     'replica' => [
-        'host'      => $UB_HOST,
+        'host'      => $UB_HOST,        // antes: '10.76.164.63'
         'port'      => 3306,
         'db'        => 'consultores_chiriqui',
         'user'      => 'win',
@@ -30,8 +35,11 @@ define('ENV_DB', [
 
 define('ENV_APP', [
     'APP_ENV'    => $APP_ENV,
-    // ASEGÚRATE DE QUE ESTA URL ES LA QUE INTENTAS VISITAR
+
+    // Si entras desde el mismo Windows, localhost está bien.
+    // Si quieres entrar desde otro dispositivo de la red, usarías:
+    // 'BASE_URL' => 'http://192.168.1.105/ExamenFinalDS4/consultores-chiriqui-platform/public',
     'BASE_URL'   => 'http://localhost/ExamenFinalDS4/consultores-chiriqui-platform/public', 
+
     'ASSETS_URL' => '/ExamenFinalDS4/consultores-chiriqui-platform/public/assets',
 ]);
-

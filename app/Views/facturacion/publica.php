@@ -56,6 +56,14 @@
                 <p>Plaza Las Lomas, David, Chiriquí</p>
                 <p>facturacion@consultores.com</p>
             </div>
+            
+            <!-- QR CODE -->
+            <?php if(isset($qrUrl)): ?>
+                <div style="text-align: center; margin: 0 20px;">
+                    <img src="<?= $qrUrl ?>" alt="QR Factura Electrónica" style="width: 100px; height: 100px; border: 1px solid #ddd; padding: 2px;">
+                </div>
+            <?php endif; ?>
+
             <div class="invoice-meta">
                 <h2>Factura Electrónica</h2>
                 <p><strong>Nº:</strong> <?= $factura['numero_fiscal'] ?></p>

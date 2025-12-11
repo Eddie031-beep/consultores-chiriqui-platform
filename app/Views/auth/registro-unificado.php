@@ -167,6 +167,13 @@ $subtitles = [
                             <label class="label-elegant">Correo Electrónico</label>
                         </div>
 
+                        <div style="margin-top: 15px; display: flex; align-items: flex-start; gap: 10px;">
+                            <input type="checkbox" name="aceptar_terminos" id="aceptar_terminos" value="1" style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;" required>
+                            <label for="aceptar_terminos" style="font-size: 0.85rem; color: #475569; cursor: pointer; line-height: 1.4;">
+                                Acepto los <a href="#" style="color: #2563eb; text-decoration: underline;">Términos y Condiciones</a> y el Acuerdo de Servicio Comercial de Consultores Chiriquí S.A.
+                            </label>
+                        </div>
+
 
                     <?php endif; ?>
 

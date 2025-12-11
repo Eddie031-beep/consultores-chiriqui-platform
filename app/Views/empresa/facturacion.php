@@ -80,10 +80,23 @@
                                 <a href="<?= ENV_APP['BASE_URL'] ?>/factura/ver/<?= $f['token_publico'] ?>" target="_blank" class="btn-icon">
                                     <i class="fas fa-eye"></i> Ver
                                 </a>
+
                                 <?php if($f['estado'] === 'emitida'): ?>
-                                    <a href="<?= ENV_APP['BASE_URL'] ?>/pagos/pagar/<?= $f['id'] ?>" class="btn-icon pay">
-                                        <i class="fas fa-credit-card"></i> Pagar
-                                    </a>
+                                    <form action="<?= ENV_APP['BASE_URL'] ?>/empresa/facturacion/confirmar" method="POST" style="display:inline;">
+                                        <input type="hidden" name="factura_id" value="<?= $f['id'] ?>">
+                                        <button type="submit" class="btn-icon mobile-full" style="background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; cursor: pointer;">
+                                            <i class="fas fa-check-double"></i> Confirmar
+                                        </button>
+                                    </form>
+                                <?php elseif($f['estado'] === 'pendiente'): ?>
+                                    <form action="<?= ENV_APP['BASE_URL'] ?>/empresa/facturacion/pagar" method="POST" style="display:inline;" onsubmit="return confirm('¿Confirma el pago de B/. <?= number_format($f['total'], 2) ?>?');">
+                                        <input type="hidden" name="factura_id" value="<?= $f['id'] ?>">
+                                        <button type="submit" class="btn-icon pay mobile-full" style="border: none; cursor: pointer;">
+                                            <i class="fas fa-credit-card"></i> Pagar (+Info)
+                                        </button>
+                                    </form>
+                                <?php elseif($f['estado'] === 'pagada'): ?>
+                                    <span style="font-size: 0.8rem; color: #166534;"><i class="fas fa-check"></i> Pagada</span>
                                 <?php endif; ?>
                             </td>
                         </tr>

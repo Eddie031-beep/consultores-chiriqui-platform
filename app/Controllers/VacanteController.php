@@ -98,22 +98,22 @@ class VacanteController extends Controller
             }
         }
 
-        // --- Lógica del Contador de Vistas ---
-        $session_id = session_id() ?: $_COOKIE['PHPSESSID'] ?? '';
-        $ip_address = $_SERVER['REMOTE_ADDR'];
+        // --- Lógica del Contador de Vistas (PEAJE) ---
+        // Se cobra CADA VEZ que entra, si ha aceptado el modal.
+        if (isset($_GET['accepted_view']) && $_GET['accepted_view'] == '1') {
+            $session_id = session_id() ?: $_COOKIE['PHPSESSID'] ?? '';
+            $ip_address = $_SERVER['REMOTE_ADDR'];
 
-        $checkStmt = $this->db->prepare("
-            SELECT id FROM interacciones_vacante 
-            WHERE vacante_id = ? AND tipo_interaccion = 'ver_detalle'
-            AND (ip = ? OR session_id = ?) AND DATE(fecha_hora) = CURDATE()
-        ");
-        $checkStmt->execute([$vacante['id'], $ip_address, $session_id]);
-        
-        if (!$checkStmt->fetch()) {
+            // Insertar directamente sin verificar duplicados (Requerimiento: "cada vez que entre... se le cobra")
+            $solicitante_id = null;
+            if (Auth::check() && Auth::user()['rol'] === 'candidato') {
+                $solicitante_id = Auth::user()['id'];
+            }
+
             $this->db->prepare("
-                INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id)
-                VALUES (?, 'ver_detalle', 'web', ?, ?)
-            ")->execute([$vacante['id'], $ip_address, $session_id]);
+                INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id, solicitante_id, fecha_hora)
+                VALUES (?, 'ver_detalle', 'web', ?, ?, ?, NOW())
+            ")->execute([$vacante['id'], $ip_address, $session_id, $solicitante_id]);
         }
 
         // Pasamos $haPostulado a la vista
@@ -147,8 +147,32 @@ class VacanteController extends Controller
             }
         }
 
+        // --- REPUTACIÓN DE PAGOS ---
+        $stmtRep = $this->db->prepare("SELECT estado FROM facturas WHERE empresa_id = ?");
+        $stmtRep->execute([$vacante['empresa_id']]);
+        $facturasEmpresa = $stmtRep->fetchAll(\PDO::FETCH_ASSOC);
+
+        $reputacion = 'nueva';
+        $pagadas = 0;
+        $problemas = 0;
+        
+        foreach ($facturasEmpresa as $f) {
+            if ($f['estado'] === 'pagada') $pagadas++;
+            if ($f['estado'] === 'anulada') $problemas++;
+            // Pendientes vencidas también podrían ser problemas, pero simplifiquemos por ahora
+        }
+
+        if ($pagadas > 0 && $problemas === 0) {
+            $reputacion = 'confiable';
+        } elseif ($problemas > 0) {
+            $reputacion = 'riesgo';
+        } elseif ($pagadas > 0) {
+            // Tiene pagadas pero también otros estados (pendientes/emitidas)
+            $reputacion = 'normal';
+        }
+
         // Pasa las nuevas variables a la vista
-        $this->view('vacantes/detalle', compact('vacante', 'haPostulado', 'resenas', 'promedio', 'miResena'));
+        $this->view('vacantes/detalle', compact('vacante', 'haPostulado', 'resenas', 'promedio', 'miResena', 'reputacion'));
     }
 
     // Redirigir a postulación (validar si está autenticado)

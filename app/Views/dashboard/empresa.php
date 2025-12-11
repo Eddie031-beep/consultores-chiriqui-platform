@@ -19,10 +19,10 @@ $user = Auth::user();
     
     <div class="dashboard-header animate-slide-up">
         <div class="header-title">
-            <h1>Hola, <?= htmlspecialchars($user['nombre']) ?></h1>
-            <div class="header-subtitle">Resumen de actividad y gestión de talento</div>
+            <h1>Panel Corporativo</h1>
+            <p class="header-subtitle">Bienvenido, <?= htmlspecialchars($user['nombre']) ?></p>
         </div>
-        <div class="user-menu">
+        <div class="user-menu" style="display: flex; gap: 10px;">
             <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/perfil" class="btn-secondary" style="border-radius: 50px;">
                 <i class="fas fa-cog"></i> Configuración
             </a>
@@ -41,7 +41,7 @@ $user = Auth::user();
                 </p>
             </div>
             <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/facturacion" class="btn-primary" style="background: #ef4444; border: none;">
-                Ver y Pagar
+                Ver
             </a>
         </div>
     </div>

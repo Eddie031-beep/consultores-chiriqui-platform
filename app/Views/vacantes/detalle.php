@@ -28,15 +28,6 @@ $fechaCierre = $vacante['fecha_cierre'] ? date('d/m/Y', strtotime($vacante['fech
             padding-top: 90px; 
         }
 
-        /* HERO HEADER */
-        .job-hero {
-            background: radial-gradient(circle at top right, #1e3a8a 0%, #0f172a 100%);
-            padding: 2rem 1rem 3rem 1rem;
-            color: white;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-        
         .back-link {
             color: rgba(255,255,255,0.8); text-decoration: none; font-weight: 500;
             display: inline-flex; align-items: center; gap: 8px; margin-bottom: 1.5rem;
@@ -127,6 +118,40 @@ $fechaCierre = $vacante['fecha_cierre'] ? date('d/m/Y', strtotime($vacante['fech
     </style>
 </head>
 <body>
+    
+    <!-- INTERSTITIAL MODAL: PEAJE POR VISTA -->
+    <?php 
+    // Ocultar modal si ya aceptó O si es una empresa (las empresas no pagan peaje por ver)
+    $isEmpresa = Auth::check() && (Auth::user()['rol'] === 'empresa' || Auth::user()['rol'] === 'empresa_admin');
+    $showModal = !isset($_GET['accepted_view']) && !$isEmpresa;
+    ?>
+    <?php if ($showModal): ?>
+    <div id="viewPeajeModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div style="background: white; width: 90%; max-width: 450px; padding: 2.5rem; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; border: 1px solid #e2e8f0;">
+            <div style="width: 70px; height: 70px; background: #fff7ed; color: #ea580c; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem; border: 4px solid #ffedd5;">
+                <i class="fas fa-eye"></i>
+            </div>
+            
+            <h2 style="color: #1e293b; margin: 0 0 1rem 0; font-size: 1.5rem; font-weight: 800;">Aviso de Sistema</h2>
+            
+            <p style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 2rem;">
+                <strong>Se te cobrará costo de peaje por vista.</strong><br>
+                <span style="font-size: 0.85rem;">(Esta acción registrará una visita cobrable a la empresa <?= htmlspecialchars($vacante['empresa_nombre']) ?>)</span>
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <a href="?accepted_view=1" style="display: block; width: 100%; padding: 14px; background: #ea580c; color: white; text-decoration: none; border-radius: 10px; font-weight: 700; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);">
+                    Aceptar y Ver Vacante
+                </a>
+                <a href="<?= ENV_APP['BASE_URL'] ?>/vacantes" style="display: block; width: 100%; padding: 14px; background: transparent; color: #64748b; text-decoration: none; font-weight: 600;">
+                    Cancelar / Volver
+                </a>
+            </div>
+        </div>
+    </div>
+    <style>body { overflow: hidden; }</style> <!-- Prevent scrolling while modal is open -->
+    <?php endif; ?>
+
     <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <div class="job-hero">
@@ -204,9 +229,9 @@ $fechaCierre = $vacante['fecha_cierre'] ? date('d/m/Y', strtotime($vacante['fech
                         <?php if ($haPostulado): ?>
                             <span style="color: #10b981; font-weight: 600;"><i class="fas fa-check-circle"></i> Ya te has postulado</span>
                         <?php else: ?>
-                            <a href="<?= ENV_APP['BASE_URL'] ?>/postular/<?= $vacante['id'] ?>" class="btn-apply" style="max-width: 300px; margin: 0 auto;">
+                            <button onclick="document.getElementById('confirmModal').style.display='flex'" class="btn-apply" style="max-width: 300px; margin: 0 auto; border:none; font-family: inherit; font-size: 1rem;">
                                 Postularme Ahora <i class="fas fa-paper-plane"></i>
-                            </a>
+                            </button>
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>
@@ -319,6 +344,23 @@ $fechaCierre = $vacante['fecha_cierre'] ? date('d/m/Y', strtotime($vacante['fech
                     <p style="font-size: 0.85rem; color: #64748b; margin-top: 10px;">
                         <?= htmlspecialchars($vacante['sector'] ?? 'Sector General') ?>
                     </p>
+
+                    <?php if (isset($reputacion)): ?>
+                        <?php if ($reputacion === 'confiable'): ?>
+                            <div style="margin-top: 8px; font-size: 0.75rem; font-weight: 700; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px;" title="Esta empresa paga sus facturas a tiempo">
+                                <i class="fas fa-check-circle"></i> PAGO CONFIABLE
+                            </div>
+                        <?php elseif ($reputacion === 'riesgo'): ?>
+                            <div style="margin-top: 8px; font-size: 0.75rem; font-weight: 700; color: #991b1b; background: #fee2e2; border: 1px solid #fecaca; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px;" title="Esta empresa tiene facturas anuladas o problemas de pago">
+                                <i class="fas fa-exclamation-triangle"></i> HISTORIAL IRREGULAR
+                            </div>
+                        <?php elseif ($reputacion === 'normal' || $reputacion === 'pendiente'): ?>
+                             <!-- Opcional: Mostrar si tiene pagos activos pendientes -->
+                             <!-- <div style="margin-top: 8px; font-size: 0.75rem; font-weight: 700; color: #b45309; background: #ffedd5; border: 1px solid #fed7aa; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-clock"></i> PAGOS EN PROCESO
+                            </div> -->
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
 
                 <div style="font-size: 0.9rem; color: #475569; margin-bottom: 1.5rem;">
@@ -369,6 +411,46 @@ $fechaCierre = $vacante['fecha_cierre'] ? date('d/m/Y', strtotime($vacante['fech
             </div>
         </div>
 
+    <!-- MODAL CONFIRMACIÓN POSTULACIÓN -->
+    <div id="confirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; width: 90%; max-width: 500px; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="width: 60px; height: 60px; background: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1rem;">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <h3 style="color: #1e293b; margin: 0 0 10px 0;">Confirmar Postulación</h3>
+                <p style="color: #64748b; margin: 0;">Estás a punto de enviar tu perfil a <strong><?= htmlspecialchars($vacante['empresa_nombre']) ?></strong>.</p>
+            </div>
+
+            <!-- MENSAJE PEAJE SOLICITADO -->
+            <div style="background: #fff7ed; border: 1px solid #ffedd5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; gap: 10px;">
+                <i class="fas fa-info-circle" style="color: #ea580c; margin-top: 2px;"></i>
+                <div style="font-size: 0.9rem; color: #9a3412;">
+                    <strong>Aviso de Transparencia:</strong><br>
+                    Al postularte, se registrará un cobro de peaje (costo por interacción) a la empresa, notificando tu interés.
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="document.getElementById('confirmModal').style.display='none'" style="flex: 1; padding: 12px; background: #f1f5f9; border: none; border-radius: 8px; font-weight: 600; color: #64748b; cursor: pointer;">
+                    Cancelar
+                </button>
+                <a href="<?= ENV_APP['BASE_URL'] ?>/postular/<?= $vacante['id'] ?>" style="flex: 1; padding: 12px; background: #2563eb; border: none; border-radius: 8px; font-weight: 600; color: white; cursor: pointer; text-decoration: none; text-align: center; display: inline-block;">
+                    Confirmar y Enviar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cerrar modal con click fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
     </div>
 </body>
 </html>

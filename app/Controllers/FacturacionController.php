@@ -38,119 +38,162 @@ class FacturacionController extends Controller
         $this->view('facturacion/listar', compact('facturas', 'mes', 'anio'));
     }
 
-    // ============ GENERAR FACTURA ============
+    // ============ GENERAR FACTURA (POR VACANTE CERRADA) ============
     public function generar(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->procesarFactura();
-            return;
+        // 1. Obtener empresas que tienen vacantes CERRADAS y NO FACTURADAS (Simplificación: Vacantes cerradas)
+        // En un sistema real, excluiríamos las que ya tienen `facturas` asociada.
+        $stmt = $this->db->query("
+            SELECT e.id, e.nombre, v.id as vacante_id, v.titulo as vacante_titulo, v.fecha_cierre
+            FROM empresas e
+            JOIN vacantes v ON v.empresa_id = e.id
+            WHERE v.estado = 'cerrada'
+            ORDER BY e.nombre, v.fecha_cierre DESC
+        ");
+        $vacantesCerradas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Agrupar por empresa para el select
+        $empresasConVacantes = [];
+        foreach ($vacantesCerradas as $row) {
+            $empresasConVacantes[$row['id']]['nombre'] = $row['nombre'];
+            $empresasConVacantes[$row['id']]['vacantes'][] = $row;
         }
 
-        // Obtener empresas
-        $stmt = $this->db->query("SELECT MIN(id) as id, nombre FROM empresas WHERE estado = 'activa' GROUP BY nombre ORDER BY nombre");
-        $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Pre-selección si viene por GET
-        $selectedEmpresa = (int)($_GET['empresa_id'] ?? 0);
-
+        // Variables iniciales
         $error = '';
-        $this->view('facturacion/generar', compact('empresas', 'error', 'selectedEmpresa'));
+        $preview = null;
+        
+        // Input: vacante_id
+        $selectedVacanteId = (int)($_GET['vacante_id'] ?? ($_POST['vacante_id'] ?? 0));
+        // Fecha Vencimiento
+        $fecha_vencimiento = $_POST['fecha_vencimiento'] ?? date('Y-m-d', strtotime('+15 days'));
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            
+            $accion = $_POST['accion'] ?? 'preview';
+            
+            if ($selectedVacanteId > 0) {
+                
+                // 1. Calcular Detalles (Por Vacante Completa)
+                $calculo = $this->calcularDetallesPorVacante($selectedVacanteId);
+
+                if ($accion === 'preview') {
+                    $preview = $calculo;
+                } elseif ($accion === 'generar') {
+                    if ($calculo['total'] > 0) {
+                        $this->guardarFacturaVacante($selectedVacanteId, $fecha_vencimiento, $calculo);
+                        return;
+                    } else {
+                        $error = "La vacante seleccionada no tiene consumo para facturar.";
+                    }
+                }
+
+            } else {
+                $error = 'Por favor seleccione una vacante cerrada.';
+            }
+        }
+
+        $this->view('facturacion/generar', compact('empresasConVacantes', 'error', 'selectedVacanteId', 'preview', 'fecha_vencimiento'));
     }
 
-    public function procesarFactura(): void
+    private function calcularDetallesPorVacante($vacante_id): array
     {
-        $empresa_id = (int)($_POST['empresa_id'] ?? 0);
-        $periodo_desde = $_POST['periodo_desde'] ?? '';
-        $periodo_hasta = $_POST['periodo_hasta'] ?? '';
+        $p_vista = 1.50; $p_click = 5.00; $p_chat = 2.50;
 
-        if ($empresa_id <= 0 || empty($periodo_desde) || empty($periodo_hasta)) {
-            $error = 'Todos los campos son obligatorios';
-            $stmt = $this->db->query("SELECT id, nombre FROM empresas WHERE estado = 'activa' ORDER BY nombre");
-            $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->view('facturacion/generar', compact('empresas', 'error'));
-            return;
+        // Calcular costo total histórico de la vacante
+        $sql = "
+            SELECT 
+                iv.tipo_interaccion,
+                COUNT(*) as cantidad,
+                CASE 
+                    WHEN iv.tipo_interaccion = 'ver_detalle' THEN $p_vista
+                    WHEN iv.tipo_interaccion = 'click_aplicar' THEN $p_click
+                    WHEN iv.tipo_interaccion = 'chat_consulta' THEN $p_chat
+                END as precio_unitario
+            FROM interacciones_vacante iv
+            WHERE iv.vacante_id = ?
+            GROUP BY iv.tipo_interaccion
+        ";
+        
+        $stmtInt = $this->db->prepare($sql);
+        $stmtInt->execute([$vacante_id]);
+        $detalles = $stmtInt->fetchAll(PDO::FETCH_ASSOC);
+
+        $subtotal = 0;
+        foreach ($detalles as &$det) {
+            $det['total_linea'] = $det['cantidad'] * $det['precio_unitario'];
+            $subtotal += $det['total_linea'];
         }
 
+        // Información de la vacante para fechas
+        $stmtVac = $this->db->prepare("SELECT fecha_publicacion, fecha_cierre FROM vacantes WHERE id = ?");
+        $stmtVac->execute([$vacante_id]);
+        $vacanteInfo = $stmtVac->fetch(PDO::FETCH_ASSOC);
+
+        // ITBMS
+        $stmtConf = $this->db->prepare("SELECT valor FROM configuraciones WHERE codigo = 'ITBMS'");
+        $stmtConf->execute();
+        $itbms_pct = $stmtConf->fetchColumn() ?: 0.07;
+
+        return [
+            'detalles' => $detalles,
+            'subtotal' => $subtotal,
+            'itbms' => $subtotal * $itbms_pct,
+            'total' => ($subtotal + ($subtotal * $itbms_pct)),
+            'periodo_desde' => $vacanteInfo['fecha_publicacion'],
+            'periodo_hasta' => $vacanteInfo['fecha_cierre'] ?? date('Y-m-d H:i:s')
+        ];
+    }
+
+    private function guardarFacturaVacante($vacante_id, $vencimiento, $calculo): void
+    {
         try {
-            // 1. Tarifas Oficiales (Rango $1.50 - $5.00)
-            $p_vista = 1.50; 
-            $p_click = 5.00; 
-            $p_chat = 2.50;
+            $this->db->beginTransaction();
 
-            // 2. Calcular interacciones
-            $sql = "
-                SELECT 
-                    iv.tipo_interaccion,
-                    COUNT(*) as cantidad,
-                    CASE 
-                        WHEN iv.tipo_interaccion = 'ver_detalle' THEN $p_vista
-                        WHEN iv.tipo_interaccion = 'click_aplicar' THEN $p_click
-                        WHEN iv.tipo_interaccion = 'chat_consulta' THEN $p_chat
-                    END as precio_unitario
-                FROM interacciones_vacante iv
-                JOIN vacantes v ON iv.vacante_id = v.id
-                WHERE v.empresa_id = ? AND DATE(iv.fecha_hora) BETWEEN ? AND ?
-                GROUP BY iv.tipo_interaccion
-            ";
-            
-            $stmtInt = $this->db->prepare($sql);
-            $stmtInt->execute([$empresa_id, $periodo_desde, $periodo_hasta]);
-            $interacciones = $stmtInt->fetchAll(PDO::FETCH_ASSOC);
+            // Obtener empresa_id de la vacante
+            $stmtEmp = $this->db->prepare("SELECT empresa_id FROM vacantes WHERE id = ?");
+            $stmtEmp->execute([$vacante_id]);
+            $empresa_id = $stmtEmp->fetchColumn();
 
-            // 3. Calcular totales
-            $subtotal = 0;
-            foreach ($interacciones as $int) {
-                $subtotal += ($int['cantidad'] * $int['precio_unitario']);
-            }
-
-            // Obtener ITBMS de configuraciones (si existe) o usar 0.07
-            $stmtConf = $this->db->prepare("SELECT valor FROM configuraciones WHERE codigo = 'ITBMS'");
-            $stmtConf->execute();
-            $itbms_pct = $stmtConf->fetchColumn() ?: 0.07;
-
-            $itbms = $subtotal * $itbms_pct;
-            $total = $subtotal + $itbms;
-
-            // Generar número de factura único
-            $numero_fiscal = 'FAC-' . date('YmdHis') . '-' . $empresa_id;
+            $numero_fiscal = 'FAC-VAC-' . $vacante_id . '-' . date('Ymd');
             $token_publico = bin2hex(random_bytes(32));
+            $cufe = strtoupper(hash('sha1', $numero_fiscal . $token_publico . time()));
+            $protocolo = 'AUT-' . date('Y') . '-' . mt_rand(100000, 999999);
+            $clave = mt_rand(10000000, 99999999);
 
-            // DATOS DGI / FE (Simulación)
-            $cufe = strtoupper(hash('sha1', $numero_fiscal . $token_publico . time())); // 40 chars
-            $protocolo_autorizacion = 'AUT-' . date('Y') . '-' . mt_rand(100000, 999999);
-            $clave_acceso = mt_rand(10000000, 99999999) . mt_rand(10000000, 99999999) . mt_rand(1000,9999); // aprox 20
-            $fecha_autorizacion = date('Y-m-d H:i:s');
-
-            // Insertar factura
             $stmtFac = $this->db->prepare("
                 INSERT INTO facturas 
-                (empresa_id, numero_fiscal, periodo_desde, periodo_hasta, subtotal, itbms, total, estado, token_publico, cufe, protocolo_autorizacion, clave_acceso, fecha_autorizacion)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'emitida', ?, ?, ?, ?, ?)
+                (empresa_id, numero_fiscal, periodo_desde, periodo_hasta, subtotal, itbms, total, estado, token_publico, cufe, protocolo_autorizacion, clave_acceso, fecha_autorizacion, fecha_vencimiento)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'emitida', ?, ?, ?, ?, NOW(), ?)
             ");
-            $stmtFac->execute([$empresa_id, $numero_fiscal, $periodo_desde, $periodo_hasta, $subtotal, $itbms, $total, $token_publico, $cufe, $protocolo_autorizacion, $clave_acceso, $fecha_autorizacion]);
+            
+            $stmtFac->execute([
+                $empresa_id, $numero_fiscal, 
+                $calculo['periodo_desde'], $calculo['periodo_hasta'], // Usamos fechas reales de la vacante
+                $calculo['subtotal'], $calculo['itbms'], $calculo['total'], 
+                $token_publico, $cufe, $protocolo, $clave, $vencimiento
+            ]);
 
             $factura_id = $this->db->lastInsertId();
 
-            // Insertar detalles
-            foreach ($interacciones as $int) {
-                $total_linea = $int['cantidad'] * $int['precio_unitario'];
+            foreach ($calculo['detalles'] as $det) {
                 $stmtDet = $this->db->prepare("
                     INSERT INTO facturas_detalle 
                     (factura_id, tipo_interaccion, cantidad_interacciones, tarifa_unitaria, total_linea)
                     VALUES (?, ?, ?, ?, ?)
                 ");
-                $stmtDet->execute([$factura_id, $int['tipo_interaccion'], $int['cantidad'], $int['precio_unitario'], $total_linea]);
+                $stmtDet->execute([$factura_id, $det['tipo_interaccion'], $det['cantidad'], $det['precio_unitario'], $det['total_linea']]);
             }
 
-            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Factura generada exitosamente: ' . $numero_fiscal];
+            $this->db->commit();
+
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => 'Factura (Cierre Vacante) generada exitosamente: ' . $numero_fiscal];
             header('Location: ' . ENV_APP['BASE_URL'] . '/consultora/facturacion/ver/' . $factura_id);
             exit;
 
         } catch (\PDOException $e) {
-            $error = 'Error al generar factura: ' . $e->getMessage();
-            $stmt = $this->db->query("SELECT id, nombre FROM empresas WHERE estado = 'activa' ORDER BY nombre");
-            $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->view('facturacion/generar', compact('empresas', 'error'));
+            $this->db->rollBack();
+            echo "Error DB: " . $e->getMessage(); exit; 
         }
     }
 

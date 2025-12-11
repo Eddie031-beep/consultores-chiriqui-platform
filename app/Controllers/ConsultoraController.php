@@ -93,6 +93,33 @@ class ConsultoraController extends Controller
         $stmt = $this->db->query($sql);
         $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // --- CÁLCULO DE CONSUMO PENDIENTE (Tiempo Real) ---
+        $p_vista = 1.50; 
+        $p_click = 5.00; 
+        $p_chat = 2.50;
+
+        $inicioMes = date('Y-m-01 00:00:00');
+        $finMes = date('Y-m-t 23:59:59');
+
+        foreach ($empresas as &$emp) {
+            $sqlCalc = "
+                SELECT 
+                    SUM(CASE WHEN tipo_interaccion = 'ver_detalle' THEN $p_vista ELSE 0 END) +
+                    SUM(CASE WHEN tipo_interaccion = 'click_aplicar' THEN $p_click ELSE 0 END) +
+                    SUM(CASE WHEN tipo_interaccion = 'chat_consulta' THEN $p_chat ELSE 0 END) 
+                as total_pendiente
+                FROM interacciones_vacante iv
+                JOIN vacantes v ON iv.vacante_id = v.id
+                WHERE v.empresa_id = ? 
+                AND iv.fecha_hora BETWEEN ? AND ?
+            ";
+            $stmtCalc = $this->db->prepare($sqlCalc);
+            $stmtCalc->execute([$emp['id'], $inicioMes, $finMes]);
+            $res = $stmtCalc->fetch(PDO::FETCH_ASSOC);
+            $emp['consumo_pendiente'] = (float)($res['total_pendiente'] ?? 0);
+        }
+        unset($emp);
+
         $this->view('dashboard/empresas-consultora', compact('empresas'));
     }
 

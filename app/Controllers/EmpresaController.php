@@ -384,4 +384,173 @@ class EmpresaController extends Controller
         exit;
     }   
 
+
+    // ============ ACCIONES DE EMPRESA ============
+
+    public function cerrarVacante($id): void {
+        $user = Auth::user();
+        
+        // Verificar propiedad
+        $stmtCheck = $this->dbRead->prepare("SELECT id FROM vacantes WHERE id = ? AND empresa_id = ?");
+        $stmtCheck->execute([(int)$id, $user['empresa_id']]);
+        if (!$stmtCheck->fetch()) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => '❌ No tienes permiso para cerrar esta vacante.'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
+            exit;
+        }
+
+        try {
+            $stmt = $this->dbWrite->prepare("UPDATE vacantes SET estado = 'cerrada' WHERE id = ?");
+            $stmt->execute([(int)$id]);
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => '✅ Vacante cerrada correctamente.'];
+        } catch (\Exception $e) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => '❌ Error al cerrar: ' . $e->getMessage()];
+        }
+
+        header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
+        exit;
+    }
+
+    public function abrirVacante($id): void {
+        $user = Auth::user();
+        
+        // Verificar propiedad
+        $stmtCheck = $this->dbRead->prepare("SELECT id FROM vacantes WHERE id = ? AND empresa_id = ?");
+        $stmtCheck->execute([(int)$id, $user['empresa_id']]);
+        if (!$stmtCheck->fetch()) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => '❌ No tienes permiso para reabrir esta vacante.'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
+            exit;
+        }
+
+        try {
+            $stmt = $this->dbWrite->prepare("UPDATE vacantes SET estado = 'abierta' WHERE id = ?");
+            $stmt->execute([(int)$id]);
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => '✅ Vacante reabierta exitosamente.'];
+        } catch (\Exception $e) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => '❌ Error al reabrir: ' . $e->getMessage()];
+        }
+
+        header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
+        exit;
+    }
+
+    public function generarFactura($vacante_id = null): void {
+        // Bloqueado por requerimiento: Solo consultores generan facturas
+        $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => '🚫 Esta acción solo puede ser realizada por un Consultor.'];
+        header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
+        exit;
+    }
+
+
+
+    public function verInteracciones($vacante_id): void {
+        $user = Auth::user();
+        
+        // 1. Verificar propiedad de la vacante
+        $stmtCheck = $this->dbRead->prepare("SELECT id, titulo FROM vacantes WHERE id = ? AND empresa_id = ?");
+        $stmtCheck->execute([(int)$vacante_id, $user['empresa_id']]);
+        $vacante = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$vacante) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => '❌ Vacante no encontrada o acceso denegado.'];
+            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/vacantes');
+            exit;
+        }
+
+        // 2. Obtener interacciones
+        $stmt = $this->dbRead->prepare("
+            SELECT iv.*, s.nombre, s.apellido, s.email 
+            FROM interacciones_vacante iv
+            LEFT JOIN solicitantes s ON iv.solicitante_id = s.id
+            WHERE iv.vacante_id = ?
+            ORDER BY iv.fecha_hora DESC
+        ");
+        $stmt->execute([(int)$vacante_id]);
+        $interacciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('empresa/interacciones', compact('vacante', 'interacciones'));
+    }
+
+    // ============ GESTIÓN DE PAGOS FACTURA ============
+    
+    public function confirmarFactura(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/facturacion');
+            exit;
+        }
+
+        $user = Auth::user();
+        $factura_id = (int)($_POST['factura_id'] ?? 0);
+
+        try {
+            // Verificar propiedad por seguridad
+            $stmtCheck = $this->dbRead->prepare("SELECT id, estado FROM facturas WHERE id = ? AND empresa_id = ?");
+            $stmtCheck->execute([$factura_id, $user['empresa_id']]);
+            $factura = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if (!$factura || $factura['estado'] !== 'emitida') {
+                $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => '❌ Factura no válida para confirmación.'];
+                header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/facturacion');
+                exit;
+            }
+
+            // Actualizar a pendiente y definir vencimiento (+3 días desde confirmación)
+            $fecha_vencimiento = date('Y-m-d H:i:s', strtotime('+3 days'));
+            
+            $stmt = $this->dbWrite->prepare("
+                UPDATE facturas 
+                SET estado = 'pendiente', fecha_confirmacion = NOW(), fecha_vencimiento = ?
+                WHERE id = ?
+            ");
+            $stmt->execute([$fecha_vencimiento, $factura_id]);
+
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => '✅ Factura confirmada. Tienes hasta el ' . date('d/m/Y', strtotime($fecha_vencimiento)) . ' para pagar.'];
+
+        } catch (\Exception $e) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Error: ' . $e->getMessage()];
+        }
+
+        header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/facturacion');
+        exit;
+    }
+
+    public function pagarFactura(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/facturacion');
+            exit;
+        }
+
+        $user = Auth::user();
+        $factura_id = (int)($_POST['factura_id'] ?? 0);
+
+        try {
+            $stmtCheck = $this->dbRead->prepare("SELECT id, estado FROM facturas WHERE id = ? AND empresa_id = ?");
+            $stmtCheck->execute([$factura_id, $user['empresa_id']]);
+            $factura = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if (!$factura || $factura['estado'] !== 'pendiente') {
+                $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => '❌ Factura no válida para pago. Debe confirmarla primero.'];
+                header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/facturacion');
+                exit;
+            }
+
+            // Procesar Pago (Mock)
+            $stmt = $this->dbWrite->prepare("
+                UPDATE facturas 
+                SET estado = 'pagada', fecha_pago = NOW()
+                WHERE id = ?
+            ");
+            $stmt->execute([$factura_id]);
+
+            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => '✅ ¡Pago exitoso! Gracias por su confianza.'];
+
+        } catch (\Exception $e) {
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Error: ' . $e->getMessage()];
+        }
+
+        header('Location: ' . ENV_APP['BASE_URL'] . '/empresa/facturacion');
+        exit;
+    }
+
 }

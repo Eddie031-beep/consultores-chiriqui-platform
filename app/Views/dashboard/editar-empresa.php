@@ -225,10 +225,7 @@
                     <input type="text" class="readonly-field" value="<?= date('d/m/Y H:i', strtotime($empresa['fecha_registro'])) ?>" readonly>
                 </div>
 
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" name="datos_facturacion_completos" id="chk_fiscal" value="1" <?= ($empresa['datos_facturacion_completos'] == 1) ? 'checked' : '' ?>>
-                    <label for="chk_fiscal" class="checkbox-label">Marcar: Datos de facturación verificados y completos</label>
-                </div>
+
 
                 <div class="section-divider">
                     <i class="fas fa-map-marker-alt"></i> Ubicación y Contacto
