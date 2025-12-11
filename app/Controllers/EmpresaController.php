@@ -166,7 +166,7 @@ class EmpresaController extends Controller
             $stmtEmp->execute([
                 $_POST['direccion'], $_POST['telefono'], 
                 $_POST['email_contacto'], $_POST['sitio_web'], 
-                $_POST['sector_id'], // Usamos el nombre 'sector_id' del form, aunque guardamos en columna 'sector'
+                $_POST['sector'],
                 $empresaId
             ]);
 

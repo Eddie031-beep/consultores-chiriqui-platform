@@ -60,7 +60,7 @@ use App\Helpers\Auth;
                     </div>
                     <div class="form-group">
                         <label class="form-label">Sector</label>
-                        <select name="sector_id" class="form-input" required>
+                        <select name="sector" class="form-input" required>
                             <option value="">Seleccione un sector...</option>
                             <?php foreach ($sectores as $sec): ?>
                                 <option value="<?= htmlspecialchars($sec) ?>" <?= ($data['sector'] === $sec) ? 'selected' : '' ?>>
