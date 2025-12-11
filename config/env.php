@@ -1,45 +1,54 @@
 <?php
 $APP_ENV = 'local';
 
-// IPs reales de cada máquina
-$WIN_HOST_APP = '127.0.0.1';  // Windows (XAMPP / MySQL maestro)
-$UB_HOST      = '192.168.1.140';  // Ubuntu (MySQL réplica)
+/*
+|--------------------------------------------------------------------------
+| Hostnames en lugar de IPs
+|--------------------------------------------------------------------------
+| Gracias al archivo hosts en Windows y Ubuntu, estos nombres apuntarán
+| siempre a la IP correcta, aunque cambie el día del examen.
+|--------------------------------------------------------------------------
+*/
+$WIN_HOST_APP = 'win-main-db';     // Windows (MySQL maestro)
+$UB_HOST      = 'ub-replica-db';   // Ubuntu (MySQL réplica)
 
-// Configuración de conexiones a BD
+/*
+|--------------------------------------------------------------------------
+| Configuración de conexiones a la Base de Datos
+|--------------------------------------------------------------------------
+| 'local'   → BD principal (Windows, maestro)
+| 'replica' → BD réplica (Ubuntu)
+|--------------------------------------------------------------------------
+*/
 define('ENV_DB', [
-    // Maestro: Windows
     'local' => [
-        // Si el código corre en Windows, puedes usar '127.0.0.1' o la IP real.
-        // Si quieres que también funcione cuando el código corra desde otra máquina,
-        // usa la IP del Windows:
-        'host'      => $WIN_HOST_APP,   // antes: '127.0.0.1'
+        'host'      => $WIN_HOST_APP,
         'port'      => 3306,
         'db'        => 'consultores_chiriqui',
-        'user'      => 'win',
+        'user'      => 'win',       // tu usuario real en Windows
         'pass'      => '12345',
         'charset'   => 'utf8mb4',
         'collation' => 'utf8mb4_unicode_ci',
     ],
 
-    // Réplica: Ubuntu
     'replica' => [
-        'host'      => $UB_HOST,        // antes: '10.76.164.63'
+        'host'      => $UB_HOST,
         'port'      => 3306,
         'db'        => 'consultores_chiriqui',
-        'user'      => 'win',
+        'user'      => 'win',       // usuario real en Ubuntu
         'pass'      => '12345',
         'charset'   => 'utf8mb4',
         'collation' => 'utf8mb4_unicode_ci',
     ],
 ]);
 
+/*
+|--------------------------------------------------------------------------
+| Configuración de la APP
+|--------------------------------------------------------------------------
+*/
 define('ENV_APP', [
     'APP_ENV'    => $APP_ENV,
-
-    // Si entras desde el mismo Windows, localhost está bien.
-    // Si quieres entrar desde otro dispositivo de la red, usarías:
-    // 'BASE_URL' => 'http://192.168.1.105/ExamenFinalDS4/consultores-chiriqui-platform/public',
-    'BASE_URL'   => 'http://localhost/ExamenFinalDS4/consultores-chiriqui-platform/public', 
-
+    'BASE_URL'   => 'http://localhost/ExamenFinalDS4/consultores-chiriqui-platform/public',
     'ASSETS_URL' => '/ExamenFinalDS4/consultores-chiriqui-platform/public/assets',
 ]);
