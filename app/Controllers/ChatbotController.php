@@ -7,13 +7,21 @@ use PDO;
 
 class ChatbotController extends Controller
 {
-    private PDO $db;
-    private array $acciones = []; // New property for quick actions
+    private ?PDO $db = null; // Change to nullable
+    private array $acciones = []; 
 
     public function __construct()
     {
-        $this->db = db_connect('local');
+        // $this->db inicializado bajo demanda para capturar errores
         if (session_status() === PHP_SESSION_NONE) session_start();
+    }
+
+    private function getDB(): PDO
+    {
+        if ($this->db === null) {
+            $this->db = db_connect('local');
+        }
+        return $this->db;
     }
 
     public function chat(): void
@@ -27,29 +35,40 @@ class ChatbotController extends Controller
 
     private function procesarChat(): void
     {
+        // Limpiar buffer de salida por si hay warnings previos
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
-        
-        $inputRaw = $_POST['pregunta'] ?? '';
-        $input = $this->normalizarTexto($inputRaw);
-        $user = Auth::user();
 
-        if (empty($input)) {
-            echo json_encode(['success' => false, 'respuesta' => '🤔 No escribiste nada.']);
-            exit;
+        try {
+            $inputRaw = $_POST['pregunta'] ?? '';
+            $input = $this->normalizarTexto($inputRaw);
+            $user = Auth::user();
+
+            if (empty($input)) {
+                echo json_encode(['success' => false, 'respuesta' => '🤔 No escribiste nada.']);
+                exit;
+            }
+
+            // CEREBRO: Detectar intención y consultar BD EN TIEMPO REAL
+            $respuestaHtml = $this->cerebroBot($input, $inputRaw, $user);
+
+            // Guardar en Historial
+            $this->logChat($inputRaw, $respuestaHtml);
+
+            echo json_encode([
+                'success' => true,
+                'respuesta' => $respuestaHtml,
+                'acciones' => $this->acciones,
+                'timestamp' => date('H:i A')
+            ]);
+        } catch (\Throwable $e) {
+            // Capturar CUALQUIER error (Exception o Fatal Error) y devolverlo bonito
+            echo json_encode([
+                'success' => true, // True para mostrar el mensaje en burbuja bot
+                'respuesta' => "❌ <strong>Error del Sistema:</strong><br>" . $e->getMessage() . "<br><small>" . $e->getFile() . ":" . $e->getLine() . "</small>",
+                'acciones' => []
+            ]);
         }
-
-        // CEREBRO: Detectar intención y consultar BD EN TIEMPO REAL
-        $respuestaHtml = $this->cerebroBot($input, $inputRaw, $user);
-
-        // Guardar en Historial (intentamos guardar, si falla no rompe el flujo)
-        $this->logChat($inputRaw, $respuestaHtml);
-
-        echo json_encode([
-            'success' => true,
-            'respuesta' => $respuestaHtml, // Enviamos HTML directamente
-            'acciones' => $this->acciones, // Enviamos botones dinámicos
-            'timestamp' => date('H:i A')
-        ]);
         exit;
     }
 
@@ -62,11 +81,11 @@ class ChatbotController extends Controller
             'generar_factura' => ['generar factura', 'crear factura', 'facturar a', 'emitir factura', 'cobrar a', 'nueva factura'],
             'saludo'          => ['hola', 'buenas', 'que tal', 'hi', 'hello', 'alo', 'dia', 'tarde', 'noche', 'saludos'],
             'vacantes'        => ['vacante', 'trabajo', 'empleo', 'puesto', 'chamba', 'oportunidad', 'oferta', 'busco', 'buscar', 'disponible', 'plaza'],
-            'estadisticas'    => ['estadistica', 'reporte', 'metrica', 'grafica', 'rendimiento', 'vistas', 'interaccion', 'datos', 'numeros', 'cuantas', 'cuantos'],
+            'estadisticas'    => ['estadistica', 'reporte', 'metrica', 'grafica', 'rendimiento', 'vistas', 'interaccion', 'numeros', 'cuantas', 'cuantos'], // 'datos' eliminado
             'facturacion'     => ['factura', 'cobro', 'pago', 'debo', 'dinero', 'cuenta', 'precio', 'costo', 'tarifa', 'peaje'],
             'registro'        => ['registro', 'registrarme', 'crear cuenta', 'nuevo usuario', 'sign up', 'inscribir'],
             'login'           => ['login', 'entrar', 'acceder', 'iniciar sesion', 'loguear', 'ingresar'],
-            'ubicacion'       => ['ubicacion', 'donde', 'direccion', 'lugar', 'oficina', 'mapa', 'calle', 'encuentro'],
+            'ubicacion'       => ['ubicacion', 'donde', 'direccion', 'lugar', 'oficina', 'mapa', 'calle', 'encuentro', 'contacto', 'telefono', 'email', 'correo'], // 'contacto' agregado
             'ayuda'           => ['ayuda', 'guia', 'tutorial', 'como', 'explicar', 'manual', 'instrucciones'],
             'empresas'        => ['empresa', 'organizacion', 'compania', 'corporacion', 'cliente'],
             'postulaciones'   => ['postular', 'aplicar', 'solicitar', 'candidato', 'curriculum', 'cv'],
@@ -74,6 +93,8 @@ class ChatbotController extends Controller
         ];
 
         $intencionDetectada = null;
+        $palabrasUsuario = explode(' ', $input); // ✅ Definir siempre al inicio
+
         // 1. Búsqueda exacta de frases (Prioridad a frases largas)
         foreach ($intenciones as $clave => $sinonimos) {
             foreach ($sinonimos as $sinonimo) {
@@ -87,7 +108,7 @@ class ChatbotController extends Controller
 
         // 2. Si no hay coincidencia exacta de frase, búsqueda por palabras clave (Fuzzy)
         if (!$intencionDetectada) {
-            $palabrasUsuario = explode(' ', $input);
+            // $palabrasUsuario ya está definido arriba
             foreach ($intenciones as $clave => $sinonimos) {
                 foreach ($sinonimos as $sinonimo) {
                     // Solo aplicar lógica de palabras sueltas si el sinónimo es una sola palabra
@@ -109,26 +130,41 @@ class ChatbotController extends Controller
             case 'saludo':
                 $nombre = ($user && isset($user['nombre'])) ? explode(' ', $user['nombre'])[0] : 'visitante';
                 
-                // Botones básicos
+                // Botones básicos por defecto
                 $this->acciones = [
                     ['texto' => '🔍 Buscar empleos', 'accion' => 'buscar empleos'],
-                    ['texto' => '📊 Ver estadísticas', 'accion' => 'ver estadisticas'],
+                    ['texto' => '📍 Ubicación', 'accion' => 'ubicacion'],
                 ];
 
-                // Si es consultor, agregar botón de facturación
-                if ($user && $user['rol'] === 'admin_consultora') {
-                    array_push($this->acciones, ['texto' => '📄 Generar Factura', 'accion' => 'generar factura']);
-                    array_push($this->acciones, ['texto' => '💰 Ver Facturación Global', 'accion' => 'facturacion']);
+                // 🌟 Lógica de Roles
+                if ($user) {
+                    if ($user['rol'] === 'admin_consultora') {
+                        // Admin
+                        $this->acciones = [
+                            ['texto' => '📄 Generar Factura', 'accion' => 'generar factura'],
+                            ['texto' => '💰 Global Facturación', 'accion' => 'facturacion'],
+                            ['texto' => '📊 Estadísticas Globales', 'accion' => 'ver estadisticas']
+                        ];
+                    } elseif ($user['rol'] === 'empresa_admin') {
+                        // Empresa
+                        $this->acciones = [
+                            ['texto' => '📊 Mis Estadísticas', 'accion' => 'ver estadisticas'],
+                            ['texto' => '💰 Mi Estado de Cuenta', 'accion' => 'ver facturacion'], // cambiado a 'ver facturacion' para coincidir mejor
+                            ['texto' => '💼 Mis Vacantes', 'accion' => 'mis vacantes'] // Nueva intención sugerida
+                        ];
+                    } elseif ($user['rol'] === 'candidato') {
+                        // Candidato
+                        $this->acciones = [
+                            ['texto' => '🔍 Buscar Vacantes', 'accion' => 'buscar vacantes'],
+                            ['texto' => '📝 Mis Postulaciones', 'accion' => 'ver mis postulaciones'],
+                            ['texto' => '❓ Ayuda', 'accion' => 'ayuda']
+                        ];
+                    }
                 }
 
-                return "👋 ¡Hola $nombre! Soy tu asistente virtual conectado en <strong>tiempo real</strong>.<br><br>" .
-                       "Puedo ayudarte con:<br>" .
-                       "🔍 <strong>Buscar vacantes</strong> (ej: 'buscar programador')<br>" .
-                       "📊 <strong>Ver estadísticas</strong> de interacciones<br>" .
-                       "💰 <strong>Consultar facturación</strong> y peajes<br>" .
-                       "📍 <strong>Ubicación</strong> de nuestras oficinas<br>" .
-                       "❓ <strong>Ayuda</strong> general<br><br>" .
-                       "¿Qué necesitas hoy?";
+                return "👋 ¡Hola $nombre! Soy tu asistente virtual.<br><br>" .
+                       "Estoy aquí para ayudarte a gestionar tus actividades en la plataforma de manera rápida.<br>" .
+                       "Selecciona una opción abajo 👇 o escribe lo que necesitas.";
 
             case 'vacantes':
                 $stopwords = ['busco', 'buscar', 'necesito', 'quiero', 'trabajo', 'de', 'en', 'el', 'la', 'vacantes', 'puesto', 'empleo'];
@@ -161,6 +197,12 @@ class ChatbotController extends Controller
                 } else {
                     return "🚫 La información de facturación es exclusiva para empresas y administración.";
                 }
+
+            case 'mis vacantes':
+                if (!$user || $user['rol'] !== 'empresa_admin') {
+                    return "🚫 Solo las empresas pueden ver sus vacantes desde aquí.";
+                }
+                return $this->listarVacantesEmpresa($user['empresa_id']);
 
             case 'empresas':
                 return $this->listarEmpresasActivas();
@@ -200,7 +242,7 @@ class ChatbotController extends Controller
                 if (empty($empresaNombre) || strlen($empresaNombre) < 2) {
                     
                     // Obtener empresas para mostrar botones (Aumentado LIMIT a 20 para ver todas)
-                    $stmt = $this->db->query("SELECT nombre FROM empresas WHERE estado = 'activa' ORDER BY id DESC LIMIT 20");
+                    $stmt = $this->getDB()->query("SELECT nombre FROM empresas WHERE estado = 'activa' ORDER BY id DESC LIMIT 20");
                     $empresas = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
                     $this->acciones = [];
@@ -288,7 +330,7 @@ class ChatbotController extends Controller
             }
             $sql .= " ORDER BY v.fecha_publicacion DESC LIMIT 5";
 
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->getDB()->prepare($sql);
             $stmt->execute($params);
             $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -317,7 +359,8 @@ class ChatbotController extends Controller
             return $html;
 
         } catch (\Exception $e) {
-            return "❌ Error al conectar con la base de datos. Intenta de nuevo.";
+            // Mostrar error real para debug
+            return "❌ Error en Base de Datos:<br>" . $e->getMessage();
         }
     }
 
@@ -341,7 +384,7 @@ class ChatbotController extends Controller
                         JOIN vacantes v ON iv.vacante_id = v.id
                         WHERE $condicion";
 
-            $stats = $this->db->query($sqlTotal)->fetch(PDO::FETCH_ASSOC);
+            $stats = $this->getDB()->query($sqlTotal)->fetch(PDO::FETCH_ASSOC);
 
             // 2. TOP 5 VACANTES MÁS VISTAS
             $sqlTop = "SELECT v.titulo, COUNT(*) as interacciones
@@ -351,7 +394,7 @@ class ChatbotController extends Controller
                        GROUP BY v.id
                        ORDER BY interacciones DESC
                        LIMIT 5";
-            $topVacantes = $this->db->query($sqlTop)->fetchAll(PDO::FETCH_ASSOC);
+            $topVacantes = $this->getDB()->query($sqlTop)->fetchAll(PDO::FETCH_ASSOC);
 
             // 3. INTERACCIONES POR DÍA (Últimos 7 días)
             $sqlDias = "SELECT DATE(iv.fecha_hora) as dia, COUNT(*) as cantidad
@@ -360,7 +403,7 @@ class ChatbotController extends Controller
                         WHERE $condicion AND iv.fecha_hora >= DATE_SUB(NOW(), INTERVAL 7 DAY)
                         GROUP BY DATE(iv.fecha_hora)
                         ORDER BY dia DESC";
-            $porDia = $this->db->query($sqlDias)->fetchAll(PDO::FETCH_ASSOC);
+            $porDia = $this->getDB()->query($sqlDias)->fetchAll(PDO::FETCH_ASSOC);
 
             // 📊 CONSTRUIR RESPUESTA
             $total = $stats['total_interacciones'] ?? 0;
@@ -429,7 +472,7 @@ class ChatbotController extends Controller
     private function listarEmpresasActivas(): string
     {
         try {
-            $stmt = $this->db->query("SELECT nombre, sector, sitio_web FROM empresas WHERE estado = 'activa' ORDER BY nombre ASC LIMIT 5");
+            $stmt = $this->getDB()->query("SELECT nombre, sector, sitio_web FROM empresas WHERE estado = 'activa' ORDER BY nombre ASC LIMIT 5");
             $empresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if (empty($empresas)) return "🏢 No hay empresas activas registradas por el momento.";
@@ -449,7 +492,7 @@ class ChatbotController extends Controller
     private function consultarPostulacionesCandidato($candidatoId): string
     {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->getDB()->prepare("
                 SELECT v.titulo, e.nombre as empresa, p.fecha_postulacion, p.estado
                 FROM postulaciones p
                 JOIN vacantes v ON p.vacante_id = v.id
@@ -464,9 +507,29 @@ class ChatbotController extends Controller
 
             $html = "📝 <strong>Tus Postulaciones Recientes:</strong><br><br>";
             foreach ($posts as $p) {
-                $estado = ucfirst($p['estado']);
-                $html .= "🔹 <strong>{$p['titulo']}</strong> - {$p['empresa']}<br>";
-                $html .= "📅 " . date('d/m/Y', strtotime($p['fecha_postulacion'])) . " | Estado: <strong>{$estado}</strong><br><br>";
+                // Color de badge según estado
+                $color = '#64748b'; // default gris
+                $bg = '#f1f5f9';
+                $st = strtolower($p['estado']);
+                
+                if (strpos($st, 'acept') !== false || strpos($st, 'select') !== false) {
+                    $color = '#166534'; $bg = '#dcfce7'; // Verde
+                } elseif (strpos($st, 'rechaz') !== false) {
+                    $color = '#991b1b'; $bg = '#fee2e2'; // Rojo
+                } elseif (strpos($st, 'pend') !== false) {
+                    $color = '#854d0e'; $bg = '#fef9c3'; // Amarillo
+                }
+
+                $badgeStyle = "background:$bg; color:$color; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold; border:1px solid $color";
+
+                $html .= "<div style='background:white; padding:10px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:8px;'>";
+                $html .= "  <div style='font-weight:bold; color:#0f172a'>{$p['titulo']}</div>";
+                $html .= "  <div style='color:#64748b; font-size:0.85rem'>🏢 {$p['empresa']}</div>";
+                $html .= "  <div style='margin-top:5px; display:flex; justify-content:space-between; align-items:center;'>";
+                $html .= "      <span style='font-size:0.8rem; color:#94a3b8'>📅 " . date('d/m/Y', strtotime($p['fecha_postulacion'])) . "</span>";
+                $html .= "      <span style='$badgeStyle'>" . ucfirst($p['estado']) . "</span>";
+                $html .= "  </div>";
+                $html .= "</div>";
             }
             return $html;
         } catch (\Exception $e) {
@@ -479,7 +542,7 @@ class ChatbotController extends Controller
         try {
             // Lógica similar a ConsultoraController dashboard
             // Suma simple de actividad para demo
-            $stmt = $this->db->query("SELECT COUNT(*) as total FROM interacciones_vacante");
+            $stmt = $this->getDB()->query("SELECT COUNT(*) as total FROM interacciones_vacante");
             $totalInteracciones = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
             
             // Estimación burda para demo
@@ -494,26 +557,58 @@ class ChatbotController extends Controller
         }
     }
 
+    private function listarVacantesEmpresa($empresaId): string
+    {
+        try {
+            $stmt = $this->getDB()->prepare("SELECT titulo, estado, fecha_publicacion FROM vacantes WHERE empresa_id = ? ORDER BY fecha_publicacion DESC LIMIT 5");
+            $stmt->execute([$empresaId]);
+            $vacantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($vacantes)) return "📭 No tienes vacantes registradas.";
+
+            $html = "💼 <strong>Tus Vacantes Recientes:</strong><br><br>";
+            foreach ($vacantes as $v) {
+                $statusColor = ($v['estado'] === 'abierta') ? '#16a34a' : '#9ca3af';
+                $html .= "<div style='margin-bottom:10px; border-bottom:1px solid #e2e8f0; padding-bottom:5px;'>";
+                $html .= "  <div style='font-weight:bold'>{$v['titulo']}</div>";
+                $html .= "  <div style='display:flex; justify-content:space-between; font-size:0.85rem; margin-top:3px;'>";
+                $html .= "      <span style='color:$statusColor'>● " . ucfirst($v['estado']) . "</span>";
+                $html .= "      <span style='color:#64748b'>" . date('d/m/Y', strtotime($v['fecha_publicacion'])) . "</span>";
+                $html .= "  </div>";
+                $html .= "</div>";
+            }
+            $html .= "<a href='" . ENV_APP['BASE_URL'] . "/empresa/vacantes' style='font-size:0.9rem'>Ver todas en el panel</a>";
+            return $html;
+        } catch (\Exception $e) {
+            return "❌ Error consultando vacantes: " . $e->getMessage();
+        }
+    }
+
     private function calcularFacturacionEmpresa($empresaId): string
     {
         try {
             // 1. Facturas emitidas (Deuda real)
-            $stmt = $this->db->prepare("SELECT SUM(total) as deuda FROM facturas WHERE empresa_id = ? AND estado = 'emitida'");
+            $stmt = $this->getDB()->prepare("SELECT SUM(total) as deuda, COUNT(*) as cant FROM facturas WHERE empresa_id = ? AND estado = 'emitida'");
             $stmt->execute([$empresaId]);
-            $deuda = $stmt->fetch(PDO::FETCH_ASSOC)['deuda'] ?? 0;
+            $res = $stmt->fetch(PDO::FETCH_ASSOC);
+            $deuda = $res['deuda'] ?? 0;
+            $cantFacturas = $res['cant'] ?? 0;
 
-            // 2. Consumo en curso (No facturado)
-            // Reutilizamos lógica simplificada de EmpresaController
-            // Por simplicidad en Chatbot, mostramos solo deuda emitida o mensaje genérico
-            
             $html = "💰 <strong>Estado de Cuenta</strong><br><br>";
             
+            // Caja de Resumen
+            $html .= "<div style='background:#f8fafc; padding:15px; border-radius:10px; border:1px solid #e2e8f0; text-align:center;'>";
             if ($deuda > 0) {
-                $html .= "⚠️ Tienes facturas pendientes por: <strong style='color:#ef4444'>B/. " . number_format($deuda, 2) . "</strong><br>";
-                $html .= "<a href='" . ENV_APP['BASE_URL'] . "/empresa/facturacion'>Pagar ahora</a>";
+                $html .= "<div style='font-size:0.9rem; color:#64748b; margin-bottom:5px'>Deuda Total</div>";
+                $html .= "<div style='font-size:1.5rem; font-weight:bold; color:#ef4444'>B/. " . number_format($deuda, 2) . "</div>";
+                $html .= "<div style='font-size:0.8rem; color:#ef4444; margin-top:5px'>($cantFacturas facturas pendientes)</div>";
+                $html .= "<div style='margin-top:10px'><a href='" . ENV_APP['BASE_URL'] . "/empresa/facturacion' style='background:#ef4444; color:white; text-decoration:none; padding:5px 15px; border-radius:5px; font-size:0.9rem'>Pagar Ahora</a></div>";
             } else {
-                $html .= "✅ ¡Estás al día! No tienes deuda pendiente.";
+                $html .= "<div style='font-size:2rem; margin-bottom:10px'>✅</div>";
+                $html .= "<div style='color:#166534; font-weight:bold;'>¡Estás al día!</div>";
+                $html .= "<div style='font-size:0.85rem; color:#64748b'>No tienes pagos pendientes.</div>";
             }
+            $html .= "</div>";
 
             return $html;
 
@@ -526,7 +621,7 @@ class ChatbotController extends Controller
     {
         try {
             // 1. Buscar empresa
-            $stmt = $this->db->prepare("SELECT id, nombre FROM empresas WHERE nombre LIKE ? LIMIT 1");
+            $stmt = $this->getDB()->prepare("SELECT id, nombre FROM empresas WHERE nombre LIKE ? LIMIT 1");
             $stmt->execute(["%$nombreEmpresa%"]);
             $empresa = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -548,7 +643,7 @@ class ChatbotController extends Controller
                     JOIN vacantes v ON iv.vacante_id = v.id 
                     WHERE v.empresa_id = ? AND DATE(iv.fecha_hora) BETWEEN ? AND ? 
                     GROUP BY tipo_interaccion";
-            $stmtInt = $this->db->prepare($sql);
+            $stmtInt = $this->getDB()->prepare($sql);
             $stmtInt->execute([$empresa['id'], $inicio, $fin]);
             $interacciones = $stmtInt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -586,16 +681,16 @@ class ChatbotController extends Controller
             // Valores dummy para FE
             $cufe = strtoupper(hash('sha1', $numero_fiscal . time()));
             
-            $stmtFac = $this->db->prepare("
+            $stmtFac = $this->getDB()->prepare("
                 INSERT INTO facturas 
                 (empresa_id, numero_fiscal, periodo_desde, periodo_hasta, subtotal, itbms, total, estado, token_publico, cufe, fecha_autorizacion, fecha_emision)
                 VALUES (?, ?, ?, ?, ?, ?, ?, 'emitida', ?, ?, NOW(), NOW())
             ");
             $stmtFac->execute([$empresa['id'], $numero_fiscal, $inicio, $fin, $subtotal, $itbms, $total, $token, $cufe]);
-            $facturaId = $this->db->lastInsertId();
+            $facturaId = $this->getDB()->lastInsertId();
 
             // 4. Insertar detalles
-            $stmtDet = $this->db->prepare("INSERT INTO facturas_detalle (factura_id, tipo_interaccion, cantidad_interacciones, tarifa_unitaria, total_linea) VALUES (?, ?, ?, ?, ?)");
+            $stmtDet = $this->getDB()->prepare("INSERT INTO facturas_detalle (factura_id, tipo_interaccion, cantidad_interacciones, tarifa_unitaria, total_linea) VALUES (?, ?, ?, ?, ?)");
             foreach ($detallesParaInsertar as $d) {
                 $stmtDet->execute([$facturaId, $d['tipo'], $d['cant'], $d['unit'], $d['tot']]);
             }
@@ -637,7 +732,7 @@ class ChatbotController extends Controller
             // Para evitar errores fatales, verificamos existencia o usamos try/catch
             
             $session_id = session_id();
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->getDB()->prepare($sql);
             $stmt->execute([$session_id, $pregunta, strip_tags($respuesta)]);
         } catch (\Exception $e) {
             // Silencio: no interrumpir el chat por error de log
@@ -649,7 +744,7 @@ class ChatbotController extends Controller
         try {
             $sql = "INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, fecha_hora, ip_usuario) VALUES (?, ?, NOW(), ?)";
             $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->getDB()->prepare($sql);
             $stmt->execute([$vacanteId, $tipo, $ip]);
         } catch (\Exception $e) {
             // Silencio
