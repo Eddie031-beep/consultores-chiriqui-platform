@@ -98,6 +98,13 @@ class VacanteController extends Controller
             }
         }
 
+        // --- VERIFICAR CUPO (VACANTE LLENA) ---
+        $stmtCount = $this->db->prepare("SELECT COUNT(*) FROM postulaciones WHERE vacante_id = ? AND estado = 'aceptado'");
+        $stmtCount->execute([$vacante['id']]);
+        $aceptados = $stmtCount->fetchColumn();
+        
+        $isFull = ($aceptados >= $vacante['cantidad_plazas']);
+
         // --- Lógica del Contador de Vistas (PEAJE) ---
         // Se cobra CADA VEZ que entra, si ha aceptado el modal.
         if (isset($_GET['accepted_view']) && $_GET['accepted_view'] == '1') {
@@ -172,7 +179,7 @@ class VacanteController extends Controller
         }
 
         // Pasa las nuevas variables a la vista
-        $this->view('vacantes/detalle', compact('vacante', 'haPostulado', 'resenas', 'promedio', 'miResena', 'reputacion'));
+        $this->view('vacantes/detalle', compact('vacante', 'haPostulado', 'resenas', 'promedio', 'miResena', 'reputacion', 'isFull'));
     }
 
     // Redirigir a postulación (validar si está autenticado)
@@ -186,12 +193,18 @@ class VacanteController extends Controller
             exit;
         }
 
+        // Obtener solicitante_id si existe
+        $solicitante_id = null;
+        if (Auth::check() && Auth::user()['rol'] === 'candidato') {
+            $solicitante_id = Auth::user()['id'];
+        }
+
         // Registrar interacción
         $interaccionStmt = $this->db->prepare("
-            INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id)
-            VALUES (?, 'click_aplicar', 'web', ?, ?)
+            INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id, solicitante_id, fecha_hora)
+            VALUES (?, 'click_aplicar', 'web', ?, ?, ?, NOW())
         ");
-        $interaccionStmt->execute([$vacante_id, $_SERVER['REMOTE_ADDR'], session_id()]);
+        $interaccionStmt->execute([$vacante_id, $_SERVER['REMOTE_ADDR'], session_id(), $solicitante_id]);
 
         // Si ya está autenticado como candidato
         if (Auth::check() && Auth::user()['rol'] === 'candidato') {

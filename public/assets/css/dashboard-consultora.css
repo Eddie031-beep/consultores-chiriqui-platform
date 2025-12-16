@@ -33,8 +33,8 @@ body {
 
 .dashboard-wrapper {
     padding: 2rem;
-    padding-top: 140px !important;
-    /* Force space for fixed navbar */
+    padding-top: 100px;
+    /* Adjusted to fit navbar without excessive gap */
     max-width: 1400px;
     margin: 0 auto;
     min-height: 100vh;
@@ -149,9 +149,23 @@ body {
 /* Grid Layout */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
+    /* Force 3 columns on large screens */
     gap: 1.5rem;
     margin-bottom: 2rem;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Compact Card Design */

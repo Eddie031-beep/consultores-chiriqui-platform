@@ -127,7 +127,11 @@ $iniciales = strtoupper(substr($user['nombre'], 0, 1) . substr($user['apellido']
                 </a>
             </div>
 
-            <div class="table-container">
+            <div class="table-container" style="max-height: 600px; overflow-y: auto; border: 1px solid #e2e8f0;">
+                <style>
+                    /* Sticky Header for this table */
+                    .premium-table thead th { position: sticky; top: 0; z-index: 10; background: #f8fafc; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+                </style>
                 <?php if (empty($vacantes)): ?>
                     <div style="text-align: center; padding: 4rem; color: #94a3b8;">
                         <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; color: #e2e8f0;"></i>

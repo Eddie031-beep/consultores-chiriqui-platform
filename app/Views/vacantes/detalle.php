@@ -7,6 +7,7 @@ $resenas = $resenas ?? [];
 $promedio = $promedio ?? 0;
 $miResena = $miResena ?? null;
 $haPostulado = $haPostulado ?? false;
+$isFull = $isFull ?? false;
 
 // Helpers para formato
 $fechaCierre = $vacante['fecha_cierre'] ? date('d/m/Y', strtotime($vacante['fecha_cierre'])) : date('d/m/Y', strtotime('+30 days'));
@@ -225,13 +226,20 @@ $fechaCierre = $vacante['fecha_cierre'] ? date('d/m/Y', strtotime($vacante['fech
                 <?php endif; ?>
 
                 <div style="margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.5rem; text-align: center;">
-                    <?php if ($isAuthenticated): ?>
-                        <?php if ($haPostulado): ?>
-                            <span style="color: #10b981; font-weight: 600;"><i class="fas fa-check-circle"></i> Ya te has postulado</span>
-                        <?php else: ?>
-                            <button onclick="document.getElementById('confirmModal').style.display='flex'" class="btn-apply" style="max-width: 300px; margin: 0 auto; border:none; font-family: inherit; font-size: 1rem;">
-                                Postularme Ahora <i class="fas fa-paper-plane"></i>
-                            </button>
+                    <?php if ($isFull): ?>
+                        <div style="background: #fff1f2; color: #be123c; padding: 1rem; border-radius: 8px; border: 1px solid #fecdd3; font-weight: 600;">
+                            <i class="fas fa-lock"></i> Esta vacante ha sido completada (Full).
+                            <p style="font-size: 0.85rem; font-weight: 400; margin: 5px 0 0 0;">Ya no se aceptan más postulaciones para este puesto.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php if ($isAuthenticated): ?>
+                            <?php if ($haPostulado): ?>
+                                <span style="color: #10b981; font-weight: 600;"><i class="fas fa-check-circle"></i> Ya te has postulado</span>
+                            <?php else: ?>
+                                <button onclick="document.getElementById('confirmModal').style.display='flex'" class="btn-apply" style="max-width: 300px; margin: 0 auto; border:none; font-family: inherit; font-size: 1rem;">
+                                    Postularme Ahora <i class="fas fa-paper-plane"></i>
+                                </button>
+                            <?php endif; ?>
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>
