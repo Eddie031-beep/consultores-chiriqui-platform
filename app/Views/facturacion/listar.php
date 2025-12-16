@@ -77,17 +77,17 @@ $user = Auth::user();
                 <p>No hay facturas generadas en este periodo.</p>
             </div>
         <?php else: ?>
-            <div class="table-responsive">
-                <table class="premium-table">
-                    <thead>
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                <table class="premium-table" style="margin: 0;">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f8fafc;">
                         <tr>
-                            <th>Número Fiscal</th>
-                            <th>Empresa Cliente</th>
-                            <th>Periodo</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                            <th>Fecha Emisión</th>
-                            <th style="text-align: right;">Acciones</th>
+                            <th style="background: #f8fafc;">Número Fiscal</th>
+                            <th style="background: #f8fafc;">Empresa Cliente</th>
+                            <th style="background: #f8fafc;">Periodo</th>
+                            <th style="background: #f8fafc;">Total</th>
+                            <th style="background: #f8fafc;">Estado</th>
+                            <th style="background: #f8fafc;">Fecha Emisión</th>
+                            <th style="text-align: right; background: #f8fafc;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>

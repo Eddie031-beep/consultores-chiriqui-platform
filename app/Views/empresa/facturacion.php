@@ -49,61 +49,63 @@
             <?php endif; ?>
         </div>
 
-        <div class="table-container">
-            <table class="premium-table">
-                <thead>
-                    <tr>
-                        <th>No. Fiscal</th>
-                        <th>Fecha Emisión</th>
-                        <th>Periodo</th>
-                        <th>Estado</th>
-                        <th>Total</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if(empty($facturas)): ?>
-                        <tr><td colspan="6" style="text-align:center; padding: 2rem; color: #94a3b8;">No hay facturas registradas.</td></tr>
-                    <?php else: ?>
-                        <?php foreach($facturas as $f): ?>
+        <div class="table-container" style="padding: 0; overflow: hidden;">
+            <div style="max-height: 500px; overflow-y: auto;">
+                <table class="premium-table">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f8fafc;">
                         <tr>
-                            <td style="font-weight:700;"><?= $f['numero_fiscal'] ?></td>
-                            <td><?= date('d/m/Y', strtotime($f['fecha_emision'])) ?></td>
-                            <td><?= date('M Y', strtotime($f['periodo_desde'])) ?></td>
-                            <td>
-                                <span class="status-badge status-<?= $f['estado'] ?>">
-                                    <?= strtoupper($f['estado']) ?>
-                                </span>
-                            </td>
-                            <td style="font-weight:700;">B/. <?= number_format($f['total'], 2) ?></td>
-                            <td>
-                                <a href="<?= ENV_APP['BASE_URL'] ?>/factura/ver/<?= $f['token_publico'] ?>" target="_blank" class="btn-icon">
-                                    <i class="fas fa-eye"></i> Ver
-                                </a>
-
-                                <?php if($f['estado'] === 'emitida'): ?>
-                                    <form action="<?= ENV_APP['BASE_URL'] ?>/empresa/facturacion/confirmar" method="POST" style="display:inline;">
-                                        <input type="hidden" name="factura_id" value="<?= $f['id'] ?>">
-                                        <button type="submit" class="btn-icon mobile-full" style="background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; cursor: pointer;">
-                                            <i class="fas fa-check-double"></i> Confirmar
-                                        </button>
-                                    </form>
-                                <?php elseif($f['estado'] === 'pendiente'): ?>
-                                    <form action="<?= ENV_APP['BASE_URL'] ?>/empresa/facturacion/pagar" method="POST" style="display:inline;" onsubmit="return confirm('¿Confirma el pago de B/. <?= number_format($f['total'], 2) ?>?');">
-                                        <input type="hidden" name="factura_id" value="<?= $f['id'] ?>">
-                                        <button type="submit" class="btn-icon pay mobile-full" style="border: none; cursor: pointer;">
-                                            <i class="fas fa-credit-card"></i> Pagar (+Info)
-                                        </button>
-                                    </form>
-                                <?php elseif($f['estado'] === 'pagada'): ?>
-                                    <span style="font-size: 0.8rem; color: #166534;"><i class="fas fa-check"></i> Pagada</span>
-                                <?php endif; ?>
-                            </td>
+                            <th style="background: #f8fafc;">No. Fiscal</th>
+                            <th style="background: #f8fafc;">Fecha Emisión</th>
+                            <th style="background: #f8fafc;">Periodo</th>
+                            <th style="background: #f8fafc;">Estado</th>
+                            <th style="background: #f8fafc;">Total</th>
+                            <th style="background: #f8fafc;">Acciones</th>
                         </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php if(empty($facturas)): ?>
+                            <tr><td colspan="6" style="text-align:center; padding: 2rem; color: #94a3b8;">No hay facturas registradas.</td></tr>
+                        <?php else: ?>
+                            <?php foreach($facturas as $f): ?>
+                            <tr>
+                                <td style="font-weight:700;"><?= $f['numero_fiscal'] ?></td>
+                                <td><?= date('d/m/Y', strtotime($f['fecha_emision'])) ?></td>
+                                <td><?= date('M Y', strtotime($f['periodo_desde'])) ?></td>
+                                <td>
+                                    <span class="status-badge status-<?= $f['estado'] ?>">
+                                        <?= strtoupper($f['estado']) ?>
+                                    </span>
+                                </td>
+                                <td style="font-weight:700;">B/. <?= number_format($f['total'], 2) ?></td>
+                                <td>
+                                    <a href="<?= ENV_APP['BASE_URL'] ?>/factura/ver/<?= $f['token_publico'] ?>" target="_blank" class="btn-icon">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+
+                                    <?php if($f['estado'] === 'emitida'): ?>
+                                        <form action="<?= ENV_APP['BASE_URL'] ?>/empresa/facturacion/confirmar" method="POST" style="display:inline;">
+                                            <input type="hidden" name="factura_id" value="<?= $f['id'] ?>">
+                                            <button type="submit" class="btn-icon mobile-full" style="background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; cursor: pointer;">
+                                                <i class="fas fa-check-double"></i> Confirmar
+                                            </button>
+                                        </form>
+                                    <?php elseif($f['estado'] === 'pendiente'): ?>
+                                        <form action="<?= ENV_APP['BASE_URL'] ?>/empresa/facturacion/pagar" method="POST" style="display:inline;" onsubmit="return confirm('¿Confirma el pago de B/. <?= number_format($f['total'], 2) ?>?');">
+                                            <input type="hidden" name="factura_id" value="<?= $f['id'] ?>">
+                                            <button type="submit" class="btn-icon pay mobile-full" style="border: none; cursor: pointer;">
+                                                <i class="fas fa-credit-card"></i> Pagar (+Info)
+                                            </button>
+                                        </form>
+                                    <?php elseif($f['estado'] === 'pagada'): ?>
+                                        <span style="font-size: 0.8rem; color: #166534;"><i class="fas fa-check"></i> Pagada</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </body>

@@ -59,61 +59,63 @@ $iniciales = strtoupper(substr($user['nombre'], 0, 1) . substr($user['apellido']
         </div>
 
         <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-            <table class="premium-table" style="margin: 0;">
-                <thead style="background: #f8fafc;">
-                    <tr>
-                        <th>Fecha y Hora</th>
-                        <th>Tipo de Evento</th>
-                        <th>Origen</th>
-                        <th>Identificación del Usuario</th>
-                        <th>Detalles Técnicos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($interacciones)): ?>
+            <div class="table-scroll-container" style="max-height: 500px; overflow-y: auto;">
+                <table class="premium-table" style="margin: 0; width: 100%;">
+                    <thead style="background: #f8fafc; position: sticky; top: 0; z-index: 10;">
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 3rem; color: #94a3b8;">
-                                <i class="far fa-eye-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                                Aún no hay interacciones registradas para esta vacante.
-                            </td>
+                            <th style="background: #f8fafc;">Fecha y Hora</th>
+                            <th style="background: #f8fafc;">Tipo de Evento</th>
+                            <th style="background: #f8fafc;">Origen</th>
+                            <th style="background: #f8fafc;">Identificación del Usuario</th>
+                            <th style="background: #f8fafc;">Detalles Técnicos</th>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($interacciones as $i): ?>
-                        <tr>
-                            <td style="font-weight: 500; color: #334155;">
-                                <?= date('d/m/Y h:i A', strtotime($i['fecha_hora'])) ?>
-                            </td>
-                            <td>
-                                <?php if($i['tipo_interaccion'] === 'ver_detalle'): ?>
-                                    <span class="type-badge badge-view"><i class="far fa-eye"></i> Vista</span>
-                                <?php elseif($i['tipo_interaccion'] === 'click_aplicar'): ?>
-                                    <span class="type-badge badge-click"><i class="fas fa-mouse-pointer"></i> Click Aplicar</span>
-                                <?php else: ?>
-                                    <span class="type-badge badge-chat"><i class="far fa-comments"></i> Chat</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><?= ucfirst($i['origen']) ?></td>
-                            <td>
-                                <?php if($i['solicitante_id']): ?>
-                                    <div class="user-auth">
-                                        <i class="fas fa-user-check" style="color: #10b981;"></i> 
-                                        <?= htmlspecialchars($i['nombre'] . ' ' . $i['apellido']) ?>
-                                    </div>
-                                    <div style="font-size: 0.75rem; color: #94a3b8;"><?= htmlspecialchars($i['email']) ?></div>
-                                <?php else: ?>
-                                    <div class="user-guest">
-                                        <i class="fas fa-user-secret"></i> Invitado (No registrado)
-                                    </div>
-                                <?php endif; ?>
-                            </td>
-                            <td style="font-family: monospace; font-size: 0.85rem; color: #64748b;">
-                                IP: <?= htmlspecialchars($i['ip']) ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($interacciones)): ?>
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 3rem; color: #94a3b8;">
+                                    <i class="far fa-eye-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                    Aún no hay interacciones registradas para esta vacante.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($interacciones as $i): ?>
+                            <tr>
+                                <td style="font-weight: 500; color: #334155;">
+                                    <?= date('d/m/Y h:i A', strtotime($i['fecha_hora'])) ?>
+                                </td>
+                                <td>
+                                    <?php if($i['tipo_interaccion'] === 'ver_detalle'): ?>
+                                        <span class="type-badge badge-view"><i class="far fa-eye"></i> Vista</span>
+                                    <?php elseif($i['tipo_interaccion'] === 'click_aplicar'): ?>
+                                        <span class="type-badge badge-click"><i class="fas fa-mouse-pointer"></i> Click Aplicar</span>
+                                    <?php else: ?>
+                                        <span class="type-badge badge-chat"><i class="far fa-comments"></i> Chat</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= ucfirst($i['origen']) ?></td>
+                                <td>
+                                    <?php if($i['solicitante_id']): ?>
+                                        <div class="user-auth">
+                                            <i class="fas fa-user-check" style="color: #10b981;"></i> 
+                                            <?= htmlspecialchars($i['nombre'] . ' ' . $i['apellido']) ?>
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: #94a3b8;"><?= htmlspecialchars($i['email']) ?></div>
+                                    <?php else: ?>
+                                        <div class="user-guest">
+                                            <i class="fas fa-user-secret"></i> Invitado (No registrado)
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="font-family: monospace; font-size: 0.85rem; color: #64748b;">
+                                    IP: <?= htmlspecialchars($i['ip']) ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </body>

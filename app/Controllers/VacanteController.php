@@ -193,27 +193,25 @@ class VacanteController extends Controller
             exit;
         }
 
-        // Obtener solicitante_id si existe
-        $solicitante_id = null;
-        if (Auth::check() && Auth::user()['rol'] === 'candidato') {
-            $solicitante_id = Auth::user()['id'];
+        // 1. VALIDACIÓN ESTRICTA: Redirigir si no hay sesión
+        if (!Auth::check() || Auth::user()['rol'] !== 'candidato') {
+            // Guardar mensaje opcionalmente o pasar por GET
+            header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=candidato&vacante_id=' . $vacante_id);
+            exit;
         }
 
-        // Registrar interacción
+        // 2. Obtener solicitante_id (Ahora garantizado)
+        $solicitante_id = Auth::user()['id'];
+
+        // 3. Registrar interacción (Solo usuarios autenticados)
         $interaccionStmt = $this->db->prepare("
             INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id, solicitante_id, fecha_hora)
             VALUES (?, 'click_aplicar', 'web', ?, ?, ?, NOW())
         ");
         $interaccionStmt->execute([$vacante_id, $_SERVER['REMOTE_ADDR'], session_id(), $solicitante_id]);
 
-        // Si ya está autenticado como candidato
-        if (Auth::check() && Auth::user()['rol'] === 'candidato') {
-            header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/postular/' . $vacante_id);
-            exit;
-        }
-
-        // Sino, redirigir a registro/login unificado
-        header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=candidato&vacante_id=' . $vacante_id);
+        // 4. Redirigir al flujo de postulación
+        header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/postular/' . $vacante_id);
         exit;
     }
 }

@@ -178,33 +178,35 @@ $iniciales = strtoupper(substr($user['nombre'], 0, 1) . substr($user['apellido']
                                 </td>
                                 <td style="color: #64748b; font-size: 0.9rem;"><?= date('d/m/Y', strtotime($v['fecha_publicacion'])) ?></td>
                                 <td>
-                                    <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/<?= $v['id'] ?>" class="action-icon" title="Editar Vacante">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </a>
-                                    <?php if($v['estado'] === 'abierta'): ?>
-                                        <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/cerrar/<?= $v['id'] ?>" 
-                                           class="action-icon" 
-                                           title="Cerrar Vacante"
-                                           onclick="return confirm('¿Estás seguro que deseas cerrar esta vacante? Ya no recibirás más postulantes.');"
-                                           style="color: #ef4444; margin-left: 5px;">
-                                            <i class="fas fa-ban"></i>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/<?= $v['id'] ?>" class="action-icon" title="Editar Vacante">
+                                            <i class="fas fa-pencil-alt"></i>
                                         </a>
-                                    <?php else: ?>
-                                        <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/abrir/<?= $v['id'] ?>" 
+                                        <?php if($v['estado'] === 'abierta'): ?>
+                                            <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/cerrar/<?= $v['id'] ?>" 
+                                               class="action-icon" 
+                                               title="Cerrar Vacante"
+                                               onclick="return confirm('¿Estás seguro que deseas cerrar esta vacante? Ya no recibirás más postulantes.');"
+                                               style="color: #ef4444;">
+                                                <i class="fas fa-ban"></i>
+                                            </a>
+                                        <?php else: ?>
+                                            <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/abrir/<?= $v['id'] ?>" 
+                                               class="action-icon" 
+                                               title="Reabrir Vacante"
+                                               onclick="return confirm('¿Deseas reabrir esta vacante para recibir más postulantes?');"
+                                               style="color: #10b981;">
+                                                <i class="fas fa-redo"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        
+                                        <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/interacciones/<?= $v['id'] ?>" 
                                            class="action-icon" 
-                                           title="Reabrir Vacante"
-                                           onclick="return confirm('¿Deseas reabrir esta vacante para recibir más postulantes?');"
-                                           style="color: #10b981; margin-left: 5px;">
-                                            <i class="fas fa-redo"></i>
+                                           title="Ver Reporte de Vistas"
+                                           style="color: #2563eb;">
+                                            <i class="fas fa-chart-line"></i>
                                         </a>
-                                    <?php endif; ?>
-                                    
-                                    <a href="<?= ENV_APP['BASE_URL'] ?>/empresa/vacantes/interacciones/<?= $v['id'] ?>" 
-                                       class="action-icon" 
-                                       title="Ver Reporte de Vistas"
-                                       style="color: #2563eb; margin-left: 5px;">
-                                        <i class="fas fa-chart-line"></i>
-                                    </a>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
