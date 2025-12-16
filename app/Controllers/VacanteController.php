@@ -185,32 +185,67 @@ class VacanteController extends Controller
     // Redirigir a postulación (validar si está autenticado)
     public function prePostular($vacante_id): void
     {
-        // Verificar que la vacante existe
-        $stmt = $this->db->prepare("SELECT id FROM vacantes WHERE id = ? AND estado = 'abierta'");
+        // 1. Verificar existencia y estado básico
+        $stmt = $this->db->prepare("SELECT * FROM vacantes WHERE id = ?");
         $stmt->execute([$vacante_id]);
-        if (!$stmt->fetch()) {
+        $vacante = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$vacante) {
             header('Location: ' . ENV_APP['BASE_URL'] . '/vacantes');
             exit;
         }
 
-        // 1. VALIDACIÓN ESTRICTA: Redirigir si no hay sesión
+        // 2. VERIFICACIÓN DE CUPO Y AUTOCORRECCIÓN
+        $stmtCount = $this->db->prepare("SELECT COUNT(*) FROM postulaciones WHERE vacante_id = ? AND estado = 'aceptado'");
+        $stmtCount->execute([$vacante_id]);
+        $aceptados = $stmtCount->fetchColumn();
+
+        if ($aceptados >= $vacante['cantidad_plazas']) {
+            // Si está llena pero seguía abierta, cerrarla automáticamente
+            if ($vacante['estado'] === 'abierta') {
+                $update = $this->db->prepare("UPDATE vacantes SET estado = 'cerrada' WHERE id = ?");
+                $update->execute([$vacante_id]);
+            }
+            
+            // Redirigir con error
+            $mensaje = urlencode("Esta vacante se ha llenado y ya no acepta postulaciones.");
+            header('Location: ' . ENV_APP['BASE_URL'] . '/vacantes/' . $vacante['slug'] . '?error=' . $mensaje);
+            exit;
+        }
+
+        // 3. Verificar si está cerrada manualmente
+        if ($vacante['estado'] !== 'abierta') {
+             $mensaje = urlencode("Esta vacante ya no está disponible.");
+             header('Location: ' . ENV_APP['BASE_URL'] . '/vacantes/' . $vacante['slug'] . '?error=' . $mensaje);
+             exit;
+        }
+
+        // 4. VALIDACIÓN DE SESIÓN (CANDIDATO)
         if (!Auth::check() || Auth::user()['rol'] !== 'candidato') {
-            // Guardar mensaje opcionalmente o pasar por GET
             header('Location: ' . ENV_APP['BASE_URL'] . '/auth/registro?tipo=candidato&vacante_id=' . $vacante_id);
             exit;
         }
 
-        // 2. Obtener solicitante_id (Ahora garantizado)
+        // 5. Obtener solicitante_id
         $solicitante_id = Auth::user()['id'];
 
-        // 3. Registrar interacción (Solo usuarios autenticados)
+        // 6. Verificar si ya se postuló
+        $check = $this->db->prepare("SELECT id FROM postulaciones WHERE vacante_id = ? AND solicitante_id = ?");
+        $check->execute([$vacante_id, $solicitante_id]);
+        if ($check->fetch()) {
+             // Ya postulado, volver al detalle
+             header('Location: ' . ENV_APP['BASE_URL'] . '/vacantes/' . $vacante['slug']);
+             exit;
+        }
+
+        // 7. Registrar interacción (click_aplicar)
         $interaccionStmt = $this->db->prepare("
             INSERT INTO interacciones_vacante (vacante_id, tipo_interaccion, origen, ip, session_id, solicitante_id, fecha_hora)
             VALUES (?, 'click_aplicar', 'web', ?, ?, ?, NOW())
         ");
         $interaccionStmt->execute([$vacante_id, $_SERVER['REMOTE_ADDR'], session_id(), $solicitante_id]);
 
-        // 4. Redirigir al flujo de postulación
+        // 8. Redirigir al flujo de postulación
         header('Location: ' . ENV_APP['BASE_URL'] . '/candidato/postular/' . $vacante_id);
         exit;
     }

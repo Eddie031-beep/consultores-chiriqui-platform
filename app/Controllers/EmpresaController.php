@@ -372,12 +372,57 @@ class EmpresaController extends Controller
         }
 
         try {
-            $stmt = $this->dbWrite->prepare("UPDATE postulaciones SET estado = ? WHERE id = ?");
-            $stmt->execute([$nuevo_estado, $postulacion_id]);
+            $this->dbWrite->beginTransaction();
 
-            $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => "Candidato marcado como " . strtoupper($nuevo_estado)];
+            // 1. Si vamos a ACEPTAR, primero verificamos cupos
+            if ($nuevo_estado === 'aceptado') {
+                // Obtener vacante para ver plazas
+                $stmtVac = $this->dbRead->prepare("SELECT cantidad_plazas, estado, titulo FROM vacantes WHERE id = ?");
+                $stmtVac->execute([$vacante_id]);
+                $vacante = $stmtVac->fetch(PDO::FETCH_ASSOC);
+
+                if (!$vacante) throw new \Exception("Vacante no encontrada.");
+
+                // Contar aceptados ACTUALES
+                $stmtCount = $this->dbRead->prepare("SELECT COUNT(*) FROM postulaciones WHERE vacante_id = ? AND estado = 'aceptado'");
+                $stmtCount->execute([$vacante_id]);
+                $aceptados = $stmtCount->fetchColumn();
+
+                if ($aceptados >= $vacante['cantidad_plazas']) {
+                     throw new \Exception("¡La vacante ya está llena! No puedes aceptar más candidatos.");
+                }
+                
+                // Proceder a actualizar la postulación
+                $stmt = $this->dbWrite->prepare("UPDATE postulaciones SET estado = ? WHERE id = ?");
+                $stmt->execute([$nuevo_estado, $postulacion_id]);
+
+                // Verificar si CON ESTE se llenó
+                if (($aceptados + 1) >= $vacante['cantidad_plazas']) {
+                    // CERRAR VACANTE
+                    $stmtClose = $this->dbWrite->prepare("UPDATE vacantes SET estado = 'cerrada' WHERE id = ?");
+                    $stmtClose->execute([$vacante_id]);
+                    
+                    // OPCIONAL: Rechazar al resto
+                    $stmtRejectRest = $this->dbWrite->prepare("UPDATE postulaciones SET estado = 'rechazado' WHERE vacante_id = ? AND estado = 'pendiente'");
+                    $stmtRejectRest->execute([$vacante_id]);
+
+                    $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => "✅ Candidato aceptado. La vacante '{$vacante['titulo']}' se ha completado y CERRADO automáticamente."];
+                } else {
+                    $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => "Candidato aceptado correctamente. (" . ($aceptados+1) . "/" . $vacante['cantidad_plazas'] . " plazas)"];
+                }
+
+            } else {
+                // Si es rechazo, solo actualizar
+                $stmt = $this->dbWrite->prepare("UPDATE postulaciones SET estado = ? WHERE id = ?");
+                $stmt->execute([$nuevo_estado, $postulacion_id]);
+                $_SESSION['mensaje'] = ['tipo' => 'success', 'texto' => "Candidato marcado como " . strtoupper($nuevo_estado)];
+            }
+
+            $this->dbWrite->commit();
+
         } catch (\Exception $e) {
-            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Error al actualizar: ' . $e->getMessage()];
+            $this->dbWrite->rollBack();
+            $_SESSION['mensaje'] = ['tipo' => 'error', 'texto' => 'Error: ' . $e->getMessage()];
         }
 
         header("Location: " . ENV_APP['BASE_URL'] . "/empresa/postulantes?vacante_id=$vacante_id");

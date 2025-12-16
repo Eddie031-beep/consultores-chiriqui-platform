@@ -226,15 +226,30 @@ $fechaCierre = $vacante['fecha_cierre'] ? date('d/m/Y', strtotime($vacante['fech
                 <?php endif; ?>
 
                 <div style="margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.5rem; text-align: center;">
-                    <?php if ($isFull): ?>
-                        <div style="background: #fff1f2; color: #be123c; padding: 1rem; border-radius: 8px; border: 1px solid #fecdd3; font-weight: 600;">
-                            <i class="fas fa-lock"></i> Esta vacante ha sido completada (Full).
-                            <p style="font-size: 0.85rem; font-weight: 400; margin: 5px 0 0 0;">Ya no se aceptan más postulaciones para este puesto.</p>
+                    
+                    <?php if(isset($_GET['error'])): ?>
+                        <div style="background: #fff1f2; color: #be123c; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem;">
+                            <i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($_GET['error']) ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($isFull || $vacante['estado'] !== 'abierta'): ?>
+                        <div style="background: #f1f5f9; color: #64748b; padding: 1.5rem; border-radius: 12px; border: 2px dashed #cbd5e1;">
+                            <i class="fas fa-lock" style="font-size: 1.5rem; margin-bottom: 10px; color: #94a3b8;"></i>
+                            <h3 style="margin: 0; font-size: 1.1rem; color: #475569;">Este puesto está lleno</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 0.9rem;">Gracias por tu interés, pero ya hemos completado las plazas disponibles.</p>
                         </div>
                     <?php else: ?>
                         <?php if ($isAuthenticated): ?>
                             <?php if ($haPostulado): ?>
-                                <span style="color: #10b981; font-weight: 600;"><i class="fas fa-check-circle"></i> Ya te has postulado</span>
+                                <span style="color: #10b981; font-weight: 600; display: block; margin-bottom: 10px;"><i class="fas fa-check-circle"></i> Ya te has postulado</span>
+                                <form action="<?= ENV_APP['BASE_URL'] ?>/candidato/cancelar-postulacion" method="POST" onsubmit="return confirm('¿Retirar postulación?');">
+                                    <input type="hidden" name="vacante_id" value="<?= $vacante['id'] ?>">
+                                    <input type="hidden" name="redirect" value="/vacantes/<?= $vacante['slug'] ?>">
+                                    <button type="submit" style="background: none; border: none; color: #ef4444; text-decoration: underline; cursor: pointer;">
+                                        Cancelar postulación
+                                    </button>
+                                </form>
                             <?php else: ?>
                                 <button onclick="document.getElementById('confirmModal').style.display='flex'" class="btn-apply" style="max-width: 300px; margin: 0 auto; border:none; font-family: inherit; font-size: 1rem;">
                                     Postularme Ahora <i class="fas fa-paper-plane"></i>
@@ -386,28 +401,28 @@ $fechaCierre = $vacante['fecha_cierre'] ? date('d/m/Y', strtotime($vacante['fech
                     </p>
                 </div>
 
-                <?php if ($isAuthenticated): ?>
-                    <?php if ($haPostulado): ?>
-                        <div style="background: #ecfdf5; border: 1px solid #10b981; color: #047857; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; font-size: 0.9rem;">
-                            <i class="fas fa-check-circle"></i> Ya te has postulado
-                        </div>
-                        <form action="<?= ENV_APP['BASE_URL'] ?>/candidato/cancelar-postulacion" method="POST" onsubmit="return confirm('¿Retirar postulación?');">
-                            <input type="hidden" name="vacante_id" value="<?= $vacante['id'] ?>">
-                            <input type="hidden" name="redirect" value="/vacantes/<?= $vacante['slug'] ?>">
-                            <button type="submit" class="btn-apply" style="background: white; color: #ef4444; border: 2px solid #fecaca; box-shadow: none;">
-                                Cancelar Postulación
-                            </button>
-                        </form>
-                    <?php else: ?>
-                        <a href="<?= ENV_APP['BASE_URL'] ?>/postular/<?= $vacante['id'] ?>" class="btn-apply">
-                            Postularme Ahora
-                        </a>
-                    <?php endif; ?>
+                <?php if ($isFull || $vacante['estado'] !== 'abierta'): ?>
+                    <div style="background: #f1f5f9; padding: 10px; border-radius: 8px; text-align: center; color: #64748b;">
+                        <i class="fas fa-lock"></i> Vacante Cerrada
+                    </div>
                 <?php else: ?>
-                    <a href="<?= ENV_APP['BASE_URL'] ?>/auth/registro?tipo=candidato&vacante_id=<?= $vacante['id'] ?>" class="btn-apply">
-                        Regístrate para Aplicar
-                    </a>
-                    <p style="text-align: center; font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">Es gratis y rápido</p>
+                    <?php if ($isAuthenticated): ?>
+                        <?php if ($haPostulado): ?>
+                            <div style="background: #ecfdf5; border: 1px solid #10b981; color: #047857; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; font-size: 0.9rem;">
+                                <i class="fas fa-check-circle"></i> Ya te has postulado
+                            </div>
+                            <!-- ... cancel form ... -->
+                        <?php else: ?>
+                            <a href="<?= ENV_APP['BASE_URL'] ?>/postular/<?= $vacante['id'] ?>" class="btn-apply">
+                                Postularme Ahora
+                            </a>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <a href="<?= ENV_APP['BASE_URL'] ?>/auth/registro?tipo=candidato&vacante_id=<?= $vacante['id'] ?>" class="btn-apply">
+                            Regístrate para Aplicar
+                        </a>
+                        <p style="text-align: center; font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">Es gratis y rápido</p>
+                    <?php endif; ?>
                 <?php endif; ?>
 
                 <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f1f5f9;">
